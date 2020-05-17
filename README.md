@@ -1,0 +1,2 @@
+# Amadeus
+Helper Discord bot
