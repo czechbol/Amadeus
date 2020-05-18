@@ -1,0 +1,16 @@
+[Unit]
+Description = Amadeus: Log mirror
+PartOf      = amadeus.service
+After       = amadeus.service
+After       = amadeus-bot.service
+
+[Service]
+Restart          = always
+User             = amadeus
+WorkingDirectory = /home/amadeus/amadeus
+StandardOutput   = journal+console
+
+ExecStart        = /bin/bash resources/mirror.sh
+
+[Install]
+WantedBy = amadeus.service

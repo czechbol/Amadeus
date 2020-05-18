@@ -1,0 +1,16 @@
+[Unit]
+Description = Amadeus: Bot
+PartOf      = amadeus.service
+After       = amadeus.service
+
+[Service]
+Restart          = always
+User             = amadeus
+WorkingDirectory = /home/amadeus/amadeus
+StandardOutput   = journal+console
+
+ExecStart        = /usr/bin/docker-compose up --build
+ExecStop         = /usr/bin/docker-compose down
+
+[Install]
+WantedBy = amadeus.service
