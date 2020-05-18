@@ -6,3 +6,6 @@ psycopg2
 requests
 pillow
 dhash
+sympy
+graphviz
+matplotlib
