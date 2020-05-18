@@ -8,4 +8,6 @@ pillow
 dhash
 sympy
 graphviz
+xdot
+pydot
 matplotlib

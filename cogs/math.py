@@ -72,6 +72,8 @@ class Math(basecog.Basecog):
         src.render('assets/graphviz', view=False)
 
         await ctx.send(file=discord.File("assets/graphviz.png"))
+        os.remove("assets/graphviz")
+        os.remove("assets/graphviz.png")
 
     def is_graphviz_message(self, body):
         return (body.startswith("```digraph") and
@@ -114,7 +116,7 @@ class Math(basecog.Basecog):
 
         ctx = commands.Context(prefix=self.bot.command_prefix, guild=message.guild,
                                channel=message.channel, message=message, author=user)
-        await self.digraph.callback(self, ctx, equation=message.content.strip("```"))
+        await self.digraph.callback(self, ctx, equasion=message.content.strip("` ` `").replace("digraph\n", "",1))
 
         await ctx.message.remove_reaction("▶", ctx.author)
         await ctx.message.remove_reaction("▶", self.bot.user)
