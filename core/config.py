@@ -1,0 +1,89 @@
+import json
+import sys
+
+class Config:
+
+    def get (self, group: str, key: str):
+        if group in self.c and key in self.c.get(group):
+            v = self.c.get(group).get(key)
+        elif key in self.d.get(group):
+            v = self.d.get(group).get(key)
+        else:
+            v = None
+
+        if v is not None:
+            return v
+
+        raise AttributeError("Configuration file: key not found")
+
+    def __init__ (self):
+        try:
+            self.d = json.load(open('config/config.default.json', 'r'))
+            self.c = json.load(open('config/config.json', 'r'))
+        except FileNotFoundError:
+            print("Error loading config files.")
+            sys.exit(1)
+
+
+        ##
+        ## DATABASE
+        self.db_states = self.get('database', 'states')
+        self.db_string = self.get('database', 'string')
+
+        ##
+        ## BOT
+        self.debug     = self.get('bot', 'debug')
+        self.loader    = self.get('bot', 'loader')
+        self.key       = self.get('bot', 'key')
+        self.admin_id  = self.get('bot', 'admin id')
+        self.guild_id  = self.get('bot', 'guild id')
+        self.slave_id  = self.get('bot', 'slave guild id')
+        self.host      = self.get('bot', 'host')
+        self.prefixes  = self.get('bot', 'prefixes')
+        self.prefix    = self.prefixes[0]
+        
+        self.extensions = self.get('bot', 'extensions')
+
+        ##
+        ## CHANNELS
+        self.channel_jail     = self.get('channels', 'jail')
+        self.channel_jailinfo = self.get('channels', 'jail-info')
+        self.channel_mods     = self.get('channels', 'mods')
+        self.channel_botdev   = self.get('channels', 'botdev')
+        self.channel_botlog   = self.get('channels', 'botlog')
+        self.channel_guildlog = self.get('channels', 'guildlog')
+        self.channel_vote     = self.get('channels', 'vote')
+        self.channel_botspam  = self.get('channels', 'botspam')
+
+        self.bot_allowed = self.get('channels', 'bot allowed')
+
+        ##
+        ## COLOR
+        self.color         = self.get('color', 'main')
+        self.color_success = self.get('color', 'success')
+        self.color_notify  = self.get('color', 'notify')
+        self.color_error   = self.get('color', 'error')
+        self.colors = [self.color, self.color_success, self.color_notify, self.color_error]
+
+        ##
+        ## DELAY
+        self.delay_embed  = self.get('delay', 'embed')
+
+        ##
+        ## ROLES
+        self.role_verify    = self.get('roles', 'verify_id')
+        self.role_mod       = self.get('roles', 'mod_id')
+        self.roles_elevated = self.get('roles', 'elevated_ids')
+
+        ##
+        ## LIBRARIAN COG
+        self.starting_week = self.get('librarian cog', 'starting week')
+        self.nameday_cz    = self.get('librarian cog', 'nameday cz')
+        self.nameday_sk    = self.get('librarian cog', 'nameday sk')
+        self.weather_token = self.get('librarian cog', 'weather token')
+
+        ##
+        ## COMPATIBILITY
+        self.noimitation = self.get('compatibility', 'ignored imitation channels')
+
+config = Config()

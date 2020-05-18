@@ -1,0 +1,15 @@
+[Unit]
+Description=Amadeus Discord bot
+Requires=postgresql.service
+After=postgresql.service
+
+[Service]
+Restart=always
+User=amadeus
+StandardOutput=journal+console
+
+WorkingDirectory=/home/amadeus/amadeus
+ExecStart=python3 amadeus.py
+
+[Install]
+WantedBy=multi-user.target
