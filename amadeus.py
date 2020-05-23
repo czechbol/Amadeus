@@ -4,17 +4,13 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from core import help, utils, basecog
+from core import check, help, utils, basecog
 from core.config import config
 from core.emote import emote
 from features import presence
 from repository.database import database
 from repository.database import session
-from repository.database.karma import Karma, Karma_emoji
-from repository.database.review import Review, ReviewRelevance, Subject
-from repository.database.verification import User
-from repository.database.image import Image
-from repository.review_repo import ReviewRepository
+from repository.database.vote import Vote
 
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(*config.prefixes),
@@ -46,48 +42,43 @@ async def on_error(event, *args, **kwargs):
             await channel.send("```\n{}```".format(message))
 
 
+@commands.check(check.is_mod)
 @bot.command()
 async def load(ctx, extension):
-    if ctx.author.id == config.admin_id:
-        try:
-            bot.load_extension(f'cogs.{extension}')
-            await ctx.send(f'Rozšíření **{extension}** načteno.')
-            await basecog.log(ctx, f"Cog {extension} loaded")
-        except Exception as e:
-            await ctx.send(f'Načtení rozšíření **{extension}** se nezdařilo.')
-            await basecog.log(ctx, "Cog loading failed", msg=e)
-    else:
-        raise commands.NotOwner()
+    try:
+        bot.load_extension(f'cogs.{extension}')
+        await ctx.send(f'Rozšíření **{extension}** načteno.')
+        await basecog.log(ctx, f"Cog {extension} loaded")
+    except Exception as e:
+        await ctx.send(f'Načtení rozšíření **{extension}** se nezdařilo.')
+        await basecog.log(ctx, "Cog loading failed", msg=e)
 
 
+@commands.check(check.is_mod)
 @bot.command()
 async def unload(ctx, extension):
-    if ctx.author.id == config.admin_id:
-        try:
-            bot.unload_extension(f'cogs.{extension}')
-            await ctx.send(f'Rozšíření **{extension}** odebráno.')
-            await basecog.log(ctx, f"Cog {extension} unloaded")
-        except Exception as e:
-            await ctx.send(f'Odebrání rozšíření **{extension}** se nezdařilo.')
-            await basecog.log(ctx, "Cog unloading failed", msg=e)
-    else:
-        raise commands.NotOwner()
+    try:
+        bot.unload_extension(f'cogs.{extension}')
+        await ctx.send(f'Rozšíření **{extension}** odebráno.')
+        await basecog.log(ctx, f"Cog {extension} unloaded")
+    except Exception as e:
+        await ctx.send(f'Odebrání rozšíření **{extension}** se nezdařilo.')
+        await basecog.log(ctx, "Cog unloading failed", msg=e)
 
 
+
+@commands.check(check.is_mod)
 @bot.command()
 async def reload(ctx, extension):
-    if ctx.author.id == config.admin_id:
-        try:
-            bot.reload_extension(f'cogs.{extension}')
-            await ctx.send(f'Rozšíření **{extension}** aktualizováno.')
-            await basecog.log(ctx, f"Cog {extension} reloaded")
-            if "docker" in config.loader:
-                await ctx.send("Jsem ale zavřená v Dockeru, víš o tom?")
-        except Exception as e:
-            await ctx.send(f'Aktualizace rozšíření **{extension}** se nepovedla.')
-            await basecog.log(ctx, "Cog reloading failed", msg=e)
-    else:
-        raise commands.NotOwner()
+    try:
+        bot.reload_extension(f'cogs.{extension}')
+        await ctx.send(f'Rozšíření **{extension}** aktualizováno.')
+        await basecog.log(ctx, f"Cog {extension} reloaded")
+        if "docker" in config.loader:
+            await ctx.send("Jsem ale zavřená v Dockeru, víš o tom?")
+    except Exception as e:
+        await ctx.send(f'Aktualizace rozšíření **{extension}** se nepovedla.')
+        await basecog.log(ctx, "Cog reloading failed", msg=e)
 
 
 @reload.error
