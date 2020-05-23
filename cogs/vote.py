@@ -106,10 +106,8 @@ class Vote(basecog.Basecog):
             if timex.search(str(lines[0])) is not None:
                 now = datetime.now()
                 t = dparser.parse(lines[0], dayfirst=True, fuzzy=True)
-                print(now)
                 diff = t - now.replace(hour=0, minute=0, second=0)
                 date = now + diff
-                print(date)
             else:
                 date = dparser.parse(lines[0], dayfirst=True, fuzzy=True)
             if now > date:
