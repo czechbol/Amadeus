@@ -12,7 +12,8 @@ from sympy.plotting import plot
 from core import basecog
 
 
-class Math(basecog.Basecog):
+class Draw(basecog.Basecog):
+    """LaTeX and Graph drawing commands"""
     def __init__(self, bot):
         self.bot = bot
 
