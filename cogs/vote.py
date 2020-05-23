@@ -62,7 +62,8 @@ class Vote(basecog.Basecog):
                     for option in votes:
                         content += text.fill("vote", "option",
                                              option=option['option'], num=option['num_votes']-1)
-                    content += text.fill("vote", "ends", date=date)
+                    content += text.fill("vote", "ends",
+                                         date=date.strftime("%Y-%m-%d %H:%M:%S"))
                     await edit_msg.edit(content=content)
                 else:
                     if text.get("vote", "not_in_cache") not in edit_msg.content:
@@ -84,8 +85,8 @@ class Vote(basecog.Basecog):
             "vote", "ended", now=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         votes = sorted(votes, key=lambda i: (i['num_votes']), reverse=True)
         for option in votes:
-            content += "{option} - počet hlasů: {num}\n".format(
-                option=option['option'], num=option['num_votes']-1)
+            content += text.fill("vote", "option",
+                                 option=option['option'], num=option['num_votes']-1)
 
         await edit_msg.edit(content=content)
         repository.del_vote(channel_id=vote_msg.channel.id,
@@ -130,9 +131,9 @@ class Vote(basecog.Basecog):
         for option in votes:
             await ctx.message.add_reaction(option["emote"])
 
-        edit_msg = await ctx.send(text.fill("vote", "waiting", date=date))
+        edit_msg = await ctx.send(text.fill("vote", "waiting", date=date.strftime("%Y-%m-%d %H:%M:%S")))
         repository.add_vote(channel_id=message.channel.id,
-                            message_id=message.id, edit_id=edit_msg.id, date=date)
+                            message_id=message.id, edit_id=edit_msg.id, date=date.strftime("%Y-%m-%d %H:%M:%S"))
 
         await self.loop(ctx.message, edit_msg, date)
         return
