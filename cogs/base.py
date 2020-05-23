@@ -4,19 +4,20 @@ import discord
 from discord.ext import commands
 
 from core import basecog
+from core.text import text
 from core.config import config
 
 boottime = datetime.datetime.now().replace(microsecond=0)
 
 class Base (basecog.Basecog):
-    """About"""
+    """Basic bot commands"""
     def __init__(self, bot: commands.Bot):
         super().__init__(bot)
 
     @commands.cooldown (rate=2, per=20.0, type=commands.BucketType.user)
     @commands.command()
     async def uptime(self, ctx):
-        """Bot uptime"""
+        """Checks bot uptime"""
         now = datetime.datetime.now().replace(microsecond=0)
         delta = now - boottime
 
@@ -28,18 +29,13 @@ class Base (basecog.Basecog):
 
     @commands.command()
     async def ping(self, ctx):
-        """Bot latency"""
+        """Checks bot latency"""
         await ctx.send("pong: **{:.2f} s**".format(self.bot.latency))
 
-    @commands.cooldown (rate=2, per=60.0, type=commands.BucketType.user)
-    @commands.command(aliases=["goddess"])
-    async def amadeus(self, ctx):
-        """Display information about bot functions"""
-        embed = self.reaction.make_embed(1)
-        msg = await ctx.send(embed=embed, delete_after=config.delay_embed)
-        await self.deleteCommand(ctx)
-        await msg.add_reaction("◀")
-        await msg.add_reaction("▶")
+    @commands.command(hidden=True)
+    async def pong(self, ctx):
+        """Really?"""
+        await ctx.send(text.get("base", "really"))
 
 def setup(bot):
     bot.add_cog(Base(bot))
