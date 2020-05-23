@@ -9,15 +9,16 @@ from core.config import config
 
 boottime = datetime.datetime.now().replace(microsecond=0)
 
+
 class Base (basecog.Basecog):
     """Basic bot commands"""
+
     def __init__(self, bot: commands.Bot):
         super().__init__(bot)
 
-    @commands.cooldown (rate=2, per=20.0, type=commands.BucketType.user)
-    @commands.command()
+    @commands.cooldown(rate=2, per=20.0, type=commands.BucketType.user)
+    @commands.command(description=text.get("base", "uptime_desc"))
     async def uptime(self, ctx):
-        """Checks bot uptime"""
         now = datetime.datetime.now().replace(microsecond=0)
         delta = now - boottime
 
@@ -27,15 +28,14 @@ class Base (basecog.Basecog):
         await ctx.send(embed=embed, delete_after=config.delay_embed)
         await self.deleteCommand(ctx, now=True)
 
-    @commands.command()
+    @commands.command(description=text.get("base", "ping_desc"))
     async def ping(self, ctx):
-        """Checks bot latency"""
         await ctx.send("pong: **{:.2f} s**".format(self.bot.latency))
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, description=text.get("base", "pong_desc"))
     async def pong(self, ctx):
-        """Really?"""
         await ctx.send(text.get("base", "really"))
+
 
 def setup(bot):
     bot.add_cog(Base(bot))

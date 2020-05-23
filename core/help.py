@@ -13,7 +13,7 @@ class Help(commands.MinimalHelpCommand):
     def __init__(self, **options):
         self.paginator = Paginator()
 
-        super().__init__(no_category="\nNezařazeno", commands_heading="commands")
+        super().__init__(no_category="Nezařazeno", commands_heading="commands")
 
     def command_not_found(self, string):
         return f"Žádný příkaz jako `{string}` neexistuje."
@@ -36,50 +36,48 @@ class Help(commands.MinimalHelpCommand):
         if commands:
             cmds = []
             joined = ', '.join(c.name for c in commands)
-            self.paginator.add_line(f"**{heading}**")
-            self.paginator.add_line(joined)
+            self.paginator.add_line("> "+f"**{heading}**")
+            self.paginator.add_line("> "+joined)
 
     def add_aliases_formatting(self, aliases):
         return
 
     def add_command_formatting(self, command):
-        if command.description:
-            self.paginator.add_line(command.description)
-
         signature = self.get_command_signature(command)
+        
         if command.aliases:
-            self.paginator.add_line(signature)
+            self.paginator.add_line("> "+ str(signature))
             self.add_aliases_formatting(command.aliases)
         else:
-            self.paginator.add_line(signature, empty=True)
+            self.paginator.add_line("> "+ str(signature))
+        
+        if command.description:
+            desc_lis = command.description.splitlines()
+            self.paginator.add_line("> "+command.description, empty=True)
 
         if command.help:
             try:
-                self.paginator.add_line(command.help, empty=True)
+                self.paginator.add_line(">>> "+command.help)
             except RuntimeError:
                 for line in command.help.splitlines():
-                    self.paginator.add_line(line)
-                self.paginator.add_line()
+                    self.paginator.add_line("> "+line)
+                self.paginator.add_line("> ")
 
     def add_subcommand_formatting(self, command):
         fmt = f"\N{EN DASH} **{command.qualified_name}**"
         if command.short_doc:
             fmt += ": " + command.short_doc
-        self.paginator.add_line(fmt)
+        self.paginator.add_line("> "+fmt)
 
 
     async def send_bot_help(self, mapping):
-        self.paginator.add_line(">>> ")
         await super().send_bot_help(mapping)
 
     async def send_command_help(self, command):
-        self.paginator.add_line(">>> ")
         await super().send_command_help(command)
 
     async def send_group_help(self, group):
-        self.paginator.add_line(">>> ")
         await super().send_group_help(group)
 
     async def send_cog_help(self, cog):
-        self.paginator.add_line(">>> ")
         await super().send_cog_help(cog)
