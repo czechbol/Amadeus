@@ -21,14 +21,22 @@
 		"botroom redirect": "{user} {emote.sad} 👉 {channel}"
 	},
 	"base": {
+		"uptime_desc": "Checks bot uptime",
+		"ping_desc": "Checks bot latency",
+		"pong_desc": "Really?",
 		"really":  "Opravdu musíš zkusit všechno?"
 	},
 	"draw": {
-		"nameday cz": "Dnes má svátek {name} {emote.happy}",
-		"nameday sk": "Dnes má svátek {name} {emote.happy}"
+		"latex_desc": "Vykreslí LaTeX výraz",
+		"plot_desc": "Vykreslí funkce",
+		"digraph_desc": "Vykreslí Graphviz graf",
+		"latex_help": "`{prefix}latex [výraz]`\nPříklad:\n`{prefix}latex x^n + y^n = z^n`",
+		"plot_help": "`{prefix}plot [od] [do] rovnice1; rovnice2; rovnice3`; ...\nPříklad:\n`{prefix}plot /-10 10 x^2; x^3; x^4`",
+		"digraph_help": "Graphviz data musí být v code bloku.\nPro vykreslení je nutné přidat kliknout na reakci kterou na zprávu bot přidá.\nZkus tento příklad:\n```digraph G {\n\t\"Welcome\" -> \"To\"\n\t\"To\" -> \"Web\"\n\t\"To\" -> \"GraphViz!\"\n}```"
 	},
 	"vote": {
-		"vote_desc": "Použití vote:\n` {prefix}vote [datum] [čas] [otázka]\n[emoji] [odpověď 1]\n[emoji] [odpověď 2]\n... a tak dále`\n Datum je ve formátu `dd.MM.(yy)`. Čas je ve formátu `hh:mm`.\nPouze vyplněný čas použije den odeslání zprávy, pouze vyplněné datum použije čas 00:00.\nDatum a čas jsou nepovinné argumenty, hlasování bude bez jejich uvedení ukončeno po 1 hodině.\nLze použít jen custom emotes ze serverů kde je i bot.",
+		"vote_desc":"Hlasovací příkaz",
+		"vote_help": "Použití vote:\n` {prefix}vote [datum] [čas] [otázka]\n[emoji] [odpověď 1]\n[emoji] [odpověď 2]\n... a tak dále`\n Datum je ve formátu `dd.MM.(yy)`. Čas je ve formátu `hh:mm`.\nPouze vyplněný čas použije den odeslání zprávy, pouze vyplněné datum použije čas 00:00.\nDatum a čas jsou nepovinné argumenty, hlasování bude bez jejich uvedení ukončeno po 1 hodině.\nLze použít jen custom emotes ze serverů kde je i bot.",
 		"emote_unknown": "Pro `vote` jde použít jen emotes ze serveru kde jsem.",
 		"waiting": "Čekám na hlasy.\nHlasování skončí v {date}",
 		"vote_count": "Pořadí hlasů je:\n",

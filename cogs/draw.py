@@ -1,19 +1,21 @@
 import os
+import urllib
+import graphviz as gz
+from typing import Optional
+from sympy.plotting import plot
+from sympy import symbols, simplify
+
 import discord
 from discord.ext import commands
 
-import urllib
-import graphviz as gz
-
-from typing import Optional
-from sympy import symbols, simplify
-from sympy.plotting import plot
-
 from core import basecog
+from core.text import text
+from core.config import config
 
 
 class Draw(basecog.Basecog):
     """LaTeX and Graph drawing commands"""
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -30,7 +32,8 @@ class Draw(basecog.Basecog):
 
         return discord.File("assets/latex.png")
 
-    @commands.command()
+    @commands.command(help=text.fill("draw", "latex_help", prefix=config.prefix),
+                      brief=text.get("draw", "latex_desc"), description=text.get("draw", "latex_desc"))
     async def latex(self, ctx, *, equation):
         embed = await self.get_math_equation(equation)
         await ctx.send(file=embed)
@@ -38,18 +41,14 @@ class Draw(basecog.Basecog):
 
     """---------------------------------------------------------------------------------------------------------------------------"""
 
-    @commands.command()
-    async def plot(self, ctx, from_: Optional[float]=-10, to_: Optional[float]=10, *, inp: str):
-        """
-            !plot from_range to_range equation1; equation2; equation3; ...
-            example:
-                !plot -10 10 x^2; x^3; x^4
-        """
+    @commands.command(help=text.fill("draw", "plot_help", prefix=config.prefix),
+                      brief=text.get("draw", "plot_desc"), description=text.get("draw", "plot_desc"))
+    async def plot(self, ctx, from_: Optional[float] = -10, to_: Optional[float] = 10, *, inp: str):
         try:
             x = symbols('x')
             equations = inp.split(";")
-            fx = plot(*[simplify(eq) for eq in equations], (x, from_, to_), show=False)
-            
+            fx = plot(*[simplify(eq)
+                        for eq in equations], (x, from_, to_), show=False)
 
             fx.save("assets/plot.png")
             await ctx.send(file=discord.File("assets/plot.png"))
@@ -60,7 +59,10 @@ class Draw(basecog.Basecog):
 
     """---------------------------------------------------------------------------------------------------------------------------"""
 
-    @commands.command(name="digraph", aliases=("graphviz",))
+    @commands.command(name="digraph", aliases=("graphviz",),
+                      help=text.fill("draw", "digraph_help",
+                                     prefix=config.prefix),
+                      brief=text.get("draw", "digraph_desc"), description=text.get("draw", "digraph_desc"))
     async def digraph(self, ctx, *, equasion):
         """
         input equasion in dishraph format into graphviz
@@ -117,11 +119,11 @@ class Draw(basecog.Basecog):
 
         ctx = commands.Context(prefix=self.bot.command_prefix, guild=message.guild,
                                channel=message.channel, message=message, author=user)
-        await self.digraph.callback(self, ctx, equasion=message.content.strip("` ` `").replace("digraph\n", "",1))
+        await self.digraph.callback(self, ctx, equasion=message.content.strip("` ` `").replace("digraph\n", "", 1))
 
         await ctx.message.remove_reaction("▶", ctx.author)
         await ctx.message.remove_reaction("▶", self.bot.user)
 
 
 def setup(bot):
-    bot.add_cog(Math(bot))
+    bot.add_cog(Draw(bot))
