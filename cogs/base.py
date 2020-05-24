@@ -10,7 +10,7 @@ from core.config import config
 boottime = datetime.datetime.now().replace(microsecond=0)
 
 
-class Base (basecog.Basecog):
+class Base(basecog.Basecog):
     """Basic bot commands"""
 
     def __init__(self, bot: commands.Bot):

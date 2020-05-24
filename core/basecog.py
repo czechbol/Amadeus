@@ -10,7 +10,8 @@ from core.text import text
 from core import check, utils
 from config.messages import Messages as messages
 
-class Basecog (commands.Cog):
+
+class Basecog(commands.Cog):
     """Main cog class"""
 
     def __init__(self, bot):
@@ -22,7 +23,6 @@ class Basecog (commands.Cog):
         self.role_verify = None
         self.roles_elevated = None
 
-
     ##
     ## OBJECT GETTERS
     ##
@@ -30,23 +30,26 @@ class Basecog (commands.Cog):
         if self.guild is None:
             self.guild = self.bot.get_guild(config.guild_id)
         return self.guild
+
     def getSlave(self):
         if self.slave is None:
             self.slave = self.bot.get_guild(config.slave_id)
         return self.slave
+
     def getModRole(self):
         if self.role_mod is None:
             self.role_mod = self.getGuild().get_role(config.role_mod)
         return self.role_mod
+
     def getVerifyRole(self):
         if self.role_verify is None:
             self.role_verify = self.getGuild().get_role(config.role_verify)
         return self.role_verify
+
     def getElevatedRoles(self):
         if self.roles_elevated is None:
             self.roles_elevated = [self.getGuild().get_role(x) for x in config.roles_elevated]
         return self.roles_elevated
-
 
     ##
     ## Helper functions
@@ -56,11 +59,14 @@ class Basecog (commands.Cog):
         if ctx.command is None:
             return "(no command)"
 
-        path = ' '.join((p.name) for p in ctx.command.parents[::-1]) + \
-               ' ' if ctx.command.parents else ''
+        path = (
+            " ".join((p.name) for p in ctx.command.parents[::-1]) + " "
+            if ctx.command.parents
+            else ""
+        )
         return config.prefix + path + ctx.command.name
 
-    def _getEmbed (self, ctx: commands.Context, color: int = None, pin = False):
+    def _getEmbed(self, ctx: commands.Context, color: int = None, pin=False):
         """Helper function for creating embeds
 
         color: embed color
@@ -72,7 +78,7 @@ class Basecog (commands.Cog):
             title = "📌 " + self._getEmbedTitle(ctx)
         else:
             title = self._getEmbedTitle(ctx)
-        description = "**{}**".format(ctx.command.cog_name) if ctx.command else ''
+        description = "**{}**".format(ctx.command.cog_name) if ctx.command else ""
 
         embed = discord.Embed(title=title, description=description, color=color)
         if ctx.author is not None:
@@ -82,7 +88,7 @@ class Basecog (commands.Cog):
     def _getCommandSignature(self, ctx: commands.Context):
         """Return a 'cog:command_name' string"""
         if not ctx.command:
-            return 'UNKNOWN'
+            return "UNKNOWN"
         name = ctx.command.qualified_name.replace(" ", "_")
         if not ctx.command.cog:
             return name
@@ -92,7 +98,7 @@ class Basecog (commands.Cog):
     ##
     ## Utils
     ##
-    async def log (self, ctx, action: str, quote: bool = True, msg = None):
+    async def log(self, ctx, action: str, quote: bool = True, msg=None):
         """Log event"""
         channel = self.getGuild().get_channel(config.channel_guildlog)
         author = self.getGuild().get_member(ctx.author.id)
@@ -104,7 +110,7 @@ class Basecog (commands.Cog):
             message = "**{}** by {} in DM".format(action, user)
         else:
             message = "**{}** by {} in {}".format(action, user, ctx.channel.mention)
-        
+
         if ctx.guild and ctx.guild.id != config.guild_id:
             message += " (**{}**/{})".format(ctx.guild.name, ctx.guild.id)
 
@@ -118,7 +124,7 @@ class Basecog (commands.Cog):
         if quote:
             message += "\n> _{}_".format(ctx.message.content)
         await channel.send(message)
-        #TODO Save to log
+        # TODO Save to log
 
     async def roomCheck(self, ctx: commands.Context):
         """Send an message to prevent bot spamming"""
@@ -126,8 +132,9 @@ class Basecog (commands.Cog):
             return
         botspam = self.getGuild().get_channel(config.channel_botspam)
         if ctx.channel.id not in config.bot_allowed:
-            await ctx.send(text.fill("server", "botroom redirect",
-                user=ctx.author, channel=botspam))
+            await ctx.send(
+                text.fill("server", "botroom redirect", user=ctx.author, channel=botspam)
+            )
 
     async def deleteCommand(self, message, now: bool = True):
         """Try to delete the context message.
@@ -145,7 +152,7 @@ class Basecog (commands.Cog):
 
     def parseArg(self, arg: str = None):
         """Return true if supported argument is matched"""
-        #TODO Do this the proper way
+        # TODO Do this the proper way
         args = ["pin", "force"]
         return True if arg in args else False
 
@@ -153,21 +160,20 @@ class Basecog (commands.Cog):
         """Get yyyy-mm-dd HH:MM:SS string"""
         return datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
-
     ##
     ## Embeds
     ##
-    #TODO Create RubbergoddessException class
-    async def throwError (self, ctx: commands.Context, err,
-                                delete: bool = False, pin: bool = False):
+    # TODO Create RubbergoddessException class
+    async def throwError(
+        self, ctx: commands.Context, err, delete: bool = False, pin: bool = False
+    ):
         """Show an embed and log the error"""
         # Get error information
         err_desc = err if type(err) == "str" else str(err)
         if isinstance(err, Exception):
-            err = getattr(err, 'original', err)
+            err = getattr(err, "original", err)
             err_type = type(err).__name__
-            err_trace = ''.join(traceback
-                .format_exception(type(err), err, err.__traceback__))
+            err_trace = "".join(traceback.format_exception(type(err), err, err.__traceback__))
         else:
             err_type = "RubbergoddessException"
             err_trace = "No traceback\n**{}**".format(err)
@@ -197,9 +203,7 @@ class Basecog (commands.Cog):
         await self.deleteCommand(ctx, now=True)
         await self.log(ctx, self._getCommandSignature(ctx), quote=True, msg=err_type)
 
-
-    async def throwNotification (self, ctx: commands.Context, msg: str,
-                                 pin: bool = False):
+    async def throwNotification(self, ctx: commands.Context, msg: str, pin: bool = False):
         """Show an embed with a message."""
         msg = str(msg)
         # Do the debug
@@ -225,10 +229,9 @@ class Basecog (commands.Cog):
         else:
             await ctx.send(embed=embed, delete_after=config.delay_embed)
         await self.deleteCommand(ctx, now=True)
-        #TODO Should we log this?
+        # TODO Should we log this?
 
-
-    async def throwDescription (self, ctx: commands.Context, pin: bool = False):
+    async def throwDescription(self, ctx: commands.Context, pin: bool = False):
         """Show an embed with full docstring content."""
         embed = self._getEmbed(ctx)
         embed.add_field(name="About", value=ctx.command.short_doc)
@@ -237,24 +240,21 @@ class Basecog (commands.Cog):
         else:
             await ctx.send(embed=embed, delete_after=config.delay_embed)
         await self.deleteCommand(ctx, now=True)
-        
 
-    async def throwHelp (self, ctx: commands.Context, pin: bool = False):
+    async def throwHelp(self, ctx: commands.Context, pin: bool = False):
         """Show help for command groups"""
         embed = self._getEmbed(ctx)
         embed.add_field(name="Help", value=self.__formatHelp(ctx.command.help))
 
         if isinstance(ctx.command, commands.Group) and ctx.command.commands:
-            embed.add_field(name="-"*60, value="**SUBCOMMANDS**:", inline=False)
-            #TODO Sort by lambda or something
+            embed.add_field(name="-" * 60, value="**SUBCOMMANDS**:", inline=False)
+            # TODO Sort by lambda or something
             for opt in ctx.command.commands:
                 embed.add_field(name=opt.name, value=opt.short_doc, inline=False)
         await ctx.send(embed=embed, delete_after=config.delay_embed)
         await self.deleteCommand(ctx, now=True)
 
-
-
-    #TODO Move helper functions here
+    # TODO Move helper functions here
     ##
     ## HELPER FUNCTIONS
     ##
@@ -264,7 +264,7 @@ class Basecog (commands.Cog):
         message: The text to be sent
         code: Whether to format the output as a code
         """
-        message = list(message[0+i:1960+i] for i in range(0, len(message), 1960))
+        message = list(message[0 + i : 1960 + i] for i in range(0, len(message), 1960))
         for m in message:
             if code:
                 await ctx.send("```\n{}```".format(m))

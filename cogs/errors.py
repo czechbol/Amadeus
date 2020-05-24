@@ -16,15 +16,13 @@ class Errors(basecog.Basecog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error):
         """Handle errors"""
-        if hasattr(ctx.command, 'on_error') \
-                or hasattr(ctx.command, 'on_command_error'):
+        if hasattr(ctx.command, "on_error") or hasattr(ctx.command, "on_command_error"):
             return
-        error = getattr(error, 'original', error)
+        error = getattr(error, "original", error)
 
         printed = False
         if config.debug == 2:
-            print(''.join(traceback.format_exception(
-                type(error), error, error.__traceback__)))
+            print("".join(traceback.format_exception(type(error), error, error.__traceback__)))
             printed = True
 
         if isinstance(error, discord.Forbidden):
@@ -78,15 +76,14 @@ class Errors(basecog.Basecog):
         await self.throwError(ctx, error)
         await self.log(ctx, "on_command_error", quote=True, msg=error)
 
-        output = 'Ignoring exception in command {}: \n\n'.format(ctx.command)
-        output += ''.join(traceback.format_exception(type(error),
-                                                     error, error.__traceback__))
+        output = "Ignoring exception in command {}: \n\n".format(ctx.command)
+        output += "".join(traceback.format_exception(type(error), error, error.__traceback__))
         # print traceback to stdout
         if not printed:
             print(output)
         # send traceback to dedicated channel
         channel = self.bot.get_channel(config.channel_botdev)
-        output = list(output[0+i:1960+i] for i in range(0, len(output), 1960))
+        output = list(output[0 + i : 1960 + i] for i in range(0, len(output), 1960))
         if channel is not None:
             for message in output:
                 await channel.send("```\n{}```".format(message))

@@ -27,13 +27,17 @@ class Draw(basecog.Basecog):
         send the result image to channel
         """
         tex2imgURL = "http://www.sciweavers.org/tex2img.php?eq={}&bc=Black&fc=White&im=png&fs=18&ff=arev&edit=0"
-        urllib.request.urlretrieve(tex2imgURL.format(urllib.parse.quote(equation)),
-                                   "assets/latex.png")
+        urllib.request.urlretrieve(
+            tex2imgURL.format(urllib.parse.quote(equation)), "assets/latex.png"
+        )
 
         return discord.File("assets/latex.png")
 
-    @commands.command(help=text.fill("draw", "latex_help", prefix=config.prefix),
-                      brief=text.get("draw", "latex_desc"), description=text.get("draw", "latex_desc"))
+    @commands.command(
+        help=text.fill("draw", "latex_help", prefix=config.prefix),
+        brief=text.get("draw", "latex_desc"),
+        description=text.get("draw", "latex_desc"),
+    )
     async def latex(self, ctx, *, equation):
         embed = await self.get_math_equation(equation)
         await ctx.send(file=embed)
@@ -41,14 +45,18 @@ class Draw(basecog.Basecog):
 
     """---------------------------------------------------------------------------------------------------------------------------"""
 
-    @commands.command(help=text.fill("draw", "plot_help", prefix=config.prefix),
-                      brief=text.get("draw", "plot_desc"), description=text.get("draw", "plot_desc"))
-    async def plot(self, ctx, from_: Optional[float] = -10, to_: Optional[float] = 10, *, inp: str):
+    @commands.command(
+        help=text.fill("draw", "plot_help", prefix=config.prefix),
+        brief=text.get("draw", "plot_desc"),
+        description=text.get("draw", "plot_desc"),
+    )
+    async def plot(
+        self, ctx, from_: Optional[float] = -10, to_: Optional[float] = 10, *, inp: str
+    ):
         try:
-            x = symbols('x')
+            x = symbols("x")
             equations = inp.split(";")
-            fx = plot(*[simplify(eq)
-                        for eq in equations], (x, from_, to_), show=False)
+            fx = plot(*[simplify(eq) for eq in equations], (x, from_, to_), show=False)
 
             fx.save("assets/plot.png")
             await ctx.send(file=discord.File("assets/plot.png"))
@@ -59,29 +67,28 @@ class Draw(basecog.Basecog):
 
     """---------------------------------------------------------------------------------------------------------------------------"""
 
-    @commands.command(name="digraph", aliases=("graphviz",),
-                      help=text.fill("draw", "digraph_help",
-                                     prefix=config.prefix),
-                      brief=text.get("draw", "digraph_desc"), description=text.get("draw", "digraph_desc"))
+    @commands.command(
+        name="digraph",
+        aliases=("graphviz",),
+        help=text.fill("draw", "digraph_help", prefix=config.prefix),
+        brief=text.get("draw", "digraph_desc"),
+        description=text.get("draw", "digraph_desc"),
+    )
     async def digraph(self, ctx, *, equasion):
         """
         input equasion in dishraph format into graphviz
         save the file into assets/graphviz.png
         send the file to channel
         """
-        src = gz.Source(
-            equasion,
-            format="png")
-        src.render('assets/graphviz', view=False)
+        src = gz.Source(equasion, format="png")
+        src.render("assets/graphviz", view=False)
 
         await ctx.send(file=discord.File("assets/graphviz.png"))
         os.remove("assets/graphviz")
         os.remove("assets/graphviz.png")
 
     def is_graphviz_message(self, body):
-        return (body.startswith("```digraph") and
-                body.endswith("```") and
-                body.count("\n") >= 2)
+        return body.startswith("```digraph") and body.endswith("```") and body.count("\n") >= 2
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -117,9 +124,16 @@ class Draw(basecog.Basecog):
         if self.bot.user not in await reaction.users().flatten():
             return
 
-        ctx = commands.Context(prefix=self.bot.command_prefix, guild=message.guild,
-                               channel=message.channel, message=message, author=user)
-        await self.digraph.callback(self, ctx, equasion=message.content.strip("` ` `").replace("digraph\n", "", 1))
+        ctx = commands.Context(
+            prefix=self.bot.command_prefix,
+            guild=message.guild,
+            channel=message.channel,
+            message=message,
+            author=user,
+        )
+        await self.digraph.callback(
+            self, ctx, equasion=message.content.strip("` ` `").replace("digraph\n", "", 1),
+        )
 
         await ctx.message.remove_reaction("▶", ctx.author)
         await ctx.message.remove_reaction("▶", self.bot.user)
