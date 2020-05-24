@@ -47,6 +47,6 @@
 	},
 	"weeb": {
 		"sauce_desc": "Gets that sweet sauce",
-		"sauce_help": "`{prefix}sauce magic_number`\nPříklad:\n`{prefix}sauce 177013`"
+		"sauce_help": "`{prefix}sauce magic_number`\nPříklad:\n`{prefix}sauce 91988`"
 	}
 }
