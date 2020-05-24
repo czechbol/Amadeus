@@ -21,6 +21,7 @@ class Weeb(basecog.Basecog):
         self.bot = bot
 
     @commands.is_nsfw()
+    @commands.has_role("weeb") 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(brief=text.get("weeb", "sauce_desc"), description=text.get("weeb", "sauce_desc"), help=text.fill("weeb", "sauce_help", prefix=config.prefix))
     async def sauce(self, ctx):
@@ -61,7 +62,11 @@ class Weeb(basecog.Basecog):
                     categories.append(tag["name"])
             url = "https://nhentai.net/g/{BOOK_ID}/".format(
                 BOOK_ID=BOOK_ID)
-            cover_url = 'https://i.nhentai.net/galleries/{MEDIA_ID}/1.jpg'.format(
+            if dic["images"]["pages"][0]["t"] == "j":
+                cover_url = 'https://i.nhentai.net/galleries/{MEDIA_ID}/1.jpg'.format(
+                MEDIA_ID=dic["media_id"])
+            elif dic["images"]["pages"][0]["t"] == "p":
+                cover_url = 'https://i.nhentai.net/galleries/{MEDIA_ID}/1.png'.format(
                 MEDIA_ID=dic["media_id"])
             title = dic["title"]["pretty"]
             num_pages = dic["num_pages"]
