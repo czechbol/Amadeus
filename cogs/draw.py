@@ -1,7 +1,13 @@
 import os
+import re
+import numpy
 import urllib
 import graphviz as gz
 from typing import Optional
+from matplotlib import pyplot as plt
+from numpy import arange, meshgrid, sqrt
+
+
 from sympy.plotting import plot
 from sympy import symbols, simplify
 
@@ -18,8 +24,35 @@ class Draw(basecog.Basecog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.replacements = {
+            "sin": "numpy.sin",
+            "cos": "numpy.cos",
+            "exp": "numpy.exp",
+            "sqrt": "numpy.sqrt",
+            "^": "**",
+        }
+        self.allowed_words = [
+            "x",
+            "sin",
+            "cos",
+            "sqrt",
+            "exp",
+        ]
 
-    """---------------------------------------------------------------------------------------------------------------------------"""
+    def string2func(self, string):
+        """ evaluates the string and returns a function of x """
+        # find all words and check if all are allowed:
+        for word in re.findall("[a-zA-Z_]+", string):
+            if word not in self.allowed_words:
+                raise ValueError('"{}" is forbidden to use in math expression'.format(word))
+
+        for old, new in self.replacements.items():
+            string = string.replace(old, new)
+
+        def func(x):
+            return eval(string)
+
+        return func
 
     async def get_math_equation(self, equation):
         """
@@ -43,29 +76,47 @@ class Draw(basecog.Basecog):
         await ctx.send(file=embed)
         os.remove("assets/latex.png")
 
-    """---------------------------------------------------------------------------------------------------------------------------"""
-
     @commands.command(
         help=text.fill("draw", "plot_help", prefix=config.prefix),
         brief=text.get("draw", "plot_desc"),
         description=text.get("draw", "plot_desc"),
     )
-    async def plot(
-        self, ctx, from_: Optional[float] = -10, to_: Optional[float] = 10, *, inp: str
-    ):
-        try:
-            x = symbols("x")
-            equations = inp.split(";")
-            fx = plot(*[simplify(eq) for eq in equations], (x, from_, to_), show=False)
+    async def plot(self, ctx, from_: Optional[int] = -10, to_: Optional[int] = 10, *, inp: str):
 
-            fx.save("assets/plot.png")
+        equations = inp.split("; ")
+        msg = text.get("draw", "plot_err")
+        fig = plt.figure(dpi=300)
+        ax = fig.add_subplot(1, 1, 1)
+
+        # Move left y-axis and bottim x-axis to centre, passing through (0,0)
+        ax.spines["bottom"].set_position("zero")
+        ax.spines["left"].set_position("zero")
+
+        # Eliminate upper and right axes
+        ax.spines["right"].set_color("none")
+        ax.spines["top"].set_color("none")
+
+        # Show ticks in the left and lower axes only
+        ax.xaxis.set_tick_params("bottom", direction="inout")
+        ax.yaxis.set_tick_params("left", direction="inout")
+        successful_eq = 0
+        for eq in equations:
+            try:
+                func = self.string2func(eq)
+                x = numpy.linspace(from_, to_, 250)
+                plt.plot(x, func(x))
+                plt.xlim(from_, to_)
+                successful_eq += 1
+            except Exception as e:
+                msg += "\n" + eq + " - " + str(e)
+        if msg != text.get("draw", "plot_err"):
+            await ctx.send(msg)
+        if successful_eq > 0:
+            plt.savefig("assets/plot.png")
+            plt.clf()
             await ctx.send(file=discord.File("assets/plot.png"))
             os.remove("assets/plot.png")
-
-        except Exception as e:
-            await ctx.send(f"{e}")
-
-    """---------------------------------------------------------------------------------------------------------------------------"""
+        return
 
     @commands.command(
         name="digraph",
