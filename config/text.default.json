@@ -21,7 +21,9 @@
 		"uptime_desc": "Checks bot uptime",
 		"ping_desc": "Checks bot latency",
 		"pong_desc": "Really?",
-		"really": "Opravdu musíš zkusit všechno?"
+		"really": "Opravdu musíš zkusit všechno?",
+		"uhoh_desc": "Počet uh ohs od spuštění",
+		"uh oh": "{cnt} uh ohs od spuštění"
 	},
 	"draw": {
 		"latex_desc": "Vykreslí LaTeX výraz",

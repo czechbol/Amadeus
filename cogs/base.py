@@ -9,12 +9,32 @@ from core.config import config
 
 boottime = datetime.datetime.now().replace(microsecond=0)
 
+uhoh_ctr = 0
+
 
 class Base(basecog.Basecog):
     """Basic bot commands"""
 
     def __init__(self, bot: commands.Bot):
         super().__init__(bot)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        global uhoh_ctr
+
+        if message.content == "PR":
+            await message.channel.send("https://github.com/Czechbol/Amadeus/pulls")
+        elif message.content == "🔧":
+            await message.channel.send("https://github.com/Czechbol/Amadeus/issues")
+        elif "uh oh" in message.content.lower() and not message.author.bot:
+            await message.channel.send("uh oh")
+            uhoh_ctr += 1
+
+    @commands.command(description=text.get("base", "uhoh_desc"))
+    async def uhoh(self, ctx):
+        global uhoh_ctr
+
+        await ctx.send(text.fill("base", "uh oh", cnt=uhoh_ctr))
 
     @commands.cooldown(rate=2, per=20.0, type=commands.BucketType.user)
     @commands.command(description=text.get("base", "uptime_desc"))
