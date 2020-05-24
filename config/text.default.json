@@ -44,5 +44,9 @@
 		"ends": "Hlasování skončí {date}",
 		"not_in_cache": "Pro toto hlasování nelze zobrazovat průběžné výsledky, jen ten konečný.",
 		"ended": "Hlasování skončilo {now}\n"
+	},
+	"weeb": {
+		"sauce_desc": "Gets that sweet sauce",
+		"sauce_help": "`{prefix}sauce magic_number`\nPříklad:\n`{prefix}sauce 177013`"
 	}
 }
