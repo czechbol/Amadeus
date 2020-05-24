@@ -99,7 +99,7 @@ class Vote(basecog.Basecog):
         message = ctx.message
         lines = message.content.split("\n")
         if len(lines) < 3:
-            await ctx.send(text.fill("vote", "vote_desc", prefix=config.prefix))
+            await ctx.send(">>> "+text.fill("vote", "vote_help", prefix=config.prefix))
             return
         now = datetime.now()
         try:
