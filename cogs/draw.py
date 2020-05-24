@@ -83,7 +83,14 @@ class Draw(basecog.Basecog):
     )
     async def plot(self, ctx, from_: Optional[int] = -10, to_: Optional[int] = 10, *, inp: str):
 
-        equations = inp.split("; ")
+        equations = (
+            inp.replace("@", "")
+            .replace("#", "")
+            .replace("'", "")
+            .replace("`", "")
+            .replace('"', "")
+            .split("; ")
+        )
         msg = text.get("draw", "plot_err")
         fig = plt.figure(dpi=300)
         ax = fig.add_subplot(1, 1, 1)
