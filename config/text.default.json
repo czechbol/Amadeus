@@ -29,6 +29,7 @@
 		"latex_desc": "Vykreslí LaTeX výraz",
 		"plot_desc": "Vykreslí funkce",
 		"digraph_desc": "Vykreslí Graphviz graf",
+		"plot_err": "Nebylo možné vykreslit tyto funkce:",
 		"latex_help": "`{prefix}latex [výraz]`\nPříklad:\n`{prefix}latex x^n + y^n = z^n`",
 		"plot_help": "`{prefix}plot od do rovnice1; rovnice2; rovnice3`; ...\nPříklad:\n`{prefix}plot -10 10 x^2; x^3; x^4`",
 		"digraph_help": "Graphviz data musí být v code bloku.\nPro vykreslení je nutné přidat kliknout na reakci kterou na zprávu bot přidá.\nZkus tento příklad:\n```digraph G {\n\t\"Welcome\" -> \"To\"\n\t\"To\" -> \"Web\"\n\t\"To\" -> \"GraphViz!\"\n}```"
