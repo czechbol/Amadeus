@@ -6,7 +6,7 @@ from discord.ext import commands
 from core.config import config
 from core.emote import emote
 from core import basecog, utils
-from config.messages import Messages as messages
+from core.text import text
 
 
 class Errors(basecog.Basecog):
@@ -32,35 +32,35 @@ class Errors(basecog.Basecog):
                 return
 
         if isinstance(error, commands.MissingPermissions):
-            await self.throwNotification(ctx, messages.err_no_permission)
+            await self.throwNotification(ctx, text.get("error", "no user permission"))
             await self.log(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
             return
 
         if isinstance(error, commands.BotMissingPermissions):
-            await self.throwNotification(ctx, messages.err_no_permission_bot)
+            await self.throwNotification(ctx, text.get("error", "no bot permission"))
             await self.log(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
             return
 
         if isinstance(error, commands.CommandOnCooldown):
-            await self.throwNotification(ctx, messages.err_cooldown)
+            await self.throwNotification(ctx, text.get("error", "cooldown"))
             return
 
         elif isinstance(error, commands.CheckFailure):
             # TODO Extract requirements and add them to the embed
-            await self.throwNotification(ctx, messages.err_no_requirements)
+            await self.throwNotification(ctx, text.get("error", "no requirements"))
             await self.log(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
             return
 
         elif isinstance(error, commands.BadArgument):
-            await self.throwNotification(ctx, messages.err_bad_argument)
+            await self.throwNotification(ctx, text.get("error", "argument"))
             return
         elif isinstance(error, commands.ExpectedClosingQuoteError):
-            await self.throwNotification(ctx, messages.err_bad_argument)
+            await self.throwNotification(ctx, text.get("error", "argument"))
             return
 
         elif isinstance(error, commands.CommandNotFound):
             if not ctx.message.content[0] in config.prefixes:
-                await self.throwNotification(ctx, messages.err_no_command)
+                await self.throwNotification(ctx, text.get("error", "no command"))
             return
 
         elif isinstance(error, commands.ExtensionError):

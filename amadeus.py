@@ -74,7 +74,7 @@ async def reload(ctx, extension):
         await ctx.send(f"Rozšíření **{extension}** aktualizováno.")
         await basecog.log(ctx, f"Cog {extension} reloaded")
         if "docker" in config.loader:
-            await ctx.send("Jsem ale zavřená v Dockeru, víš o tom?")
+            await ctx.send("Jsem ale zavřený v Dockeru, víš o tom?")
     except Exception as e:
         await ctx.send(f"Aktualizace rozšíření **{extension}** se nepovedla.")
         await basecog.log(ctx, "Cog reloading failed", msg=e)
