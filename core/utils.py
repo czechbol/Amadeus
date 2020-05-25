@@ -1,6 +1,7 @@
-import git
 import discord
 from discord.ext import commands
+
+import git
 
 from core import config
 from config.messages import Messages

@@ -2,8 +2,6 @@ from repository.base_repository import BaseRepository
 from repository.database import session
 from repository.database.vote import Vote
 
-from datetime import datetime
-
 
 class VoteRepository(BaseRepository):
     # unknown - pending - verified - kicked - banned

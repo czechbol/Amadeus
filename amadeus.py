@@ -1,15 +1,15 @@
 import traceback
 from datetime import datetime
 
-import discord
 from discord.ext import commands
 
-from core import check, help, utils, basecog
-from core.config import config
 from core.emote import emote
+from core.config import config
+from core import check, help, utils, basecog
+
 from features import presence
-from repository.database import database
 from repository.database import session
+from repository.database import database
 from repository.database.vote import Vote
 
 bot = commands.Bot(
