@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 
 
@@ -35,7 +34,6 @@ class Help(commands.MinimalHelpCommand):
 
     def add_bot_commands_formatting(self, commands, heading):
         if commands:
-            cmds = []
             joined = ", ".join(c.name for c in commands)
             self.paginator.add_line("> " + f"**{heading}**")
             self.paginator.add_line("> " + joined)
@@ -53,7 +51,6 @@ class Help(commands.MinimalHelpCommand):
             self.paginator.add_line("> " + str(signature))
 
         if command.description:
-            desc_lis = command.description.splitlines()
             self.paginator.add_line("> " + command.description, empty=True)
 
         if command.help:

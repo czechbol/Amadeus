@@ -1,15 +1,11 @@
 import os
 import re
-import numpy
 import urllib
-import graphviz as gz
 from typing import Optional
+
+import numpy
+import graphviz as gz
 from matplotlib import pyplot as plt
-from numpy import arange, meshgrid, sqrt
-
-
-from sympy.plotting import plot
-from sympy import symbols, simplify
 
 import discord
 from discord.ext import commands
@@ -27,16 +23,24 @@ class Draw(basecog.Basecog):
         self.replacements = {
             "sin": "numpy.sin",
             "cos": "numpy.cos",
+            "tan": "numpy.tan",
             "exp": "numpy.exp",
+            "log": "numpy.log",
             "sqrt": "numpy.sqrt",
+            "cbrt": "numpy.cbrt",
+            "abs": "numpy.absolute",
             "^": "**",
         }
         self.allowed_words = [
             "x",
             "sin",
             "cos",
+            "tan",
             "sqrt",
+            "cbrt",
             "exp",
+            "log",
+            "abs",
         ]
 
     def string2func(self, string):
@@ -81,7 +85,9 @@ class Draw(basecog.Basecog):
         brief=text.get("draw", "plot_desc"),
         description=text.get("draw", "plot_desc"),
     )
-    async def plot(self, ctx, from_: Optional[int] = -10, to_: Optional[int] = 10, *, inp: str):
+    async def plot(
+        self, ctx, from_: Optional[float] = -10, to_: Optional[float] = 10, *, inp: str
+    ):
 
         equations = (
             inp.replace("@", "")
@@ -89,9 +95,9 @@ class Draw(basecog.Basecog):
             .replace("'", "")
             .replace("`", "")
             .replace('"', "")
-            .split("; ")
+            .split(";")
         )
-        msg = text.get("draw", "plot_err")
+
         fig = plt.figure(dpi=300)
         ax = fig.add_subplot(1, 1, 1)
 
@@ -106,11 +112,13 @@ class Draw(basecog.Basecog):
         # Show ticks in the left and lower axes only
         ax.xaxis.set_tick_params("bottom", direction="inout")
         ax.yaxis.set_tick_params("left", direction="inout")
+
         successful_eq = 0
+        msg = text.get("draw", "plot_err")
         for eq in equations:
             try:
                 func = self.string2func(eq)
-                x = numpy.linspace(from_, to_, 250)
+                x = numpy.linspace(from_, to_, 1000)
                 plt.plot(x, func(x))
                 plt.xlim(from_, to_)
                 successful_eq += 1

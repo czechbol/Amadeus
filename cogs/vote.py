@@ -1,20 +1,18 @@
 import re
-import typing
 import asyncio
-import dateutil
 from datetime import datetime
 from datetime import timedelta
+
+import dateutil
 import dateutil.parser as dparser
+
+import discord
+from discord.ext import commands
 
 from core import basecog
 from core.text import text
 from core.config import config
 from repository import vote_repo
-
-import discord
-from discord.ext import commands
-from discord.ext.commands import BadArgument
-from discord import Reaction, RawReactionActionEvent, NotFound, HTTPException
 
 
 repository = vote_repo.VoteRepository()

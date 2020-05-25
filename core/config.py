@@ -1,5 +1,5 @@
-import json
 import sys
+import json
 
 
 class Config:
@@ -78,13 +78,6 @@ class Config:
         self.role_verify = self.get("roles", "verify_id")
         self.role_mod = self.get("roles", "mod_id")
         self.roles_elevated = self.get("roles", "elevated_ids")
-
-        ##
-        ## LIBRARIAN COG
-        self.starting_week = self.get("librarian cog", "starting week")
-        self.nameday_cz = self.get("librarian cog", "nameday cz")
-        self.nameday_sk = self.get("librarian cog", "nameday sk")
-        self.weather_token = self.get("librarian cog", "weather token")
 
         ##
         ## COMPATIBILITY
