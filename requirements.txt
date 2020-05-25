@@ -1,8 +1,9 @@
 discord
 gitpython
 sqlalchemy
-psycopg2
+psycopg2-binary
 requests
 graphviz
 xdot
+scipy
 matplotlib
