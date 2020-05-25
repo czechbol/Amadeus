@@ -4,7 +4,7 @@ import urllib
 from typing import Optional
 
 import numpy
-import scipy
+from scipy.special import gamma
 import graphviz as gz
 from matplotlib import pyplot as plt
 
@@ -46,7 +46,7 @@ class Draw(basecog.Basecog):
             "sqrt": "numpy.sqrt",
             "cbrt": "numpy.cbrt",
             "abs": "numpy.absolute",
-            "fact": "scipy.special.gamma",
+            "fact": "gamma",
         }
         self.rep_op = {
             "+": " + ",
