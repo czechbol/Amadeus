@@ -63,6 +63,8 @@ class Draw(basecog.Basecog):
         send the text equasion to the API
         send the result image to channel
         """
+        if not os.path.isdir("assets"):
+            os.mkdir("assets")
         tex2imgURL = "http://www.sciweavers.org/tex2img.php?eq={}&bc=Black&fc=White&im=png&fs=18&ff=arev&edit=0"
         urllib.request.urlretrieve(
             tex2imgURL.format(urllib.parse.quote(equation)), "assets/latex.png"
@@ -127,6 +129,8 @@ class Draw(basecog.Basecog):
         if msg != text.get("draw", "plot_err"):
             await ctx.send(msg)
         if successful_eq > 0:
+            if not os.path.isdir("assets"):
+                os.mkdir("assets")
             plt.savefig("assets/plot.png")
             plt.clf()
             await ctx.send(file=discord.File("assets/plot.png"))
@@ -147,6 +151,8 @@ class Draw(basecog.Basecog):
         send the file to channel
         """
         src = gz.Source(equasion, format="png")
+        if not os.path.isdir("assets"):
+            os.mkdir("assets")
         src.render("assets/graphviz", view=False)
 
         await ctx.send(file=discord.File("assets/graphviz.png"))
