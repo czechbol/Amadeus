@@ -1,13 +1,13 @@
-FROM python:3.7-alpine
+FROM python:3.8-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-RUN apk update && apk add gcc g++ git postgresql-dev musl-dev tzdata
-RUN apk add jpeg-dev zlib-dev freetype-dev lcms2-dev openjpeg-dev tiff-dev tk-dev tcl-dev
-RUN apk add graphviz
-RUN apk --no-cache add msttcorefonts-installer fontconfig && \
-    update-ms-fonts && \
-    fc-cache -f
+RUN apt-get update && apt-get -qq install wget gnupg1
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" >> etc/apt/sources.list.d/pgdg.list
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+RUN apt-get update && apt-get -qq install git postgresql-12 tzdata
+RUN apt-get -qq install graphviz
+RUN apt-get clean && apt-get autoremove -y
 ENV TZ=Europe/Prague
 
 VOLUME /Amadeus
