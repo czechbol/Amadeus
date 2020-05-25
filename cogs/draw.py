@@ -4,11 +4,13 @@ import urllib
 from typing import Optional
 
 import numpy
+import scipy
 import graphviz as gz
 from matplotlib import pyplot as plt
 
 import discord
 from discord.ext import commands
+from discord.utils import escape_markdown, escape_mentions
 
 from core import basecog
 from core.text import text
@@ -20,38 +22,56 @@ class Draw(basecog.Basecog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.replacements = {
+        self.rep_exp = {
+            "x": "x",
             "sin": "numpy.sin",
             "cos": "numpy.cos",
             "tan": "numpy.tan",
+            "tg": "numpy.tan",
+            "arcsin": "numpy.arcsin",
+            "arccos": "numpy.arccos",
+            "arctan": "numpy.arctan",
+            "arctg": "numpy.arctg",
+            "sinh": "numpy.sinh",
+            "cosh": "numpy.cosh",
+            "tanh": "numpy.tanh",
+            "tgh": "numpy.tgh",
+            "arcsinh": "numpy.arcsinh",
+            "arccosh": "numpy.arccosh",
+            "arctanh": "numpy.arctanh",
+            "arctgh": "numpy.arctgh",
             "exp": "numpy.exp",
-            "log": "numpy.log",
+            "log": "numpy.log10",
+            "ln": "numpy.log",
             "sqrt": "numpy.sqrt",
             "cbrt": "numpy.cbrt",
             "abs": "numpy.absolute",
-            "^": "**",
+            "fact": "scipy.special.gamma",
         }
-        self.allowed_words = [
-            "x",
-            "sin",
-            "cos",
-            "tan",
-            "sqrt",
-            "cbrt",
-            "exp",
-            "log",
-            "abs",
-        ]
+        self.rep_op = {
+            "+": " + ",
+            "-": " - ",
+            "*": " * ",
+            "/": " / ",
+            "//": " // ",
+            "%": " % ",
+            "^": " ** ",
+        }
 
     def string2func(self, string):
         """ evaluates the string and returns a function of x """
+        # surround operators with spaces and replace ^ with **
+        for old, new in self.rep_op.items():
+            string = string.replace(old, new)
+        string = " ".join(string.split())
+
         # find all words and check if all are allowed:
         for word in re.findall("[a-zA-Z_]+", string):
-            if word not in self.allowed_words:
+            if word not in self.rep_exp.keys():
                 raise ValueError('"{}" is forbidden to use in math expression'.format(word))
 
-        for old, new in self.replacements.items():
-            string = string.replace(old, new)
+        for old, new in self.rep_exp.items():
+            string = re.sub(rf"\b{old}\b", new, string)
 
         def func(x):
             return eval(string)
@@ -88,24 +108,16 @@ class Draw(basecog.Basecog):
         description=text.get("draw", "plot_desc"),
     )
     async def plot(
-        self, ctx, from_: Optional[float] = -10, to_: Optional[float] = 10, *, inp: str
+        self, ctx, xmin: Optional[float] = -10, xmax: Optional[float] = 10, *, inp: str
     ):
 
-        equations = (
-            inp.replace("@", "")
-            .replace("#", "")
-            .replace("'", "")
-            .replace("`", "")
-            .replace('"', "")
-            .split(";")
-        )
+        equations = escape_mentions(escape_markdown(inp)).split(";")
 
         fig = plt.figure(dpi=300)
         ax = fig.add_subplot(1, 1, 1)
 
-        # Move left y-axis and bottim x-axis to centre, passing through (0,0)
-        ax.spines["bottom"].set_position("zero")
-        ax.spines["left"].set_position("zero")
+        if xmin < 0 < xmax:
+            ax.spines["left"].set_position("zero")
 
         # Eliminate upper and right axes
         ax.spines["right"].set_color("none")
@@ -117,12 +129,13 @@ class Draw(basecog.Basecog):
 
         successful_eq = 0
         msg = text.get("draw", "plot_err")
+        numpy.seterr(divide="ignore", invalid="ignore")
         for eq in equations:
             try:
                 func = self.string2func(eq)
-                x = numpy.linspace(from_, to_, 1000)
+                x = numpy.linspace(xmin, xmax, 1000)
                 plt.plot(x, func(x))
-                plt.xlim(from_, to_)
+                plt.xlim(xmin, xmax)
                 successful_eq += 1
             except Exception as e:
                 msg += "\n" + eq + " - " + str(e)
@@ -131,7 +144,7 @@ class Draw(basecog.Basecog):
         if successful_eq > 0:
             if not os.path.isdir("assets"):
                 os.mkdir("assets")
-            plt.savefig("assets/plot.png")
+            plt.savefig("assets/plot.png", bbox_inches="tight", dpi=100)
             plt.clf()
             await ctx.send(file=discord.File("assets/plot.png"))
             os.remove("assets/plot.png")
