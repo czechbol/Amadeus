@@ -100,6 +100,7 @@ class Vote(basecog.Basecog):
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
         rest_is_raw=True,
+        brief=text.get("vote", "vote_desc"),
         description=text.get("vote", "vote_desc"),
         help=text.fill("vote", "vote_help", prefix=config.prefix),
     )

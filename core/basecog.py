@@ -7,8 +7,6 @@ from discord.ext import commands
 
 from core.config import config
 from core.text import text
-from core import check, utils
-from config.messages import Messages as messages
 
 
 class Basecog(commands.Cog):
