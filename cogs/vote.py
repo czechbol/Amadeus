@@ -125,19 +125,23 @@ class Vote(basecog.Basecog):
         except dateutil.parser._parser.ParserError:
             date = now + timedelta(hours=1)
         votes = []
-        for line in lines:
-            emote = re.match(r"<:\w*:\d*>", line)
-            if emote is not None:
-                for emoji in self.bot.emojis:
-                    if str(emoji) in line:
-                        votes.append(
-                            {
-                                "emote": emoji,
-                                "option": line.replace(str(emoji) + " ", ""),
-                                "num_votes": 0,
-                            }
-                        )
-                        break
+        for idx, line in enumerate(lines):
+            if idx > 0:
+                emote = re.match(r"<:\w*:\d*>", line)
+                if emote is not None:
+                    for emoji in self.bot.emojis:
+                        if str(emoji) in line:
+                            votes.append(
+                                {
+                                    "emote": emoji,
+                                    "option": line.replace(str(emoji) + " ", ""),
+                                    "num_votes": 0,
+                                }
+                            )
+                            break
+                    else:
+                        await ctx.send(text.get("vote", "emote_unknown"))
+                        return
                 else:
                     await ctx.send(text.get("vote", "emote_unknown"))
                     return
