@@ -8,6 +8,7 @@ import dateutil.parser as dparser
 
 import discord
 from discord.ext import commands
+from discord.utils import escape_markdown, escape_mentions
 
 from core import basecog
 from core.text import text
@@ -76,6 +77,7 @@ class Vote(basecog.Basecog):
                         content += text.fill(
                             "vote", "ends", date=date.strftime("%Y-%m-%d %H:%M:%S")
                         )
+                        content = escape_mentions(escape_markdown(content))
                         await edit_msg.edit(content=content)
                     else:
                         if text.get("vote", "not_in_cache") not in edit_msg.content:
@@ -96,14 +98,18 @@ class Vote(basecog.Basecog):
                 if reaction.emoji == option["emote"]:
                     option["num_votes"] = reaction.count
 
+        lines = vote_msg.content.split("\n")
+
         content = text.fill("vote", "ended", now=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        content += lines[0] + "\n"
         votes = sorted(votes, key=lambda i: (i["num_votes"]), reverse=True)
         for option in votes:
             content += text.fill(
-                "vote", "option", option=option["option"], num=option["num_votes"] - 1
+                "vote", "option", option=option["option"], num=option["num_votes"] - 1,
             )
+        content = escape_mentions(escape_markdown(content))
 
-        await edit_msg.edit(content=content)
+        await edit_msg.channel.send(content=content)
         repository.del_vote(channel_id=vote_msg.channel.id, message_id=vote_msg.id)
         return
 
