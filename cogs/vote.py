@@ -56,27 +56,37 @@ class Vote(basecog.Basecog):
             for task in done_tasks:
                 raw_reaction = await task
 
-            if raw_reaction.message_id == vote_msg.id:
-                if vote_msg in self.bot.cached_messages:
-                    content = text.get("vote", "vote_count")
-                    for reaction in vote_msg.reactions:
-                        for option in votes:
-                            if reaction.emoji == option["emote"]:
-                                option["num_votes"] = reaction.count
+            try:
+                if raw_reaction.message_id == vote_msg.id:
+                    if vote_msg in self.bot.cached_messages:
+                        content = text.get("vote", "vote_count")
+                        for reaction in vote_msg.reactions:
+                            for option in votes:
+                                if reaction.emoji == option["emote"]:
+                                    option["num_votes"] = reaction.count
 
-                    votes = sorted(votes, key=lambda i: (i["num_votes"]), reverse=True)
-                    for option in votes:
+                        votes = sorted(votes, key=lambda i: (i["num_votes"]), reverse=True)
+                        for option in votes:
+                            content += text.fill(
+                                "vote",
+                                "option",
+                                option=option["option"],
+                                num=option["num_votes"] - 1,
+                            )
                         content += text.fill(
-                            "vote", "option", option=option["option"], num=option["num_votes"] - 1,
+                            "vote", "ends", date=date.strftime("%Y-%m-%d %H:%M:%S")
                         )
-                    content += text.fill("vote", "ends", date=date.strftime("%Y-%m-%d %H:%M:%S"))
-                    await edit_msg.edit(content=content)
-                else:
-                    if text.get("vote", "not_in_cache") not in edit_msg.content:
-                        edit_msg = await vote_msg.channel.fetch_message(edit_msg.id)
+                        await edit_msg.edit(content=content)
+                    else:
                         if text.get("vote", "not_in_cache") not in edit_msg.content:
-                            content = edit_msg.content + "\n" + text.get("vote", "not_in_cache")
-                            await edit_msg.edit(content=content)
+                            edit_msg = await vote_msg.channel.fetch_message(edit_msg.id)
+                            if text.get("vote", "not_in_cache") not in edit_msg.content:
+                                content = (
+                                    edit_msg.content + "\n" + text.get("vote", "not_in_cache")
+                                )
+                                await edit_msg.edit(content=content)
+            except UnboundLocalError:
+                pass
 
         if vote_msg not in self.bot.cached_messages:
             vote_msg = await vote_msg.channel.fetch_message(vote_msg.id)
