@@ -89,7 +89,7 @@ class Boards(basecog.Basecog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        bot_dev = self.bot.get_channel(702819547811414087)
+        bot_dev = self.bot.get_channel(config.channel_botdev)
         channels = repository.get_channels()
         results = []
         async with bot_dev.typing():
