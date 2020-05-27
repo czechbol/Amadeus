@@ -58,7 +58,7 @@
 		"user board title": "FEKT VUT Message Leaderboard",
 		"channel board title": "FEKT VUT Channel Leaderboard",
 		"synced": "UserChannel databáze byla úspěšně synchronizována.",
-		"channel template": "{index}. \t{guild} {name} ({count})",
+		"channel template": "{index}. {name} ({count}) - {guild}",
 		"user template": "{index}. \t {name} ({count})",
 		"author user": "{index}. \t **{name}** ({count})",
 		"author position": "Tvoje umístění",
