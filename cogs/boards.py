@@ -149,97 +149,86 @@ class Boards(basecog.Basecog):
 
         results = self.sort_users(user_channels)
 
-        embed = discord.Embed(title=text.get("boards", "user board title"), color=config.color)
-        value = ""
-        author_position = -1
-        for idx, row in enumerate(results):
-            if ctx.author.id == row["user_id"]:
-                author_position = idx
-            if idx < config.board_top:
-                user = await self.bot.fetch_user(row["user_id"])
-                if value == "":
-                    if author_position == idx:
-                        value = "\n" + text.fill(
-                            "boards",
-                            "author user",
-                            index=idx + 1,
-                            name=user.name,
-                            count=row["count"],
-                        )
-                    else:
-                        value = text.fill(
-                            "boards",
-                            "user template",
-                            index=idx + 1,
-                            name=user.name,
-                            count=row["count"],
-                        )
-                elif author_position == idx:
-                    value += "\n" + text.fill(
-                        "boards", "author user", index=idx + 1, name=user.name, count=row["count"]
-                    )
-                else:
-                    value += "\n" + text.fill(
-                        "boards",
-                        "user template",
-                        index=idx + 1,
-                        name=user.name,
-                        count=row["count"],
-                    )
-
-            if idx > config.board_top and author_position != -1:
-                break
-
-        embed.add_field(
-            name=text.fill("boards", "top number", top=config.board_top), value=value, inline=False
+        # create an embed
+        embed = discord.Embed(
+            title=text.get("boards", "user board title"),
+            description=text.get("boards", "user board desc"),
+            color=config.color,
         )
 
-        user_pos = [
-            author_position - 2,
-            author_position - 1,
-            author_position,
-            author_position + 1,
-            author_position + 2,
+        # get data for "TOP X" list
+        lines = []
+        author_position = -1
+        for position, item in enumerate(results):
+            if ctx.author.id == item["user_id"]:
+                author_position = position
+
+            if position >= config.board_top:
+                continue
+
+            user = self.bot.get_user(item["user_id"])
+            if user == None:
+                user = await self.bot.fetch_user(item["user_id"])
+            if user == None:
+                user_name = "_(Unknown user)_"
+            else:
+                user_name = discord.utils.escape_mentions(user.display_name)
+
+            # get user line
+            # fmt: off
+            if item["user_id"] == ctx.author.id:
+                user_position = position
+                lines.append(text.fill("boards", "author user",
+                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
+            else:
+                lines.append(text.fill("boards", "user template",
+                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
+            # fmt: on
+
+        embed.add_field(
+            name=text.fill("boards", "top number", top=config.board_top),
+            value="\n".join(lines),
+            inline=False,
+        )
+
+        # get data for "YOUR POSITION" list
+        positions = [
+            x + author_position
+            for x in [y - config.board_around for y in range(config.board_around * 2)]
         ]
-        value = ""
-        for pos in user_pos:
-            if pos >= 0 and pos <= len(results) - 1:
-                row = results[pos]
-                user = await self.bot.fetch_user(row["user_id"])
-                if value == "":
-                    if author_position == pos:
-                        value = "\n" + text.fill(
-                            "boards",
-                            "author user",
-                            index=author_position + 1,
-                            name=user.name,
-                            count=row["count"],
-                        )
-                    else:
-                        value = text.fill(
-                            "boards",
-                            "user template",
-                            index=pos + 1,
-                            name=user.name,
-                            count=row["count"],
-                        )
-                elif author_position == pos:
-                    value += "\n" + text.fill(
-                        "boards",
-                        "author user",
-                        index=author_position + 1,
-                        name=user.name,
-                        count=row["count"],
-                    )
-                else:
-                    value += "\n" + text.fill(
-                        "boards",
-                        "user template",
-                        index=pos + 1,
-                        name=user.name,
-                        count=row["count"],
-                    )
-        embed.add_field(name=text.get("boards", "author position"), value=value, inline=False)
+        lines = []
+        for position in positions:
+            # do not display "YOUR POSITION" if user is in "TOP X"
+            if user_position < config.board_top - config.board_around:
+                break
+
+            # do not wrap around (if the 'around' number is too high)
+            if position < 0:
+                continue
+
+            item = results[position]
+            user = self.bot.get_user(item["user_id"])
+            if user == None:
+                user = await self.bot.fetch_user(item["user_id"])
+            if user == None:
+                user_name = "_(Unknown user)_"
+            else:
+                user_name = discord.utils.escape_mentions(user.display_name)
+
+            # fmt: off
+            if item["user_id"] == ctx.author.id:
+                lines.append(text.fill("boards", "author user",
+                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
+            else:
+                lines.append(text.fill("boards", "user template",
+                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
+            # fmt: on
+
+        if len(lines) > 0:
+            embed.add_field(
+                name=text.get("boards", "author position"), value="\n".join(lines), inline=False,
+            )
+
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
