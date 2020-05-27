@@ -94,6 +94,18 @@
 			"GUEST"
 		]
 	},
+	"boards": {
+		"ignored channels": [
+			0,
+			0
+		],
+		"ignored users": [
+			0,
+			0,
+			0
+		],
+		"top number": 15
+	},
 	"compatibility": {
 		"__comment": "Do not send the same emote as other bot here",
 		"ignored imitation channels": []

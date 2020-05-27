@@ -78,7 +78,7 @@ class UserChannelRepository(BaseRepository):
 
         session.commit()
 
-    def get_channels(self):
+    def get_user_channels(self):
         """Update a specified user with a new verification code"""
         channels = session.query(UserChannel).all()
         result = []
@@ -92,87 +92,24 @@ class UserChannelRepository(BaseRepository):
 
     def get_channel(self, channel_id: int):
         """Update a specified user with a new verification code"""
-        channels = session.query(UserChannel).filter_by(channel_id=channel_id)
+        channels = session.query(UserChannel).filter_by(channel_id=channel_id).all()
         result = []
 
         if channels is not None:
             for ch in channels:
-                ch = ch.__dict__
-                for row in result:
-                    if row["channel_id"] == ch["channel_id"] and row["guild_id"] == ch["guild_id"]:
-                        row["count"] += ch["count"]
-                        if row["last_message_at"] < ch["last_message_at"]:
-                            row["last_message_at"] = ch["last_message_at"]
-                        break
-                else:
-                    result.append(
-                        {
-                            "channel_id": ch["channel_id"],
-                            "guild_id": ch["guild_id"],
-                            "count": ch["count"],
-                            "last_message_at": ch["last_message_at"],
-                        }
-                    )
-        else:
-            result = None
-        return result
-
-    def get_users(self):
-        users = session.query(UserChannel).all()
-        result = []
-
-        if users is not None:
-            for usr in users:
-                usr = usr.__dict__
-                for row in result:
-                    if row["user_id"] == usr["user_id"]:
-                        row["count"] += usr["count"]
-                        if row["last_message_at"] < usr["last_message_at"]:
-                            row["last_message_at"] = usr["last_message_at"]
-                        break
-                else:
-                    result.append(
-                        {
-                            "user_id": usr["user_id"],
-                            "count": usr["count"],
-                            "last_message_at": usr["last_message_at"],
-                        }
-                    )
+                result.append(ch.__dict__)
         else:
             result = None
         return result
 
     def get_user(self, user_id: int):
-        users = session.query(UserChannel).filter_by(user_id=user_id)
+        users = session.query(UserChannel).filter_by(user_id=user_id).all()
         result = []
 
         if users is not None:
             for usr in users:
-                usr = usr.__dict__
-                for row in result:
-                    if row["user_id"] == usr["user_id"]:
-                        row["count"] += usr["count"]
-                        if row["last_message_at"] < usr["last_message_at"]:
-                            row["last_message_at"] = usr["last_message_at"]
-                        break
-                else:
-                    result.append(
-                        {
-                            "user_id": usr["user_id"],
-                            "count": usr["count"],
-                            "last_message_at": usr["last_message_at"],
-                        }
-                    )
+                result.append(usr.__dict__)
+
         else:
             result = None
         return result
-
-    def del_vote(self, channel_id: int = None, message_id: int = None):
-        users = (
-            session.query(Vote)
-            .filter(Vote.message_id == message_id)
-            .filter(Vote.channel_id == channel_id)
-            .delete()
-        )
-        session.commit()
-        return users
