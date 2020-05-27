@@ -48,5 +48,8 @@
 	"weeb": {
 		"sauce_desc": "Gets that sweet sauce",
 		"sauce_help": "`{prefix}sauce magic_number`\nPříklad:\n`{prefix}sauce 91988`"
+	},
+	"boards": {
+		"synced": "UserChannel databáze byla úspěšně synchronizována."
 	}
 }

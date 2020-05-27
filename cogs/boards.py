@@ -1,4 +1,3 @@
-import re
 import asyncio
 from datetime import datetime
 
@@ -32,6 +31,7 @@ class Boards(basecog.Basecog):
         help=text.fill("vote", "vote_help", prefix=config.prefix),
     )
     async def channelboard(self, ctx):
+        await asyncio.sleep(0.5)
         channels = repository.get_channels()
         results = []
         if channels is not None:
@@ -88,11 +88,36 @@ class Boards(basecog.Basecog):
                 )
 
     @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        if (
+            not isinstance(message.channel, PrivateChannel)
+            and not isinstance(message.channel, VoiceChannel)
+            and not isinstance(message.channel, CategoryChannel)
+        ):
+            if (
+                message.author.id not in config.board_ignored_users
+                and message.channel.id not in config.board_ignored_users
+            ):
+                channel_id = message.channel.id
+                user_id = message.author.id
+                guild_id = message.guild.id
+                last_message_at = message.created_at
+                last_message_id = message.id
+                repository.decrement(
+                    channel_id=channel_id,
+                    user_id=user_id,
+                    guild_id=guild_id,
+                    last_message_at=last_message_at,
+                    last_message_id=last_message_id,
+                )
+
+    @commands.Cog.listener()
     async def on_ready(self):
         bot_dev = self.bot.get_channel(config.channel_botdev)
         channels = repository.get_channels()
         results = []
         async with bot_dev.typing():
+
             if channels is not None:
                 for ch in channels:
                     for row in results:
@@ -122,10 +147,15 @@ class Boards(basecog.Basecog):
                         not isinstance(channel, PrivateChannel)
                         and not isinstance(channel, VoiceChannel)
                         and not isinstance(channel, CategoryChannel)
+                        and channel.id not in config.board_ignored_channels
                     ):
                         for res in results:
                             if res["channel_id"] == channel.id:
-                                after = await channel.fetch_message(id=res["last_message_id"])
+                                try:
+                                    after = await channel.fetch_message(id=res["last_message_id"])
+                                except discord.errors.NotFound:
+                                    after = res["last_message_at"]
+
                                 messages = await channel.history(
                                     limit=None, after=after, oldest_first=True
                                 ).flatten()
@@ -136,10 +166,7 @@ class Boards(basecog.Basecog):
                             ).flatten()
 
                         for msg in messages:
-                            if (
-                                msg.author.id not in config.board_ignored_users
-                                and msg.channel.id not in config.board_ignored_users
-                            ):
+                            if msg.author.id not in config.board_ignored_users:
                                 channel_id = msg.channel.id
                                 user_id = msg.author.id
                                 guild_id = msg.guild.id
@@ -153,7 +180,7 @@ class Boards(basecog.Basecog):
                                     last_message_at=last_message_at,
                                     last_message_id=last_message_id,
                                 )
-        await bot_dev.send("Successfully built UserChannel database.")
+        await bot_dev.send(text.get("boards", "synced"))
 
 
 def setup(bot):
