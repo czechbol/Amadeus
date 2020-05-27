@@ -84,6 +84,7 @@ class Config:
         self.board_ignored_channels = self.get("boards", "ignored channels")
         self.board_ignored_users = self.get("boards", "ignored users")
         self.board_top = self.get("boards", "top number")
+        self.board_around = self.get("boards", "around number")
 
         ##
         ## COMPATIBILITY

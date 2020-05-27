@@ -104,7 +104,8 @@
 			0,
 			0
 		],
-		"top number": 15
+		"top number": 10,
+		"around number": 2
 	},
 	"compatibility": {
 		"__comment": "Do not send the same emote as other bot here",

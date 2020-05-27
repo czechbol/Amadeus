@@ -49,19 +49,25 @@
 		"sauce_desc": "Gets that sweet sauce",
 		"sauce_help": "`{prefix}sauce magic_number`\nPříklad:\n`{prefix}sauce 91988`"
 	},
+
 	"boards": {
-		"channel board": "Zobrazí kanály s nejvíce zprávami",
-		"user board": "Zobrazí uživatele s nejvíce odeslanými zprávami",
-		"channel info": "Zobrazí informace o kanálu",
-		"user info": "Zobrazí informace o uživateli",
-		"top number": "Top {top}",
-		"user board title": "FEKT VUT Message Leaderboard",
-		"channel board title": "FEKT VUT Channel Leaderboard",
-		"synced": "UserChannel databáze byla úspěšně synchronizována.",
-		"channel template": "{index}. {name} ({count}) - {guild}",
-		"user template": "{index}. \t {name} ({count})",
-		"author user": "{index}. \t **{name}** ({count})",
-		"author position": "Tvoje umístění",
-		"not found": "V databázi není takový záznam."
+		"top number":          "Top {top}",
+		"synced":              "Databáze zpráv byla úspěšně synchronizována.",
+		"author position":     "Tvoje umístění",
+		"not found":           "V databázi takový záznam není",
+		
+		"channel board":       "Zobrazí kanály s nejvíce zprávami",
+		"channel info":        "Zobrazí informace o kanálu",
+		"channel board title": "Channelboard",
+		"channel board desc":  "Celkový počet zpráv na kanál",
+		"channel template":    "`{index}` ... `{count}` {name} ({guild})",
+
+
+		"user board":          "Zobrazí uživatele s nejvíce odeslanými zprávami",
+		"user info":           "Zobrazí informace o uživateli",
+		"user board title":    "Userboard",
+		"user board desc":     "Celkový počet zpráv na uživatele",
+		"user template":       "`{index}` ... `{count}` {name}",
+		"author user":         "`{index}` ... `{count}` **{name}**"
 	}
 }
