@@ -63,39 +63,13 @@ class Boards(basecog.Basecog):
                 )
         await ctx.send(embed=embed)
 
-    @commands.check(check.is_mod)
-    @commands.command(
-        rest_is_raw=True,
-        brief=text.get("vote", "vote_desc"),
-        description=text.get("vote", "vote_desc"),
-        help=text.fill("vote", "vote_help", prefix=config.prefix),
-    )
-    async def board_build(self, ctx):
-        for guild in self.bot.guilds:
-            for channel in guild.channels:
-                if not isinstance(channel, PrivateChannel):
-                    if not isinstance(channel, VoiceChannel) and not isinstance(
-                        channel, CategoryChannel
-                    ):
-                        messages = await channel.history(limit=None, oldest_first=True).flatten()
-                        print(len(messages))
-                        for idx, msg in enumerate(messages, start=1):
-                            if (
-                                msg.author.id not in config.board_ignored_users
-                                and msg.channel.id not in config.board_ignored_users
-                            ):
-                                channel_id = msg.channel.id
-                                user_id = msg.author.id
-                                guild_id = msg.guild.id
-                                last_message_at = msg.created_at
-                                repository.increment(
-                                    channel_id, user_id, guild_id, last_message_at
-                                )
-        await ctx.send("Successfully built UserChannel database.")
-
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not isinstance(message.channel, PrivateChannel):
+        if (
+            not isinstance(message.channel, PrivateChannel)
+            and not isinstance(message.channel, VoiceChannel)
+            and not isinstance(message.channel, CategoryChannel)
+        ):
             if (
                 message.author.id not in config.board_ignored_users
                 and message.channel.id not in config.board_ignored_users
@@ -104,7 +78,82 @@ class Boards(basecog.Basecog):
                 user_id = message.author.id
                 guild_id = message.guild.id
                 last_message_at = message.created_at
-                repository.increment(channel_id, user_id, guild_id, last_message_at)
+                last_message_id = message.id
+                repository.increment(
+                    channel_id=channel_id,
+                    user_id=user_id,
+                    guild_id=guild_id,
+                    last_message_at=last_message_at,
+                    last_message_id=last_message_id,
+                )
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        bot_dev = self.bot.get_channel(702819547811414087)
+        channels = repository.get_channels()
+        results = []
+        async with bot_dev.typing():
+            if channels is not None:
+                for ch in channels:
+                    for row in results:
+                        if (
+                            row["channel_id"] == ch["channel_id"]
+                            and row["guild_id"] == ch["guild_id"]
+                        ):
+                            row["count"] += ch["count"]
+                            if row["last_message_at"] < ch["last_message_at"]:
+                                row["last_message_at"] = ch["last_message_at"]
+                                row["last_message_id"] = ch["last_message_id"]
+                            break
+                    else:
+                        results.append(
+                            {
+                                "channel_id": ch["channel_id"],
+                                "guild_id": ch["guild_id"],
+                                "count": ch["count"],
+                                "last_message_at": ch["last_message_at"],
+                                "last_message_id": ch["last_message_id"],
+                            }
+                        )
+
+            for guild in self.bot.guilds:
+                for channel in guild.channels:
+                    if (
+                        not isinstance(channel, PrivateChannel)
+                        and not isinstance(channel, VoiceChannel)
+                        and not isinstance(channel, CategoryChannel)
+                    ):
+                        for res in results:
+                            if res["channel_id"] == channel.id:
+                                after = await channel.fetch_message(id=res["last_message_id"])
+                                messages = await channel.history(
+                                    limit=None, after=after, oldest_first=True
+                                ).flatten()
+                                break
+                        else:
+                            messages = await channel.history(
+                                limit=None, oldest_first=True
+                            ).flatten()
+
+                        for msg in messages:
+                            if (
+                                msg.author.id not in config.board_ignored_users
+                                and msg.channel.id not in config.board_ignored_users
+                            ):
+                                channel_id = msg.channel.id
+                                user_id = msg.author.id
+                                guild_id = msg.guild.id
+                                last_message_at = msg.created_at
+                                last_message_id = msg.id
+
+                                repository.increment(
+                                    channel_id=channel_id,
+                                    user_id=user_id,
+                                    guild_id=guild_id,
+                                    last_message_at=last_message_at,
+                                    last_message_id=last_message_id,
+                                )
+        await bot_dev.send("Successfully built UserChannel database.")
 
 
 def setup(bot):
