@@ -43,6 +43,41 @@ class UserChannelRepository(BaseRepository):
 
         session.commit()
 
+    def decrement(
+        self,
+        channel_id: int,
+        user_id: int,
+        guild_id: int,
+        last_message_id: int,
+        last_message_at: datetime,
+    ):
+        """Increment user_channel count, 
+        if it doesn't exist, create it"""
+        user_channel = (
+            session.query(UserChannel)
+            .filter_by(channel_id=channel_id, user_id=user_id, guild_id=guild_id)
+            .one_or_none()
+        )
+        if not user_channel:
+            session.add(
+                UserChannel(
+                    channel_id=channel_id,
+                    user_id=user_id,
+                    count=0,
+                    last_message_at=last_message_at,
+                    last_message_id=last_message_id,
+                    guild_id=guild_id,
+                )
+            )
+
+        else:
+            user_channel.count = user_channel.count - 1
+            if user_channel.last_message_at < last_message_at:
+                user_channel.last_message_at = last_message_at
+                user_channel.last_message_id = last_message_id
+
+        session.commit()
+
     def get_channels(self):
         """Update a specified user with a new verification code"""
         channels = session.query(UserChannel).all()
