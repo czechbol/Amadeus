@@ -89,7 +89,7 @@ async def missing_arg_error(ctx, error):
         await ctx.send(f"Nesprávný počet argumentů" + emote.sad)
 
 
-database.base.metadata.drop_all(database.db)
+# database.base.metadata.drop_all(database.db)
 database.base.metadata.create_all(database.db)
 session.commit()  # Making sure
 

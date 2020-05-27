@@ -10,4 +10,5 @@ class UserChannel(database.base):
     user_id = Column(BigInteger)
     count = Column(BigInteger, default=1)
     last_message_at = Column(DateTime)
+    last_message_id = Column(BigInteger)
     guild_id = Column(BigInteger)
