@@ -80,6 +80,11 @@ class Config:
         self.roles_elevated = self.get("roles", "elevated_ids")
 
         ##
+        ## BOARDS
+        self.board_ignored_channels = self.get("boards", "ignored channels")
+        self.board_ignored_users = self.get("boards", "ignored users")
+
+        ##
         ## COMPATIBILITY
         self.noimitation = self.get("compatibility", "ignored imitation channels")
 
