@@ -119,7 +119,7 @@ class Boards(basecog.Basecog):
 
             channel = self.bot.get_channel(item["channel_id"])
             # fmt: off
-            if channel.guild.id == ctx.guild.id:
+            if ctx.guild != None and channel.guild.id == ctx.guild.id:
                 lines.append(text.fill("boards", "channel template",
                     index=f"{position + 1:>2}",
                     count=f"{item['count']:>5}",
