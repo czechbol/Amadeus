@@ -91,7 +91,7 @@ class Boards(basecog.Basecog):
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
 
-    @commands.cooldown(rate=1, per=120.0)
+    @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "channel board"))
     async def channelboard(self, ctx):
         await asyncio.sleep(0.5)
@@ -135,7 +135,7 @@ class Boards(basecog.Basecog):
         )
         await ctx.send(embed=embed)
 
-    @commands.cooldown(rate=1, per=120.0)
+    @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "user board"))
     async def userboard(self, ctx):
         await asyncio.sleep(0.5)
