@@ -105,36 +105,40 @@ class Boards(basecog.Basecog):
 
         results = self.sort_channels(user_channels)
 
-        embed = discord.Embed(title=text.get("boards", "user board title"), color=config.color)
-        value = ""
-        for idx, row in enumerate(results):
-            channel = self.bot.get_channel(row["channel_id"])
-            if idx < config.board_top:
-                if value == "":
-                    value = text.fill(
-                        "boards",
-                        "channel template",
-                        index=idx + 1,
-                        guild=channel.guild.name,
-                        name=channel.name,
-                        count=row["count"],
-                    )
-                else:
-                    value += "\n" + text.fill(
-                        "boards",
-                        "channel template",
-                        index=idx + 1,
-                        guild=channel.guild.name,
-                        name=channel.name,
-                        count=row["count"],
-                    )
+        embed = discord.Embed(
+            title=text.get("boards", "channel board title"),
+            description=text.get("boards", "channel board desc"),
+            color=config.color,
+        )
 
-            if idx > config.board_top:
+        # get data for "TOP X" list
+        lines = []
+        for position, item in enumerate(results):
+            if position >= config.board_top:
                 break
 
+            channel = self.bot.get_channel(item["channel_id"])
+            # fmt: off
+            if channel.guild.id == ctx.guild.id:
+                lines.append(text.fill("boards", "channel template",
+                    index=f"{position + 1:>2}",
+                    count=f"{item['count']:>5}",
+                    name=discord.utils.escape_markdown(channel.name)))
+            else:
+                # channel is on some other guild
+                lines.append(text.fill("boards", "channel template guild",
+                    index=f"{position + 1:>2}",
+                    count=f"{item['count']:>5}",
+                    name=discord.utils.escape_markdown(channel.name),
+                    guild=discord.utils.escape_markdown(channel.guild.name)))
+            # fmt: on
+        # fmt: off
         embed.add_field(
-            name=text.fill("boards", "top number", top=config.board_top), value=value, inline=False
+            name=text.fill("boards", "top number", top=config.board_top),
+            value="\n".join(lines),
+            inline=False,
         )
+        # fmt: on
         await ctx.send(embed=embed)
 
     @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
@@ -166,6 +170,7 @@ class Boards(basecog.Basecog):
             if position >= config.board_top:
                 continue
 
+            # get user object
             user = self.bot.get_user(item["user_id"])
             if user == None:
                 user = await self.bot.fetch_user(item["user_id"])
@@ -174,11 +179,11 @@ class Boards(basecog.Basecog):
             else:
                 user_name = discord.utils.escape_mentions(user.display_name)
 
-            # get user line
+            # get leaderboard line
             # fmt: off
             if item["user_id"] == ctx.author.id:
                 user_position = position
-                lines.append(text.fill("boards", "author user",
+                lines.append(text.fill("boards", "author template",
                     index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
             else:
                 lines.append(text.fill("boards", "user template",
@@ -206,6 +211,7 @@ class Boards(basecog.Basecog):
             if position < 0:
                 continue
 
+            # get user object
             item = results[position]
             user = self.bot.get_user(item["user_id"])
             if user == None:
@@ -215,9 +221,10 @@ class Boards(basecog.Basecog):
             else:
                 user_name = discord.utils.escape_mentions(user.display_name)
 
+            # get leaderboard line
             # fmt: off
             if item["user_id"] == ctx.author.id:
-                lines.append(text.fill("boards", "author user",
+                lines.append(text.fill("boards", "author template",
                     index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
             else:
                 lines.append(text.fill("boards", "user template",
@@ -285,6 +292,7 @@ class Boards(basecog.Basecog):
         if self.scanned:
             return
 
+        return
         self.scanned = False
 
         bot_dev = self.bot.get_channel(config.channel_botdev)
