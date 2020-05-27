@@ -22,6 +22,8 @@ class Boards(basecog.Basecog):
         self.bot = bot
         self.handled = []
 
+        self.scanned = False
+
     def sort_channels(self, lis):
         results = []
         for ch in lis:
@@ -291,6 +293,11 @@ class Boards(basecog.Basecog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        if self.scanned:
+            return
+
+        self.scanned = False
+
         bot_dev = self.bot.get_channel(config.channel_botdev)
         channels = repository.get_user_channels()
         results = None
