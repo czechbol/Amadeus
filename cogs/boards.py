@@ -128,6 +128,10 @@ class Boards(basecog.Basecog):
                 break
 
             channel = self.bot.get_channel(item["channel_id"])
+            if not hasattr(channel, "name"):
+                # channel was not found
+                continue
+
             # fmt: off
             if ctx.guild != None and channel.guild.id == ctx.guild.id:
                 lines.append(text.fill("boards", "channel template",
@@ -220,14 +224,13 @@ class Boards(basecog.Basecog):
 
             # get user object
             user = self.bot.get_user(item["user_id"])
-            if user == None:
-                user = await self.bot.fetch_user(item["user_id"])
-            if user == None:
-                user_name = "_(Unknown user)_"
-            else:
-                user_name = discord.utils.escape_mentions(user.display_name)
+            if not hasattr(user, "display_name"):
+                # user was not found
+                continue
 
-            # get leaderboard line
+            user_name = discord.utils.escape_mentions(user.display_name)
+
+            # get position string
             # fmt: off
             if item["user_id"] == member.id:
                 user_position = position
@@ -270,7 +273,7 @@ class Boards(basecog.Basecog):
             else:
                 user_name = discord.utils.escape_mentions(user.display_name)
 
-            # get leaderboard line
+            # get position string
             # fmt: off
             if item["user_id"] == ctx.author.id:
                 lines.append(text.fill("boards", "target template",
@@ -341,8 +344,7 @@ class Boards(basecog.Basecog):
         if self.scanned:
             return
 
-        return
-        self.scanned = False
+        self.scanned = True
 
         bot_dev = self.bot.get_channel(config.channel_botdev)
         channels = repository.get_user_channels()
