@@ -93,15 +93,19 @@ class Boards(basecog.Basecog):
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
 
-    @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
+    @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "channel board"))
-    async def channelboard(self, ctx):
+    async def channelboard(self, ctx, offset: int = 1):
         await asyncio.sleep(0.5)
         user_channels = repository.get_user_channels()
 
         if not user_channels:
-            ctx.send(text.get("boards", "not found"))
-            return
+            return ctx.send(text.get("boards", "not found"))
+
+        # convert to be zero-indexed
+        offset -= 1
+        if offset < 0:
+            return await ctx.send(text.get("boards", "invalid offset"))
 
         results = self.sort_channels(user_channels)
 
@@ -114,7 +118,10 @@ class Boards(basecog.Basecog):
         # get data for "TOP X" list
         lines = []
         for position, item in enumerate(results):
-            if position >= config.board_top:
+            if position < offset:
+                continue
+
+            if position - offset >= config.board_top:
                 break
 
             channel = self.bot.get_channel(item["channel_id"])
@@ -132,24 +139,30 @@ class Boards(basecog.Basecog):
                     name=discord.utils.escape_markdown(channel.name),
                     guild=discord.utils.escape_markdown(channel.guild.name)))
             # fmt: on
+        title = "top number" if offset == 0 else "top offset"
         # fmt: off
         embed.add_field(
-            name=text.fill("boards", "top number", top=config.board_top),
+            name=text.fill("boards", title, top=config.board_top, offset=offset+1),
             value="\n".join(lines),
             inline=False,
         )
         # fmt: on
         await ctx.send(embed=embed)
 
-    @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
+    @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "user board"))
-    async def userboard(self, ctx):
+    async def userboard(self, ctx, offset: int = 1):
         await asyncio.sleep(0.5)
         user_channels = repository.get_user_channels()
 
         if not user_channels:
             ctx.send(text.get("boards", "not found"))
             return
+
+        # convert to be zero-indexed
+        offset -= 1
+        if offset < 0:
+            return await ctx.send(text.get("boards", "invalid offset"))
 
         results = self.sort_users(user_channels)
 
@@ -167,7 +180,7 @@ class Boards(basecog.Basecog):
             if ctx.author.id == item["user_id"]:
                 author_position = position
 
-            if position >= config.board_top:
+            if position < offset or position - offset >= config.board_top:
                 continue
 
             # get user object
@@ -190,8 +203,9 @@ class Boards(basecog.Basecog):
                     index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
             # fmt: on
 
+        title = "top number" if offset == 0 else "top offset"
         embed.add_field(
-            name=text.fill("boards", "top number", top=config.board_top),
+            name=text.fill("boards", title, top=config.board_top, offset=offset + 1),
             value="\n".join(lines),
             inline=False,
         )
@@ -203,8 +217,8 @@ class Boards(basecog.Basecog):
         ]
         lines = []
         for position in positions:
-            # do not display "YOUR POSITION" if user is in "TOP X"
-            if user_position < config.board_top - config.board_around:
+            # do not display "YOUR POSITION" if user is in "TOP X" and OFFSET is not set
+            if offset == 0 and user_position < config.board_top - config.board_around:
                 break
 
             # do not wrap around (if the 'around' number is too high)

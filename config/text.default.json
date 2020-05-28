@@ -8,7 +8,7 @@
 		"no requirements": "Nesplnili jste podmínky příkazu.",
 		"no user": "Nikoho takového jsem nenašla {emote.sad}",
 		"command": "Chyba v příkazu",
-		"cooldown": "Ten příkaz nemůžeš používat tak často.",
+		"cooldown": "Zpomal (cooldown: {time} s)",
 		"extension": "Chyba v rozšíření {emote.ree}",
 		"argument": "Chyba v argumentu {emote.sad}"
 	},
@@ -52,9 +52,11 @@
 
 	"boards": {
 		"top number":          "Top {top}",
+		"top offset"  :        "{top} od pozice {offset}",
 		"synced":              "Databáze zpráv byla úspěšně synchronizována.",
 		"author position":     "Tvoje umístění",
 		"not found":           "V databázi takový záznam není",
+		"invalid offset":      "Offset může být jen kladné celé číslo",
 		
 		"channel board":          "Zobrazí kanály s nejvíce zprávami",
 		"channel info":           "Zobrazí informace o kanálu",
