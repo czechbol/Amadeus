@@ -341,8 +341,7 @@ class Boards(basecog.Basecog):
         if self.scanned:
             return
 
-        return
-        self.scanned = False
+        self.scanned = True
 
         bot_dev = self.bot.get_channel(config.channel_botdev)
         channels = repository.get_user_channels()
