@@ -57,6 +57,7 @@
 		"author position":     "Tvoje umístění",
 		"not found":           "V databázi takový záznam není",
 		"invalid offset":      "Offset může být jen kladné celé číslo",
+		"offset too big":      "Moc velký offset",
 		
 		"channel board":          "Zobrazí kanály s nejvíce zprávami",
 		"channel info":           "Zobrazí informace o kanálu",
@@ -70,6 +71,6 @@
 		"user board title":    "Userboard",
 		"user board desc":     "Celkový počet zpráv na uživatele",
 		"user template":       "`{index}` ... `{count}` {name}",
-		"author template":     "`{index}` ... `{count}` **{name}**"
+		"target template":     "`{index}` ... `{count}` **{name}**"
 	}
 }

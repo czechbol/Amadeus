@@ -109,6 +109,9 @@ class Boards(basecog.Basecog):
 
         results = self.sort_channels(user_channels)
 
+        if offset > len(results):
+            return await ctx.send(text.get("boards", "offset too big"))
+
         embed = discord.Embed(
             title=text.get("boards", "channel board title"),
             description=text.get("boards", "channel board desc"),
@@ -154,18 +157,50 @@ class Boards(basecog.Basecog):
     async def userboard(self, ctx, offset: int = 1):
         await asyncio.sleep(0.5)
         user_channels = repository.get_user_channels()
-
         if not user_channels:
-            ctx.send(text.get("boards", "not found"))
-            return
+            return ctx.send(text.get("boards", "not found"))
 
         # convert to be zero-indexed
         offset -= 1
         if offset < 0:
             return await ctx.send(text.get("boards", "invalid offset"))
 
-        results = self.sort_users(user_channels)
+        users = self.sort_users(user_channels)
 
+        if offset > len(users):
+            return await ctx.send(text.get("boards", "offset too big"))
+
+        await self.sendUserboard(ctx, users, ctx.author, offset)
+
+    @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
+    @commands.command()
+    async def stalk(self, ctx, member: discord.Member):
+        await asyncio.sleep(0.5)
+        user_channels = repository.get_user_channels()
+        if not user_channels:
+            return ctx.send(text.get("boards", "not found"))
+
+        users = self.sort_users(user_channels)
+
+        offset = -1
+        for position, item in enumerate(users):
+            if item["user_id"] == member.id:
+                offset = position
+                break
+
+        if offset < 0:
+            return await ctx.send(text.get("boards", "not found"))
+
+        if offset < config.board_top - config.board_around:
+            offset = 0
+
+        if offset > len(users):
+            return await ctx.send(text.get("boards", "offset too big"))
+
+        await self.sendUserboard(ctx, users, member, offset=0)
+
+    async def sendUserboard(self, ctx, users, member: discord.Member, offset: int):
+        # note: this offset is zero-indexed here, not like in userboard()
         # create an embed
         embed = discord.Embed(
             title=text.get("boards", "user board title"),
@@ -176,7 +211,7 @@ class Boards(basecog.Basecog):
         # get data for "TOP X" list
         lines = []
         author_position = -1
-        for position, item in enumerate(results):
+        for position, item in enumerate(users):
             if ctx.author.id == item["user_id"]:
                 author_position = position
 
@@ -194,9 +229,9 @@ class Boards(basecog.Basecog):
 
             # get leaderboard line
             # fmt: off
-            if item["user_id"] == ctx.author.id:
+            if item["user_id"] == member.id:
                 user_position = position
-                lines.append(text.fill("boards", "author template",
+                lines.append(text.fill("boards", "target template",
                     index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
             else:
                 lines.append(text.fill("boards", "user template",
@@ -226,7 +261,7 @@ class Boards(basecog.Basecog):
                 continue
 
             # get user object
-            item = results[position]
+            item = users[position]
             user = self.bot.get_user(item["user_id"])
             if user == None:
                 user = await self.bot.fetch_user(item["user_id"])
@@ -238,7 +273,7 @@ class Boards(basecog.Basecog):
             # get leaderboard line
             # fmt: off
             if item["user_id"] == ctx.author.id:
-                lines.append(text.fill("boards", "author template",
+                lines.append(text.fill("boards", "target template",
                     index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
             else:
                 lines.append(text.fill("boards", "user template",
