@@ -8,7 +8,7 @@
 		"no requirements": "Nesplnili jste podmínky příkazu.",
 		"no user": "Nikoho takového jsem nenašla {emote.sad}",
 		"command": "Chyba v příkazu",
-		"cooldown": "Ten příkaz nemůžeš používat tak často.",
+		"cooldown": "Zpomal (cooldown: {time} s)",
 		"extension": "Chyba v rozšíření {emote.ree}",
 		"argument": "Chyba v argumentu {emote.sad}"
 	},
@@ -49,19 +49,28 @@
 		"sauce_desc": "Gets that sweet sauce",
 		"sauce_help": "`{prefix}sauce magic_number`\nPříklad:\n`{prefix}sauce 91988`"
 	},
+
 	"boards": {
-		"channel board": "Zobrazí kanály s nejvíce zprávami",
-		"user board": "Zobrazí uživatele s nejvíce odeslanými zprávami",
-		"channel info": "Zobrazí informace o kanálu",
-		"user info": "Zobrazí informace o uživateli",
-		"top number": "Top {top}",
-		"user board title": "FEKT VUT Message Leaderboard",
-		"channel board title": "FEKT VUT Channel Leaderboard",
-		"synced": "UserChannel databáze byla úspěšně synchronizována.",
-		"channel template": "{index}. {name} ({count}) - {guild}",
-		"user template": "{index}. \t {name} ({count})",
-		"author user": "{index}. \t **{name}** ({count})",
-		"author position": "Tvoje umístění",
-		"not found": "V databázi není takový záznam."
+		"top number":          "Top {top}",
+		"top offset"  :        "{top} od pozice {offset}",
+		"synced":              "Databáze zpráv byla úspěšně synchronizována.",
+		"author position":     "Tvoje umístění",
+		"not found":           "V databázi takový záznam není",
+		"invalid offset":      "Offset může být jen kladné celé číslo",
+		"offset too big":      "Moc velký offset",
+		
+		"channel board":          "Zobrazí kanály s nejvíce zprávami",
+		"channel info":           "Zobrazí informace o kanálu",
+		"channel board title":    "Channelboard",
+		"channel board desc":     "Celkový počet zpráv na kanál",
+		"channel template":       "`{index}` ... `{count}` #{name}",
+		"channel template guild": "`{index}` ... `{count}` #{name} ({guild})",
+
+		"user board":          "Zobrazí uživatele s nejvíce odeslanými zprávami",
+		"user info":           "Zobrazí informace o uživateli",
+		"user board title":    "Userboard",
+		"user board desc":     "Celkový počet zpráv na uživatele",
+		"user template":       "`{index}` ... `{count}` {name}",
+		"target template":     "`{index}` ... `{count}` **{name}**"
 	}
 }
