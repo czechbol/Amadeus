@@ -22,6 +22,8 @@ class Boards(basecog.Basecog):
         self.bot = bot
         self.handled = []
 
+        self.scanned = False
+
     def sort_channels(self, lis):
         results = []
         for ch in lis:
@@ -91,153 +93,198 @@ class Boards(basecog.Basecog):
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
 
-    @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
+    @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "channel board"))
-    async def channelboard(self, ctx):
+    async def channelboard(self, ctx, offset: int = 1):
         await asyncio.sleep(0.5)
         user_channels = repository.get_user_channels()
 
         if not user_channels:
-            ctx.send(text.get("boards", "not found"))
-            return
+            return ctx.send(text.get("boards", "not found"))
+
+        # convert to be zero-indexed
+        offset -= 1
+        if offset < 0:
+            return await ctx.send(text.get("boards", "invalid offset"))
 
         results = self.sort_channels(user_channels)
 
-        embed = discord.Embed(title=text.get("boards", "user board title"), color=config.color)
-        value = ""
-        for idx, row in enumerate(results):
-            channel = self.bot.get_channel(row["channel_id"])
-            if idx < config.board_top:
-                if value == "":
-                    value = text.fill(
-                        "boards",
-                        "channel template",
-                        index=idx + 1,
-                        guild=channel.guild.name,
-                        name=channel.name,
-                        count=row["count"],
-                    )
-                else:
-                    value += "\n" + text.fill(
-                        "boards",
-                        "channel template",
-                        index=idx + 1,
-                        guild=channel.guild.name,
-                        name=channel.name,
-                        count=row["count"],
-                    )
+        if offset > len(results):
+            return await ctx.send(text.get("boards", "offset too big"))
 
-            if idx > config.board_top:
+        embed = discord.Embed(
+            title=text.get("boards", "channel board title"),
+            description=text.get("boards", "channel board desc"),
+            color=config.color,
+        )
+
+        # get data for "TOP X" list
+        lines = []
+        for position, item in enumerate(results):
+            if position < offset:
+                continue
+
+            if position - offset >= config.board_top:
                 break
 
+            channel = self.bot.get_channel(item["channel_id"])
+            # fmt: off
+            if ctx.guild != None and channel.guild.id == ctx.guild.id:
+                lines.append(text.fill("boards", "channel template",
+                    index=f"{position + 1:>2}",
+                    count=f"{item['count']:>5}",
+                    name=discord.utils.escape_markdown(channel.name)))
+            else:
+                # channel is on some other guild
+                lines.append(text.fill("boards", "channel template guild",
+                    index=f"{position + 1:>2}",
+                    count=f"{item['count']:>5}",
+                    name=discord.utils.escape_markdown(channel.name),
+                    guild=discord.utils.escape_markdown(channel.guild.name)))
+            # fmt: on
+        title = "top number" if offset == 0 else "top offset"
+        # fmt: off
         embed.add_field(
-            name=text.fill("boards", "top number", top=config.board_top), value=value, inline=False
+            name=text.fill("boards", title, top=config.board_top, offset=offset+1),
+            value="\n".join(lines),
+            inline=False,
         )
+        # fmt: on
         await ctx.send(embed=embed)
 
-    @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
+    @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "user board"))
-    async def userboard(self, ctx):
+    async def userboard(self, ctx, offset: int = 1):
         await asyncio.sleep(0.5)
         user_channels = repository.get_user_channels()
-
         if not user_channels:
-            ctx.send(text.get("boards", "not found"))
-            return
+            return ctx.send(text.get("boards", "not found"))
 
-        results = self.sort_users(user_channels)
+        # convert to be zero-indexed
+        offset -= 1
+        if offset < 0:
+            return await ctx.send(text.get("boards", "invalid offset"))
 
-        embed = discord.Embed(title=text.get("boards", "user board title"), color=config.color)
-        value = ""
-        author_position = -1
-        for idx, row in enumerate(results):
-            if ctx.author.id == row["user_id"]:
-                author_position = idx
-            if idx < config.board_top:
-                user = await self.bot.fetch_user(row["user_id"])
-                if value == "":
-                    if author_position == idx:
-                        value = "\n" + text.fill(
-                            "boards",
-                            "author user",
-                            index=idx + 1,
-                            name=user.name,
-                            count=row["count"],
-                        )
-                    else:
-                        value = text.fill(
-                            "boards",
-                            "user template",
-                            index=idx + 1,
-                            name=user.name,
-                            count=row["count"],
-                        )
-                elif author_position == idx:
-                    value += "\n" + text.fill(
-                        "boards", "author user", index=idx + 1, name=user.name, count=row["count"]
-                    )
-                else:
-                    value += "\n" + text.fill(
-                        "boards",
-                        "user template",
-                        index=idx + 1,
-                        name=user.name,
-                        count=row["count"],
-                    )
+        users = self.sort_users(user_channels)
 
-            if idx > config.board_top and author_position != -1:
+        if offset > len(users):
+            return await ctx.send(text.get("boards", "offset too big"))
+
+        await self.sendUserboard(ctx, users, ctx.author, offset)
+
+    @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
+    @commands.command()
+    async def stalk(self, ctx, member: discord.Member):
+        await asyncio.sleep(0.5)
+        user_channels = repository.get_user_channels()
+        if not user_channels:
+            return ctx.send(text.get("boards", "not found"))
+
+        users = self.sort_users(user_channels)
+
+        offset = -1
+        for position, item in enumerate(users):
+            if item["user_id"] == member.id:
+                offset = position
                 break
 
-        embed.add_field(
-            name=text.fill("boards", "top number", top=config.board_top), value=value, inline=False
+        if offset < 0:
+            return await ctx.send(text.get("boards", "not found"))
+
+        if offset < config.board_top - config.board_around:
+            offset = 0
+
+        if offset > len(users):
+            return await ctx.send(text.get("boards", "offset too big"))
+
+        await self.sendUserboard(ctx, users, member, offset=0)
+
+    async def sendUserboard(self, ctx, users, member: discord.Member, offset: int):
+        # note: this offset is zero-indexed here, not like in userboard()
+        # create an embed
+        embed = discord.Embed(
+            title=text.get("boards", "user board title"),
+            description=text.get("boards", "user board desc"),
+            color=config.color,
         )
 
-        user_pos = [
-            author_position - 2,
-            author_position - 1,
-            author_position,
-            author_position + 1,
-            author_position + 2,
+        # get data for "TOP X" list
+        lines = []
+        author_position = -1
+        for position, item in enumerate(users):
+            if ctx.author.id == item["user_id"]:
+                author_position = position
+
+            if position < offset or position - offset >= config.board_top:
+                continue
+
+            # get user object
+            user = self.bot.get_user(item["user_id"])
+            if user == None:
+                user = await self.bot.fetch_user(item["user_id"])
+            if user == None:
+                user_name = "_(Unknown user)_"
+            else:
+                user_name = discord.utils.escape_mentions(user.display_name)
+
+            # get leaderboard line
+            # fmt: off
+            if item["user_id"] == member.id:
+                user_position = position
+                lines.append(text.fill("boards", "target template",
+                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
+            else:
+                lines.append(text.fill("boards", "user template",
+                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
+            # fmt: on
+
+        title = "top number" if offset == 0 else "top offset"
+        embed.add_field(
+            name=text.fill("boards", title, top=config.board_top, offset=offset + 1),
+            value="\n".join(lines),
+            inline=False,
+        )
+
+        # get data for "YOUR POSITION" list
+        positions = [
+            x + author_position
+            for x in [y - config.board_around for y in range(config.board_around * 2)]
         ]
-        value = ""
-        for pos in user_pos:
-            if pos >= 0 and pos <= len(results) - 1:
-                row = results[pos]
-                user = await self.bot.fetch_user(row["user_id"])
-                if value == "":
-                    if author_position == pos:
-                        value = "\n" + text.fill(
-                            "boards",
-                            "author user",
-                            index=author_position + 1,
-                            name=user.name,
-                            count=row["count"],
-                        )
-                    else:
-                        value = text.fill(
-                            "boards",
-                            "user template",
-                            index=pos + 1,
-                            name=user.name,
-                            count=row["count"],
-                        )
-                elif author_position == pos:
-                    value += "\n" + text.fill(
-                        "boards",
-                        "author user",
-                        index=author_position + 1,
-                        name=user.name,
-                        count=row["count"],
-                    )
-                else:
-                    value += "\n" + text.fill(
-                        "boards",
-                        "user template",
-                        index=pos + 1,
-                        name=user.name,
-                        count=row["count"],
-                    )
-        embed.add_field(name=text.get("boards", "author position"), value=value, inline=False)
+        lines = []
+        for position in positions:
+            # do not display "YOUR POSITION" if user is in "TOP X" and OFFSET is not set
+            if offset == 0 and user_position < config.board_top - config.board_around:
+                break
+
+            # do not wrap around (if the 'around' number is too high)
+            if position < 0:
+                continue
+
+            # get user object
+            item = users[position]
+            user = self.bot.get_user(item["user_id"])
+            if user == None:
+                user = await self.bot.fetch_user(item["user_id"])
+            if user == None:
+                user_name = "_(Unknown user)_"
+            else:
+                user_name = discord.utils.escape_mentions(user.display_name)
+
+            # get leaderboard line
+            # fmt: off
+            if item["user_id"] == ctx.author.id:
+                lines.append(text.fill("boards", "target template",
+                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
+            else:
+                lines.append(text.fill("boards", "user template",
+                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
+            # fmt: on
+
+        if len(lines) > 0:
+            embed.add_field(
+                name=text.get("boards", "author position"), value="\n".join(lines), inline=False,
+            )
+
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
@@ -291,6 +338,12 @@ class Boards(basecog.Basecog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        if self.scanned:
+            return
+
+        return
+        self.scanned = False
+
         bot_dev = self.bot.get_channel(config.channel_botdev)
         channels = repository.get_user_channels()
         results = None

@@ -25,6 +25,7 @@ class Errors(basecog.Basecog):
             print("".join(traceback.format_exception(type(error), error, error.__traceback__)))
             printed = True
 
+        # fmt: off
         if isinstance(error, commands.MissingPermissions):
             await self.throwNotification(ctx, text.get("error", "no user permission"))
             await self.log(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
@@ -36,7 +37,7 @@ class Errors(basecog.Basecog):
             return
 
         if isinstance(error, commands.CommandOnCooldown):
-            await self.throwNotification(ctx, text.get("error", "cooldown"))
+            await self.throwNotification(ctx, text.fill("error", "cooldown", time=int(error.retry_after)))
             return
 
         elif isinstance(error, commands.CheckFailure):
@@ -65,6 +66,7 @@ class Errors(basecog.Basecog):
             await self.throwNotification(ctx, error)
             await self.log(ctx, "Missing argument", quote=True, msg=error)
             return
+        # fmt: on
 
         # display error message
         await self.throwError(ctx, error)
