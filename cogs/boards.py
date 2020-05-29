@@ -31,13 +31,31 @@ class Boards(basecog.Basecog):
             messages = await channel.history(limit=None, after=after, oldest_first=True).flatten()
         return messages
 
-    async def sort_channels(self, lis):
+    async def add_to_db(self, msg):
+        repository.increment(
+            channel_id=msg.channel.id,
+            user_id=msg.author.id,
+            guild_id=msg.guild.id,
+            last_message_at=msg.created_at,
+            last_message_id=msg.id,
+        )
+        return
+
+    async def msg_iter(self, messages):
+        for idx, msg in enumerate(messages):
+            if idx % 2500 == 0:
+                await asyncio.sleep(2)
+            await self.add_to_db(msg)
+        return
+
+    async def sort_channels(self, lis, all_allowed):
         results = []
         for ch in lis:
-            if (
+            if all_allowed is True or (
                 ch["channel_id"] not in config.board_ignored_channels
                 and ch["user_id"] not in config.board_ignored_users
             ):
+
                 for row in results:
                     if row["channel_id"] == ch["channel_id"] and row["guild_id"] == ch["guild_id"]:
                         row["count"] += ch["count"]
@@ -84,10 +102,10 @@ class Boards(basecog.Basecog):
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
 
-    async def sort_users(self, lis):
+    async def sort_users(self, lis, all_allowed):
         results = []
         for ch in lis:
-            if (
+            if all_allowed is True or (
                 ch["channel_id"] not in config.board_ignored_channels
                 and ch["user_id"] not in config.board_ignored_users
             ):
@@ -122,7 +140,7 @@ class Boards(basecog.Basecog):
         if offset < 0:
             return await ctx.send(text.get("boards", "invalid offset"))
 
-        results = await self.sort_channels(user_channels)
+        results = await self.sort_channels(user_channels, False)
 
         if offset > len(results):
             return await ctx.send(text.get("boards", "offset too big"))
@@ -184,7 +202,7 @@ class Boards(basecog.Basecog):
         if offset < 0:
             return await ctx.send(text.get("boards", "invalid offset"))
 
-        users = await self.sort_users(user_channels)
+        users = await self.sort_users(user_channels, False)
 
         if offset > len(users):
             return await ctx.send(text.get("boards", "offset too big"))
@@ -199,7 +217,7 @@ class Boards(basecog.Basecog):
         if not user_channels:
             return ctx.send(text.get("boards", "not found"))
 
-        users = await self.sort_users(user_channels)
+        users = await self.sort_users(user_channels, False)
 
         offset = -1
         for position, item in enumerate(users):
@@ -312,18 +330,7 @@ class Boards(basecog.Basecog):
             and not isinstance(message.channel, VoiceChannel)
             and not isinstance(message.channel, CategoryChannel)
         ):
-            channel_id = message.channel.id
-            user_id = message.author.id
-            guild_id = message.guild.id
-            last_message_at = message.created_at
-            last_message_id = message.id
-            repository.increment(
-                channel_id=channel_id,
-                user_id=user_id,
-                guild_id=guild_id,
-                last_message_at=last_message_at,
-                last_message_id=last_message_id,
-            )
+            await self.add_to_db(message)
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
@@ -347,26 +354,24 @@ class Boards(basecog.Basecog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        if self.scanned:
-            return
-
-        self.scanned = True
-
         bot_dev = self.bot.get_channel(config.channel_botdev)
         channels = repository.get_user_channels()
         results = None
+        tasks = []
         async with bot_dev.typing():
 
             if channels is not None:
-                results = await self.sort_channels(channels)
+                results = await self.sort_channels(channels, True)
 
             for guild in self.bot.guilds:
                 for channel in guild.channels:
+
                     if (
                         not isinstance(channel, PrivateChannel)
                         and not isinstance(channel, VoiceChannel)
                         and not isinstance(channel, CategoryChannel)
                     ):
+
                         if results is None:
                             messages = await self.get_history(channel, None)
                         else:
@@ -378,21 +383,12 @@ class Boards(basecog.Basecog):
                             else:
                                 messages = await self.get_history(channel, None)
 
-                        for msg in messages:
+                        if len(messages) > 0:
+                            tasks.append(self.msg_iter(messages))
 
-                            channel_id = msg.channel.id
-                            user_id = msg.author.id
-                            guild_id = msg.guild.id
-                            last_message_at = msg.created_at
-                            last_message_id = msg.id
+        for task in tasks:
+            await task
 
-                            repository.increment(
-                                channel_id=channel_id,
-                                user_id=user_id,
-                                guild_id=guild_id,
-                                last_message_at=last_message_at,
-                                last_message_id=last_message_id,
-                            )
         await bot_dev.send(text.get("boards", "synced"))
 
 
