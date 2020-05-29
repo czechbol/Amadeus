@@ -51,8 +51,7 @@ class UserChannelRepository(BaseRepository):
         last_message_id: int,
         last_message_at: datetime,
     ):
-        """Increment user_channel count, 
-        if it doesn't exist, create it"""
+        """Decrement user_channel count."""
         user_channel = (
             session.query(UserChannel)
             .filter_by(channel_id=channel_id, user_id=user_id, guild_id=guild_id)
@@ -79,7 +78,7 @@ class UserChannelRepository(BaseRepository):
         session.commit()
 
     def get_user_channels(self):
-        """Update a specified user with a new verification code"""
+        """Retrieves the whole table"""
         channels = session.query(UserChannel).all()
         result = []
 
@@ -91,7 +90,7 @@ class UserChannelRepository(BaseRepository):
         return result
 
     def get_channel(self, channel_id: int):
-        """Update a specified user with a new verification code"""
+        """Retrieves table, filtered by channel id"""
         channels = session.query(UserChannel).filter_by(channel_id=channel_id).all()
         result = []
 
@@ -103,6 +102,7 @@ class UserChannelRepository(BaseRepository):
         return result
 
     def get_user(self, user_id: int):
+        """Retrieves table, filtered by user id"""
         users = session.query(UserChannel).filter_by(user_id=user_id).all()
         result = []
 
