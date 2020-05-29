@@ -24,7 +24,14 @@ class Boards(basecog.Basecog):
 
         self.scanned = False
 
-    def sort_channels(self, lis):
+    async def get_history(self, channel, after):
+        if after is None:
+            messages = await channel.history(limit=None, oldest_first=True).flatten()
+        else:
+            messages = await channel.history(limit=None, after=after, oldest_first=True).flatten()
+        return messages
+
+    async def sort_channels(self, lis):
         results = []
         for ch in lis:
             if (
@@ -51,7 +58,7 @@ class Boards(basecog.Basecog):
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
 
-    def sort_userchannel(self, lis):
+    async def sort_userchannel(self, lis):
         results = []
         for ch in lis:
             for row in results:
@@ -77,7 +84,7 @@ class Boards(basecog.Basecog):
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
 
-    def sort_users(self, lis):
+    async def sort_users(self, lis):
         results = []
         for ch in lis:
             if (
@@ -115,7 +122,7 @@ class Boards(basecog.Basecog):
         if offset < 0:
             return await ctx.send(text.get("boards", "invalid offset"))
 
-        results = self.sort_channels(user_channels)
+        results = await self.sort_channels(user_channels)
 
         if offset > len(results):
             return await ctx.send(text.get("boards", "offset too big"))
@@ -177,7 +184,7 @@ class Boards(basecog.Basecog):
         if offset < 0:
             return await ctx.send(text.get("boards", "invalid offset"))
 
-        users = self.sort_users(user_channels)
+        users = await self.sort_users(user_channels)
 
         if offset > len(users):
             return await ctx.send(text.get("boards", "offset too big"))
@@ -192,7 +199,7 @@ class Boards(basecog.Basecog):
         if not user_channels:
             return ctx.send(text.get("boards", "not found"))
 
-        users = self.sort_users(user_channels)
+        users = await self.sort_users(user_channels)
 
         offset = -1
         for position, item in enumerate(users):
@@ -351,7 +358,7 @@ class Boards(basecog.Basecog):
         async with bot_dev.typing():
 
             if channels is not None:
-                results = self.sort_channels(channels)
+                results = await self.sort_channels(channels)
 
             for guild in self.bot.guilds:
                 for channel in guild.channels:
@@ -361,27 +368,15 @@ class Boards(basecog.Basecog):
                         and not isinstance(channel, CategoryChannel)
                     ):
                         if results is None:
-                            messages = await channel.history(
-                                limit=None, oldest_first=True
-                            ).flatten()
+                            messages = await self.get_history(channel, None)
                         else:
                             for res in results:
                                 if res["channel_id"] == channel.id:
-                                    try:
-                                        after = await channel.fetch_message(
-                                            id=res["last_message_id"]
-                                        )
-                                    except discord.errors.NotFound:
-                                        after = res["last_message_at"]
-
-                                    messages = await channel.history(
-                                        limit=None, after=after, oldest_first=True
-                                    ).flatten()
+                                    after = res["last_message_at"]
+                                    messages = await self.get_history(channel, after)
                                     break
                             else:
-                                messages = await channel.history(
-                                    limit=None, oldest_first=True
-                                ).flatten()
+                                messages = await self.get_history(channel, None)
 
                         for msg in messages:
 
