@@ -27,23 +27,27 @@ class Boards(basecog.Basecog):
     def sort_channels(self, lis):
         results = []
         for ch in lis:
-            for row in results:
-                if row["channel_id"] == ch["channel_id"] and row["guild_id"] == ch["guild_id"]:
-                    row["count"] += ch["count"]
-                    if row["last_message_at"] < ch["last_message_at"]:
-                        row["last_message_at"] = ch["last_message_at"]
-                        row["last_message_id"] = ch["last_message_id"]
-                    break
-            else:
-                results.append(
-                    {
-                        "channel_id": ch["channel_id"],
-                        "guild_id": ch["guild_id"],
-                        "count": ch["count"],
-                        "last_message_at": ch["last_message_at"],
-                        "last_message_id": ch["last_message_id"],
-                    }
-                )
+            if (
+                ch["channel_id"] not in config.board_ignored_channels
+                and ch["user_id"] not in config.board_ignored_users
+            ):
+                for row in results:
+                    if row["channel_id"] == ch["channel_id"] and row["guild_id"] == ch["guild_id"]:
+                        row["count"] += ch["count"]
+                        if row["last_message_at"] < ch["last_message_at"]:
+                            row["last_message_at"] = ch["last_message_at"]
+                            row["last_message_id"] = ch["last_message_id"]
+                        break
+                else:
+                    results.append(
+                        {
+                            "channel_id": ch["channel_id"],
+                            "guild_id": ch["guild_id"],
+                            "count": ch["count"],
+                            "last_message_at": ch["last_message_at"],
+                            "last_message_id": ch["last_message_id"],
+                        }
+                    )
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
 
@@ -76,20 +80,24 @@ class Boards(basecog.Basecog):
     def sort_users(self, lis):
         results = []
         for ch in lis:
-            for row in results:
-                if row["user_id"] == ch["user_id"]:
-                    row["count"] += ch["count"]
-                    if row["last_message_at"] < ch["last_message_at"]:
-                        row["last_message_at"] = ch["last_message_at"]
-                    break
-            else:
-                results.append(
-                    {
-                        "user_id": ch["user_id"],
-                        "count": ch["count"],
-                        "last_message_at": ch["last_message_at"],
-                    }
-                )
+            if (
+                ch["channel_id"] not in config.board_ignored_channels
+                and ch["user_id"] not in config.board_ignored_users
+            ):
+                for row in results:
+                    if row["user_id"] == ch["user_id"]:
+                        row["count"] += ch["count"]
+                        if row["last_message_at"] < ch["last_message_at"]:
+                            row["last_message_at"] = ch["last_message_at"]
+                        break
+                else:
+                    results.append(
+                        {
+                            "user_id": ch["user_id"],
+                            "count": ch["count"],
+                            "last_message_at": ch["last_message_at"],
+                        }
+                    )
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
 
@@ -297,23 +305,18 @@ class Boards(basecog.Basecog):
             and not isinstance(message.channel, VoiceChannel)
             and not isinstance(message.channel, CategoryChannel)
         ):
-            if (
-                message.author.id not in config.board_ignored_users
-                and message.channel.id not in config.board_ignored_channels
-            ):
-                channel_id = message.channel.id
-                user_id = message.author.id
-                guild_id = message.guild.id
-                last_message_at = message.created_at
-                last_message_id = message.id
-                repository.increment(
-                    channel_id=channel_id,
-                    user_id=user_id,
-                    guild_id=guild_id,
-                    last_message_at=last_message_at,
-                    last_message_id=last_message_id,
-                )
-                ch_repo = repository.get_channel(channel_id)
+            channel_id = message.channel.id
+            user_id = message.author.id
+            guild_id = message.guild.id
+            last_message_at = message.created_at
+            last_message_id = message.id
+            repository.increment(
+                channel_id=channel_id,
+                user_id=user_id,
+                guild_id=guild_id,
+                last_message_at=last_message_at,
+                last_message_id=last_message_id,
+            )
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
@@ -322,22 +325,18 @@ class Boards(basecog.Basecog):
             and not isinstance(message.channel, VoiceChannel)
             and not isinstance(message.channel, CategoryChannel)
         ):
-            if (
-                message.author.id not in config.board_ignored_users
-                and message.channel.id not in config.board_ignored_channels
-            ):
-                channel_id = message.channel.id
-                user_id = message.author.id
-                guild_id = message.guild.id
-                last_message_at = message.created_at
-                last_message_id = message.id
-                repository.decrement(
-                    channel_id=channel_id,
-                    user_id=user_id,
-                    guild_id=guild_id,
-                    last_message_at=last_message_at,
-                    last_message_id=last_message_id,
-                )
+            channel_id = message.channel.id
+            user_id = message.author.id
+            guild_id = message.guild.id
+            last_message_at = message.created_at
+            last_message_id = message.id
+            repository.decrement(
+                channel_id=channel_id,
+                user_id=user_id,
+                guild_id=guild_id,
+                last_message_at=last_message_at,
+                last_message_id=last_message_id,
+            )
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -360,7 +359,6 @@ class Boards(basecog.Basecog):
                         not isinstance(channel, PrivateChannel)
                         and not isinstance(channel, VoiceChannel)
                         and not isinstance(channel, CategoryChannel)
-                        and channel.id not in config.board_ignored_channels
                     ):
                         if results is None:
                             messages = await channel.history(
@@ -386,20 +384,20 @@ class Boards(basecog.Basecog):
                                 ).flatten()
 
                         for msg in messages:
-                            if msg.author.id not in config.board_ignored_users:
-                                channel_id = msg.channel.id
-                                user_id = msg.author.id
-                                guild_id = msg.guild.id
-                                last_message_at = msg.created_at
-                                last_message_id = msg.id
 
-                                repository.increment(
-                                    channel_id=channel_id,
-                                    user_id=user_id,
-                                    guild_id=guild_id,
-                                    last_message_at=last_message_at,
-                                    last_message_id=last_message_id,
-                                )
+                            channel_id = msg.channel.id
+                            user_id = msg.author.id
+                            guild_id = msg.guild.id
+                            last_message_at = msg.created_at
+                            last_message_id = msg.id
+
+                            repository.increment(
+                                channel_id=channel_id,
+                                user_id=user_id,
+                                guild_id=guild_id,
+                                last_message_at=last_message_at,
+                                last_message_id=last_message_id,
+                            )
         await bot_dev.send(text.get("boards", "synced"))
 
 
