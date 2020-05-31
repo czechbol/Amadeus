@@ -8,7 +8,6 @@ from core.config import config
 from repository import vote_repo
 
 
-
 repository = vote_repo.VoteRepository()
 
 
@@ -34,9 +33,7 @@ class Weeb(basecog.Basecog):
             return
         BOOK_ID = args[1]
         try:
-            response = requests.get(
-                "https://nhentai.net/api/gallery/{BOOK_ID}".format(BOOK_ID=BOOK_ID)
-            )
+            response = requests.get("https://nhentai.net/api/gallery/{BOOK_ID}".format(BOOK_ID=BOOK_ID))
             dic = response.json()
             response.raise_for_status()
 

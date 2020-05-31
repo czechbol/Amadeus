@@ -35,11 +35,7 @@ class Vote(basecog.Basecog):
                 for emoji in self.bot.emojis:
                     if str(emoji) in line:
                         votes.append(
-                            {
-                                "emote": emoji,
-                                "option": line.replace(str(emoji) + " ", ""),
-                                "num_votes": 0,
-                            }
+                            {"emote": emoji, "option": line.replace(str(emoji) + " ", ""), "num_votes": 0,}
                         )
                         break
         while True:
@@ -69,23 +65,16 @@ class Vote(basecog.Basecog):
                         votes = sorted(votes, key=lambda i: (i["num_votes"]), reverse=True)
                         for option in votes:
                             content += text.fill(
-                                "vote",
-                                "option",
-                                option=option["option"],
-                                num=option["num_votes"] - 1,
+                                "vote", "option", option=option["option"], num=option["num_votes"] - 1,
                             )
-                        content += text.fill(
-                            "vote", "ends", date=date.strftime("%Y-%m-%d %H:%M:%S")
-                        )
+                        content += text.fill("vote", "ends", date=date.strftime("%Y-%m-%d %H:%M:%S"))
                         content = escape_mentions(escape_markdown(content))
                         await edit_msg.edit(content=content)
                     else:
                         if text.get("vote", "not_in_cache") not in edit_msg.content:
                             edit_msg = await vote_msg.channel.fetch_message(edit_msg.id)
                             if text.get("vote", "not_in_cache") not in edit_msg.content:
-                                content = (
-                                    edit_msg.content + "\n" + text.get("vote", "not_in_cache")
-                                )
+                                content = edit_msg.content + "\n" + text.get("vote", "not_in_cache")
                                 await edit_msg.edit(content=content)
             except UnboundLocalError:
                 pass
@@ -104,9 +93,7 @@ class Vote(basecog.Basecog):
         content += lines[0] + "\n"
         votes = sorted(votes, key=lambda i: (i["num_votes"]), reverse=True)
         for option in votes:
-            content += text.fill(
-                "vote", "option", option=option["option"], num=option["num_votes"] - 1,
-            )
+            content += text.fill("vote", "option", option=option["option"], num=option["num_votes"] - 1,)
         content = escape_mentions(escape_markdown(content))
 
         await edit_msg.channel.send(content=content)
@@ -165,9 +152,7 @@ class Vote(basecog.Basecog):
         for option in votes:
             await ctx.message.add_reaction(option["emote"])
 
-        edit_msg = await ctx.send(
-            text.fill("vote", "waiting", date=date.strftime("%Y-%m-%d %H:%M:%S"))
-        )
+        edit_msg = await ctx.send(text.fill("vote", "waiting", date=date.strftime("%Y-%m-%d %H:%M:%S")))
         repository.add_vote(
             channel_id=message.channel.id,
             message_id=message.id,

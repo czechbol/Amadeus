@@ -57,11 +57,7 @@ class Basecog(commands.Cog):
         if ctx.command is None:
             return "(no command)"
 
-        path = (
-            " ".join((p.name) for p in ctx.command.parents[::-1]) + " "
-            if ctx.command.parents
-            else ""
-        )
+        path = " ".join((p.name) for p in ctx.command.parents[::-1]) + " " if ctx.command.parents else ""
         return config.prefix + path + ctx.command.name
 
     def _getEmbed(self, ctx: commands.Context, color: int = None, pin=False):
@@ -130,9 +126,7 @@ class Basecog(commands.Cog):
             return
         botspam = self.getGuild().get_channel(config.channel_botspam)
         if ctx.channel.id not in config.bot_allowed:
-            await ctx.send(
-                text.fill("server", "botroom redirect", user=ctx.author, channel=botspam)
-            )
+            await ctx.send(text.fill("server", "botroom redirect", user=ctx.author, channel=botspam))
 
     async def deleteCommand(self, message, now: bool = True):
         """Try to delete the context message.
@@ -162,9 +156,7 @@ class Basecog(commands.Cog):
     ## Embeds
     ##
     # TODO Create RubbergoddessException class
-    async def throwError(
-        self, ctx: commands.Context, err, delete: bool = False, pin: bool = False
-    ):
+    async def throwError(self, ctx: commands.Context, err, delete: bool = False, pin: bool = False):
         """Show an embed and log the error"""
         # Get error information
         err_desc = err if type(err) == "str" else str(err)

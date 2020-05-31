@@ -54,9 +54,7 @@ def is_in_jail(ctx: commands.Context):
 
 
 def is_in_jail_or_dm(ctx: commands.Context):
-    return ctx.channel.id == config.channel_jail or isinstance(
-        ctx.message.channel, discord.DMChannel
-    )
+    return ctx.channel.id == config.channel_jail or isinstance(ctx.message.channel, discord.DMChannel)
 
 
 def is_in_voice(ctx: commands.Context):
