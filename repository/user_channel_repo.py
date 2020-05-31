@@ -10,12 +10,7 @@ class UserChannelRepository(BaseRepository):
     # unknown - pending - verified - kicked - banned
 
     def increment(
-        self,
-        channel_id: int,
-        user_id: int,
-        guild_id: int,
-        last_message_id: int,
-        last_message_at: datetime,
+        self, channel_id: int, user_id: int, guild_id: int, last_message_id: int, last_message_at: datetime,
     ):
         """Increment user_channel count, 
         if it doesn't exist, create it"""
@@ -44,12 +39,7 @@ class UserChannelRepository(BaseRepository):
         session.commit()
 
     def decrement(
-        self,
-        channel_id: int,
-        user_id: int,
-        guild_id: int,
-        last_message_id: int,
-        last_message_at: datetime,
+        self, channel_id: int, user_id: int, guild_id: int, last_message_id: int, last_message_at: datetime,
     ):
         """Decrement user_channel count."""
         user_channel = (

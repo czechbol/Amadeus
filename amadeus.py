@@ -13,9 +13,7 @@ from repository.database import database
 from repository.database.vote import Vote
 from repository.database.user_channels import UserChannel
 
-bot = commands.Bot(
-    command_prefix=commands.when_mentioned_or(*config.prefixes), help_command=help.Help(),
-)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(*config.prefixes), help_command=help.Help(),)
 
 presence = presence.Presence(bot)
 basecog = basecog.Basecog(bot)

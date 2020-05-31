@@ -85,10 +85,10 @@ class Draw(basecog.Basecog):
         """
         if not os.path.isdir("assets"):
             os.mkdir("assets")
-        tex2imgURL = "http://www.sciweavers.org/tex2img.php?eq={}&bc=Black&fc=White&im=png&fs=18&ff=arev&edit=0"
-        urllib.request.urlretrieve(
-            tex2imgURL.format(urllib.parse.quote(equation)), "assets/latex.png"
+        tex2imgURL = (
+            "http://www.sciweavers.org/tex2img.php?eq={}&bc=Black&fc=White&im=png&fs=18&ff=arev&edit=0"
         )
+        urllib.request.urlretrieve(tex2imgURL.format(urllib.parse.quote(equation)), "assets/latex.png")
 
         return discord.File("assets/latex.png")
 
@@ -107,9 +107,7 @@ class Draw(basecog.Basecog):
         brief=text.get("draw", "plot_desc"),
         description=text.get("draw", "plot_desc"),
     )
-    async def plot(
-        self, ctx, xmin: Optional[float] = -10, xmax: Optional[float] = 10, *, inp: str
-    ):
+    async def plot(self, ctx, xmin: Optional[float] = -10, xmax: Optional[float] = 10, *, inp: str):
 
         equations = escape_mentions(escape_markdown(inp)).split(";")
 

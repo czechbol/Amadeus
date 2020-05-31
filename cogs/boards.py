@@ -22,8 +22,6 @@ class Boards(basecog.Basecog):
         self.bot = bot
         self.handled = []
 
-        self.scanned = False
-
     async def get_history(self, channel, after):
         if after is None:
             messages = await channel.history(limit=None, oldest_first=True).flatten()
@@ -283,8 +281,7 @@ class Boards(basecog.Basecog):
 
         # get data for "YOUR POSITION" list
         positions = [
-            x + author_position
-            for x in [y - config.board_around for y in range(config.board_around * 2)]
+            x + author_position for x in [y - config.board_around for y in range(config.board_around * 2)]
         ]
         lines = []
         for position in positions:
