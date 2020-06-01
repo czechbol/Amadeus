@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime
 
 import discord
 from discord import CategoryChannel, VoiceChannel
@@ -164,7 +163,7 @@ class Boards(basecog.Basecog):
                 continue
 
             # fmt: off
-            if ctx.guild != None and channel.guild.id == ctx.guild.id:
+            if ctx.guild is not None and channel.guild.id == ctx.guild.id:
                 lines.append(text.fill("boards", "channel template",
                     index=f"{position + 1:>2}",
                     count=f"{item['count']:>5}",
@@ -180,7 +179,7 @@ class Boards(basecog.Basecog):
         title = "top number" if offset == 0 else "top offset"
         # fmt: off
         embed.add_field(
-            name=text.fill("boards", title, top=config.board_top, offset=offset+1),
+            name=text.fill("boards", title, top=config.board_top, offset=offset + 1),
             value="\n".join(lines),
             inline=False,
         )
@@ -296,9 +295,9 @@ class Boards(basecog.Basecog):
             # get user object
             item = users[position]
             user = self.bot.get_user(item["user_id"])
-            if user == None:
+            if user is None:
                 user = await self.bot.fetch_user(item["user_id"])
-            if user == None:
+            if user is None:
                 user_name = "_(Unknown user)_"
             else:
                 user_name = discord.utils.escape_mentions(user.display_name)

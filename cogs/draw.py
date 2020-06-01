@@ -4,7 +4,7 @@ import urllib
 from typing import Optional
 
 import numpy
-from scipy.special import gamma
+from scipy.special import gamma  # noqa F401
 import graphviz as gz
 from matplotlib import pyplot as plt
 
