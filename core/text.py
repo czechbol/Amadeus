@@ -1,4 +1,5 @@
-import json, re
+import re
+import json
 
 import discord
 

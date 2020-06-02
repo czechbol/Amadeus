@@ -23,7 +23,9 @@
 		"pong_desc": "Really?",
 		"really": "Opravdu musíš zkusit všechno?",
 		"uhoh_desc": "Počet uh ohs od spuštění",
-		"uh oh": "{cnt} uh ohs od spuštění"
+		"uh oh": "{cnt} uh ohs od spuštění",
+		"not_booster_anymore": "Uživatel na serveru již není ServerBooster.",
+		"new_server_booster": "Uživatel na serveru je nyní ServerBooster."
 	},
 	"draw": {
 		"latex_desc": "Vykreslí LaTeX výraz",
@@ -49,28 +51,25 @@
 		"sauce_desc": "Gets that sweet sauce",
 		"sauce_help": "`{prefix}sauce magic_number`\nPříklad:\n`{prefix}sauce 91988`"
 	},
-
 	"boards": {
-		"top number":          "Top {top}",
-		"top offset"  :        "{top} od pozice {offset}",
-		"synced":              "Databáze zpráv byla úspěšně synchronizována.",
-		"author position":     "Tvoje umístění",
-		"not found":           "V databázi takový záznam není",
-		"invalid offset":      "Offset může být jen kladné celé číslo",
-		"offset too big":      "Moc velký offset",
-		
-		"channel board":          "Zobrazí kanály s nejvíce zprávami",
-		"channel info":           "Zobrazí informace o kanálu",
-		"channel board title":    "Channelboard",
-		"channel board desc":     "Celkový počet zpráv na kanál",
-		"channel template":       "`{index}` ... `{count}` #{name}",
+		"top number": "Top {top}",
+		"top offset": "{top} od pozice {offset}",
+		"synced": "Databáze zpráv byla úspěšně synchronizována.",
+		"author position": "Tvoje umístění",
+		"not found": "V databázi takový záznam není",
+		"invalid offset": "Offset může být jen kladné celé číslo",
+		"offset too big": "Moc velký offset",
+		"channel board": "Zobrazí kanály s nejvíce zprávami",
+		"channel info": "Zobrazí informace o kanálu",
+		"channel board title": "Channelboard",
+		"channel board desc": "Celkový počet zpráv na kanál",
+		"channel template": "`{index}` ... `{count}` #{name}",
 		"channel template guild": "`{index}` ... `{count}` #{name} ({guild})",
-
-		"user board":          "Zobrazí uživatele s nejvíce odeslanými zprávami",
-		"user info":           "Zobrazí informace o uživateli",
-		"user board title":    "Userboard",
-		"user board desc":     "Celkový počet zpráv na uživatele",
-		"user template":       "`{index}` ... `{count}` {name}",
-		"target template":     "`{index}` ... `{count}` **{name}**"
+		"user board": "Zobrazí uživatele s nejvíce odeslanými zprávami",
+		"user info": "Zobrazí informace o uživateli",
+		"user board title": "Userboard",
+		"user board desc": "Celkový počet zpráv na uživatele",
+		"user template": "`{index}` ... `{count}` {name}",
+		"target template": "`{index}` ... `{count}` **{name}**"
 	}
 }

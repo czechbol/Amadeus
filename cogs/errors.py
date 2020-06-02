@@ -1,11 +1,9 @@
 import traceback
 
-import discord
 from discord.ext import commands
 
 from core.config import config
-from core.emote import emote
-from core import basecog, utils
+from core import basecog
 from core.text import text
 
 

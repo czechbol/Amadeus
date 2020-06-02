@@ -5,13 +5,13 @@ from discord.ext import commands
 
 from core.emote import emote
 from core.config import config
-from core import check, help, utils, basecog
+from core import check, help, basecog
 
 from features import presence
 from repository.database import session
 from repository.database import database
-from repository.database.vote import Vote
-from repository.database.user_channels import UserChannel
+from repository.database.vote import Vote  # noqa F401
+from repository.database.user_channels import UserChannel  # noqa F401
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or(*config.prefixes), help_command=help.Help(),)
 
@@ -84,7 +84,7 @@ async def reload(ctx, extension):
 @unload.error
 async def missing_arg_error(ctx, error):
     if isinstance(error, commands.errors.MissingRequiredArgument):
-        await ctx.send(f"Nesprávný počet argumentů" + emote.sad)
+        await ctx.send("Nesprávný počet argumentů" + emote.sad)
 
 
 # database.base.metadata.drop_all(database.db)
