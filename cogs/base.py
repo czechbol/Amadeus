@@ -59,15 +59,20 @@ class Base(basecog.Basecog):
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         booster_role = discord.utils.get(self.getGuild().roles, id=config.booster_role)
+
         if booster_role in before.roles:
             before_booster = True
         else:
             before_booster = False
+
         if booster_role in after.roles:
             after_booster = True
         else:
             after_booster = False
+
         if not before_booster and not after_booster:
+            return
+        elif before_booster and after_booster:
             return
         elif not before_booster and after_booster:
             embed = discord.Embed(
