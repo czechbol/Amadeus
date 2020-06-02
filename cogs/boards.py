@@ -265,7 +265,7 @@ class Boards(basecog.Basecog):
             # get position string
             # fmt: off
             if item["user_id"] == member.id:
-                user_position = position
+                author_position = position
                 lines.append(text.fill("boards", "target template",
                     index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
             else:
@@ -287,8 +287,12 @@ class Boards(basecog.Basecog):
         ]
         lines = []
         for position in positions:
+            # do not display "YOUR POSITION" if user has no place
+            if author_position < 0:
+                break
+
             # do not display "YOUR POSITION" if user is in "TOP X" and OFFSET is not set
-            if offset == 0 and user_position < config.board_top - config.board_around:
+            if offset == 0 and author_position < config.board_top - config.board_around:
                 break
 
             # do not wrap around (if the 'around' number is too high)
