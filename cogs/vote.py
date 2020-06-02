@@ -35,7 +35,7 @@ class Vote(basecog.Basecog):
                 for emoji in self.bot.emojis:
                     if str(emoji) in line:
                         votes.append(
-                            {"emote": emoji, "option": line.replace(str(emoji) + " ", ""), "num_votes": 0,}
+                            {"emote": emoji, "option": line.replace(str(emoji) + " ", ""), "num_votes": 0}
                         )
                         break
         while True:
@@ -190,7 +190,7 @@ class Vote(basecog.Basecog):
                     vote_msg = await channel.fetch_message(v["message_id"])
                     edit_msg = await channel.fetch_message(v["edit_id"])
                     date = v["date"]
-                    task = asyncio.create_task(self.loop(vote_msg, edit_msg, date))
+                    asyncio.create_task(self.loop(vote_msg, edit_msg, date))
                     votes.append(v["message_id"])
                 except discord.errors.NotFound:
                     repository.del_vote(channel_id=v["channel_id"], message_id=v["message_id"])
