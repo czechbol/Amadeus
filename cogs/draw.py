@@ -46,7 +46,7 @@ class Draw(basecog.Basecog):
             "sqrt": "numpy.sqrt",
             "cbrt": "numpy.cbrt",
             "abs": "numpy.absolute",
-            "fact": "gamma",
+            "gamma": "gamma",
         }
         self.rep_op = {
             "+": " + ",
