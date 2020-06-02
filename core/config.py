@@ -24,13 +24,11 @@ class Config:
             print("Error loading config files.")
             sys.exit(1)
 
-        ##
-        ## DATABASE
+        # DATABASE
         self.db_states = self.get("database", "states")
         self.db_string = self.get("database", "string")
 
-        ##
-        ## BOT
+        # BOT
         self.debug = self.get("bot", "debug")
         self.loader = self.get("bot", "loader")
         self.key = self.get("bot", "key")
@@ -43,11 +41,11 @@ class Config:
 
         self.extensions = self.get("bot", "extensions")
 
-        ##
-        ## CHANNELS
+        # CHANNELS
         self.channel_jail = self.get("channels", "jail")
         self.channel_jailinfo = self.get("channels", "jail-info")
         self.channel_mods = self.get("channels", "mods")
+        self.boost_channel = self.get("channels", "boost")
         self.channel_botdev = self.get("channels", "botdev")
         self.channel_botlog = self.get("channels", "botlog")
         self.channel_guildlog = self.get("channels", "guildlog")
@@ -56,38 +54,36 @@ class Config:
 
         self.bot_allowed = self.get("channels", "bot allowed")
 
-        ##
-        ## COLOR
+        # COLOR
         self.color = self.get("color", "main")
         self.color_success = self.get("color", "success")
         self.color_notify = self.get("color", "notify")
         self.color_error = self.get("color", "error")
+        self.color_boost = self.get("color", "boost")
         self.colors = [
             self.color,
             self.color_success,
             self.color_notify,
             self.color_error,
+            self.color_boost,
         ]
 
-        ##
-        ## DELAY
+        # DELAY
         self.delay_embed = self.get("delay", "embed")
 
-        ##
-        ## ROLES
+        # ROLES
         self.role_verify = self.get("roles", "verify_id")
         self.role_mod = self.get("roles", "mod_id")
         self.roles_elevated = self.get("roles", "elevated_ids")
+        self.booster_role = self.get("roles", "server_booster")
 
-        ##
-        ## BOARDS
+        # BOARDS
         self.board_ignored_channels = self.get("boards", "ignored channels")
         self.board_ignored_users = self.get("boards", "ignored users")
         self.board_top = self.get("boards", "top number")
         self.board_around = self.get("boards", "around number")
 
-        ##
-        ## COMPATIBILITY
+        # COMPATIBILITY
         self.noimitation = self.get("compatibility", "ignored imitation channels")
 
 
