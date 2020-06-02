@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import timedelta
 
 from repository.base_repository import BaseRepository
 from repository.database import session

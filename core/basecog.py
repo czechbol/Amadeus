@@ -21,9 +21,7 @@ class Basecog(commands.Cog):
         self.role_verify = None
         self.roles_elevated = None
 
-    ##
-    ## OBJECT GETTERS
-    ##
+    # OBJECT GETTERS
     def getGuild(self):
         if self.guild is None:
             self.guild = self.bot.get_guild(config.guild_id)
@@ -49,9 +47,7 @@ class Basecog(commands.Cog):
             self.roles_elevated = [self.getGuild().get_role(x) for x in config.roles_elevated]
         return self.roles_elevated
 
-    ##
-    ## Helper functions
-    ##
+    # Helper functions
     def _getEmbedTitle(self, ctx: commands.Context):
         """Helper function assembling title for embeds"""
         if ctx.command is None:
@@ -89,9 +85,7 @@ class Basecog(commands.Cog):
         else:
             return "{}:{}".format(ctx.command.cog.qualified_name.lower(), name)
 
-    ##
-    ## Utils
-    ##
+    # Utils
     async def log(self, ctx, action: str, quote: bool = True, msg=None):
         """Log event"""
         channel = self.getGuild().get_channel(config.channel_guildlog)
@@ -152,9 +146,7 @@ class Basecog(commands.Cog):
         """Get yyyy-mm-dd HH:MM:SS string"""
         return datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
-    ##
-    ## Embeds
-    ##
+    # Embeds
     # TODO Create RubbergoddessException class
     async def throwError(self, ctx: commands.Context, err, delete: bool = False, pin: bool = False):
         """Show an embed and log the error"""
@@ -245,9 +237,7 @@ class Basecog(commands.Cog):
         await self.deleteCommand(ctx, now=True)
 
     # TODO Move helper functions here
-    ##
-    ## HELPER FUNCTIONS
-    ##
+    # HELPER FUNCTIONS
     async def sendLong(self, ctx: commands.Context, message: str, code: bool = False):
         """Send messages that may exceed the 2000-char limit
 
