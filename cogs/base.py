@@ -56,6 +56,37 @@ class Base(basecog.Basecog):
     async def pong(self, ctx):
         await ctx.send(text.get("base", "really"))
 
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        booster_role = discord.utils.get(self.getGuild().roles, id=config.booster_role)
+        if booster_role in before.roles:
+            before_booster = True
+        else:
+            before_booster = False
+        if booster_role in after.roles:
+            after_booster = True
+        else:
+            after_booster = False
+        if not before_booster and not after_booster:
+            return
+        elif not before_booster and after_booster:
+            embed = discord.Embed(
+                title=text.get("base", "new_server_booster"),
+                color=config.color_boost,
+                timestamp=datetime.datetime.now().replace(microsecond=0),
+            )
+        elif before_booster and not after_booster:
+            embed = discord.Embed(
+                title=text.get("base", "not_booster_anymore"),
+                color=config.color_boost,
+                timestamp=datetime.datetime.now().replace(microsecond=0),
+            )
+        embed.set_thumbnail(url=after.avatar_url)
+        embed.add_field(name="User", value=f"{after.name}#{after.discriminator}")
+        embed.set_footer(text=f"UserID: {after.id}")
+        channel = discord.utils.get(self.getGuild().channels, id=config.boost_channel)
+        await channel.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Base(bot))
