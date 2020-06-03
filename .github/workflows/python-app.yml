@@ -34,7 +34,7 @@ jobs:
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names. Ignores errors linked to black and our codestyle preferences
-        flake8 . --count --select=C,E,F,W,B --ignore=E128, E203, E501, W503 --exclude=config/* --max-complexity=10 --max-line-length=110 --show-source --statistics
+        flake8 . --count --select=C,E,F,W,B --ignore=E128,E203,E501,W503 --exclude=config/* --max-complexity=10 --max-line-length=110 --show-source --statistics
         
         # Check the code with black
         black . --check --line-length=100
