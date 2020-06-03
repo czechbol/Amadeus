@@ -102,9 +102,9 @@ class Basecog(commands.Cog):
         if ctx.guild and ctx.guild.id != config.guild_id:
             message += " (**{}**/{})".format(ctx.guild.name, ctx.guild.id)
 
-        if msg != None or quote != None:
+        if msg is not None or quote is not None:
             message += ": "
-        if msg != None:
+        if msg is not None:
             if type(msg).__name__ == "str":
                 message += msg
             else:
@@ -151,7 +151,7 @@ class Basecog(commands.Cog):
     async def throwError(self, ctx: commands.Context, err, delete: bool = False, pin: bool = False):
         """Show an embed and log the error"""
         # Get error information
-        err_desc = err if type(err) == "str" else str(err)
+        # err_desc = err if type(err) == "str" else str(err)
         if isinstance(err, Exception):
             err = getattr(err, "original", err)
             err_type = type(err).__name__
