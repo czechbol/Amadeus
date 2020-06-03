@@ -37,4 +37,4 @@ jobs:
         flake8 . --count --select=C,E,F,W,B --ignore=E128,E203,E501,W503,C901 --exclude=config/* --max-complexity=10 --max-line-length=110 --show-source --statistics
         
         # Check the code with black
-        black . --check --line-length=100
+        black . --check --line-length=110
