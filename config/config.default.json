@@ -39,6 +39,7 @@
 		"__comment": "cogs to load by default",
 		"extensions": [
 			"base",
+			"boards",
 			"draw",
 			"vote",
 			"weeb"
@@ -49,6 +50,7 @@
 		"jail": 0,
 		"jail-info": 0,
 		"mods": 0,
+		"boost": 0,
 		"botdev": 0,
 		"botlog": 0,
 		"guildlog": 0,
@@ -66,7 +68,8 @@
 		"main": 5518687,
 		"success": 2015049,
 		"notify": 15042615,
-		"error": 14166812
+		"error": 14166812,
+		"boost": 16023551
 	},
 	"__comment": "Timers for automatic deletion of bot's messages",
 	"delay": {
@@ -80,6 +83,7 @@
 			0,
 			0
 		],
+		"server_booster": 0,
 		"__comment": "Which roles are considered fully local",
 		"native": [
 			"FEKT"
