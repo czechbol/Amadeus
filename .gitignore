@@ -4,3 +4,4 @@ config/emotes.py
 __pycache__
 .idea
 .venv/
+.vscode/settings.json
