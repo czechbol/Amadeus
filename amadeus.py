@@ -21,7 +21,7 @@ basecog = basecog.Basecog(bot)
 
 @bot.event
 async def on_ready():
-    """If Amadeus is ready"""
+    """If Amadeus is ready."""
     if config.debug < 1:
         login = "Logged in: "
     else:

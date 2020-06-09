@@ -13,7 +13,7 @@ uhoh_ctr = 0
 
 
 class Base(basecog.Basecog):
-    """Basic bot commands"""
+    """Basic bot commands."""
 
     def __init__(self, bot: commands.Bot):
         super().__init__(bot)
