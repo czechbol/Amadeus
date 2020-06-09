@@ -26,7 +26,22 @@ class Vote(basecog.Basecog):
         self.bot = bot
         self.handled = []
 
-    async def loop(self, vote_msg, edit_msg, date):
+    async def fetch_repo_votes(self):
+        lis = repository.get_list()
+        if lis is not None:
+            votes = []
+            for v in lis:
+                try:
+                    channel = self.bot.get_channel(v["channel_id"])
+                    vote_msg = await channel.fetch_message(v["message_id"])
+                    edit_msg = await channel.fetch_message(v["edit_id"])
+                    date = v["date"]
+                    asyncio.create_task(self.loop(vote_msg, edit_msg, date))
+                    votes.append(v["message_id"])
+                except discord.errors.NotFound:
+                    repository.del_vote(channel_id=v["channel_id"], message_id=v["message_id"])
+
+    async def find_emotes(self, vote_msg):
         lines = vote_msg.content.split("\n")
         votes = []
         for line in lines:
@@ -38,6 +53,37 @@ class Vote(basecog.Basecog):
                             {"emote": emoji, "option": line.replace(str(emoji) + " ", ""), "num_votes": 0}
                         )
                         break
+        return votes
+
+    async def check_reactions(self, raw_reaction, vote_msg, votes, edit_msg, date):
+        try:
+            if raw_reaction.message_id == vote_msg.id:
+                if vote_msg in self.bot.cached_messages:
+                    content = text.get("vote", "vote_count")
+                    for reaction in vote_msg.reactions:
+                        for option in votes:
+                            if reaction.emoji == option["emote"]:
+                                option["num_votes"] = reaction.count
+                    votes = sorted(votes, key=lambda i: (i["num_votes"]), reverse=True)
+                    for option in votes:
+                        content += text.fill(
+                            "vote", "option", option=option["option"], num=option["num_votes"] - 1,
+                        )
+                    content += text.fill("vote", "ends", date=date.strftime("%Y-%m-%d %H:%M:%S"))
+                    content = escape_mentions(escape_markdown(content))
+                    await edit_msg.edit(content=content)
+                else:
+                    if text.get("vote", "not_in_cache") not in edit_msg.content:
+                        edit_msg = await vote_msg.channel.fetch_message(edit_msg.id)
+                        if text.get("vote", "not_in_cache") not in edit_msg.content:
+                            content = edit_msg.content + "\n" + text.get("vote", "not_in_cache")
+                            await edit_msg.edit(content=content)
+        except UnboundLocalError:
+            pass
+
+    async def loop(self, vote_msg, edit_msg, date):
+        votes = await self.find_emotes(vote_msg)
+
         while True:
             if date < datetime.now():
                 break
@@ -53,31 +99,7 @@ class Vote(basecog.Basecog):
             for task in done_tasks:
                 raw_reaction = await task
 
-            try:
-                if raw_reaction.message_id == vote_msg.id:
-                    if vote_msg in self.bot.cached_messages:
-                        content = text.get("vote", "vote_count")
-                        for reaction in vote_msg.reactions:
-                            for option in votes:
-                                if reaction.emoji == option["emote"]:
-                                    option["num_votes"] = reaction.count
-
-                        votes = sorted(votes, key=lambda i: (i["num_votes"]), reverse=True)
-                        for option in votes:
-                            content += text.fill(
-                                "vote", "option", option=option["option"], num=option["num_votes"] - 1,
-                            )
-                        content += text.fill("vote", "ends", date=date.strftime("%Y-%m-%d %H:%M:%S"))
-                        content = escape_mentions(escape_markdown(content))
-                        await edit_msg.edit(content=content)
-                    else:
-                        if text.get("vote", "not_in_cache") not in edit_msg.content:
-                            edit_msg = await vote_msg.channel.fetch_message(edit_msg.id)
-                            if text.get("vote", "not_in_cache") not in edit_msg.content:
-                                content = edit_msg.content + "\n" + text.get("vote", "not_in_cache")
-                                await edit_msg.edit(content=content)
-            except UnboundLocalError:
-                pass
+            await self.check_reactions(raw_reaction, vote_msg, votes, edit_msg, date)
 
         if vote_msg not in self.bot.cached_messages:
             vote_msg = await vote_msg.channel.fetch_message(vote_msg.id)
@@ -165,35 +187,11 @@ class Vote(basecog.Basecog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        lis = repository.get_list()
-        if lis is not None:
-            votes = []
-            for v in lis:
-                try:
-                    channel = self.bot.get_channel(v["channel_id"])
-                    vote_msg = await channel.fetch_message(v["message_id"])
-                    edit_msg = await channel.fetch_message(v["edit_id"])
-                    date = v["date"]
-                    asyncio.create_task(self.loop(vote_msg, edit_msg, date))
-                    votes.append(v["message_id"])
-                except discord.errors.NotFound:
-                    repository.del_vote(channel_id=v["channel_id"], message_id=v["message_id"])
+        await self.fetch_repo_votes()
 
     @commands.Cog.listener()
     async def on_resumed(self):
-        lis = repository.get_list()
-        if lis is not None:
-            votes = []
-            for v in lis:
-                try:
-                    channel = self.bot.get_channel(v["channel_id"])
-                    vote_msg = await channel.fetch_message(v["message_id"])
-                    edit_msg = await channel.fetch_message(v["edit_id"])
-                    date = v["date"]
-                    asyncio.create_task(self.loop(vote_msg, edit_msg, date))
-                    votes.append(v["message_id"])
-                except discord.errors.NotFound:
-                    repository.del_vote(channel_id=v["channel_id"], message_id=v["message_id"])
+        await self.fetch_repo_votes()
 
 
 def setup(bot):
