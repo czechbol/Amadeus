@@ -1,5 +1,7 @@
 # Amadeus
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/226d8bbd49e242d1a710cb03c2f2764a)](https://app.codacy.com/manual/Czechbol/Amadeus?utm_source=github.com&utm_medium=referral&utm_content=Czechbol/Amadeus&utm_campaign=Badge_Grade_Dashboard)
+
 <p align="center">
   <a href="https://github.com/Czechbol/Amadeus/actions?query=workflow%3AAmadeus"><img src="https://github.com/Czechbol/Amadeus/workflows/Amadeus/badge.svg?branch=master" alt="Build" /></a>
   <a href="https://github.com/Czechbol/Amadeus/graphs/commit-activity"><img src="https://img.shields.io/github/last-commit/Czechbol/Amadeus" alt="Maintenance" /></a>
