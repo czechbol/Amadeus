@@ -1,6 +1,8 @@
 import os
 import re
+import io
 import urllib
+import aiohttp
 from typing import Optional
 
 import numpy
@@ -78,29 +80,23 @@ class Draw(basecog.Basecog):
 
         return func
 
-    async def get_math_equation(self, equation):
-        """
-        send the text equasion to the API
-        send the result image to channel
-        """
-        if not os.path.isdir("assets"):
-            os.mkdir("assets")
-        tex2imgURL = (
-            "http://www.sciweavers.org/tex2img.php?eq={}&bc=Black&fc=White&im=png&fs=18&ff=arev&edit=0"
-        )
-        urllib.request.urlretrieve(tex2imgURL.format(urllib.parse.quote(equation)), "assets/latex.png")
-
-        return discord.File("assets/latex.png")
-
     @commands.command(
         help=text.fill("draw", "latex_help", prefix=config.prefix),
         brief=text.get("draw", "latex_desc"),
         description=text.get("draw", "latex_desc"),
     )
     async def latex(self, ctx, *, equation):
-        embed = await self.get_math_equation(equation)
-        await ctx.send(file=embed)
-        os.remove("assets/latex.png")
+        channel = ctx.channel
+        async with ctx.typing():
+            imgURL = (
+                "http://www.sciweavers.org/tex2img.php?eq={}&bc=Black&fc=White&im=png&fs=18&ff=arev&edit=0"
+            ).format(urllib.parse.quote(equation))
+            async with aiohttp.ClientSession() as session:
+                async with session.get(imgURL) as resp:
+                    if resp.status != 200:
+                        return await ctx.send("Could not get image.")
+                    data = io.BytesIO(await resp.read())
+                    await channel.send(file=discord.File(data, "latex.png"))
 
     @commands.command(
         help=text.fill("draw", "plot_help", prefix=config.prefix),
@@ -128,24 +124,25 @@ class Draw(basecog.Basecog):
         successful_eq = 0
         msg = text.get("draw", "plot_err")
         numpy.seterr(divide="ignore", invalid="ignore")
-        for eq in equations:
-            try:
-                func = self.string2func(eq)
-                x = numpy.linspace(xmin, xmax, 1000)
-                plt.plot(x, func(x))
-                plt.xlim(xmin, xmax)
-                successful_eq += 1
-            except Exception as e:
-                msg += "\n" + eq + " - " + str(e)
-        if msg != text.get("draw", "plot_err"):
-            await ctx.send(msg)
-        if successful_eq > 0:
-            if not os.path.isdir("assets"):
-                os.mkdir("assets")
-            plt.savefig("assets/plot.png", bbox_inches="tight", dpi=100)
-            plt.clf()
-            await ctx.send(file=discord.File("assets/plot.png"))
-            os.remove("assets/plot.png")
+        async with ctx.typing():
+            for eq in equations:
+                try:
+                    func = self.string2func(eq)
+                    x = numpy.linspace(xmin, xmax, 1000)
+                    plt.plot(x, func(x))
+                    plt.xlim(xmin, xmax)
+                    successful_eq += 1
+                except Exception as e:
+                    msg += "\n" + eq + " - " + str(e)
+            if msg != text.get("draw", "plot_err"):
+                await ctx.send(msg)
+            if successful_eq > 0:
+                if not os.path.isdir("assets"):
+                    os.mkdir("assets")
+                plt.savefig("assets/plot.png", bbox_inches="tight", dpi=100)
+                plt.clf()
+                await ctx.send(file=discord.File("assets/plot.png"))
+                os.remove("assets/plot.png")
         return
 
     @commands.command(
@@ -170,6 +167,7 @@ class Draw(basecog.Basecog):
         os.remove("assets/graphviz")
         os.remove("assets/graphviz.png")
 
+    @classmethod
     def is_graphviz_message(self, body):
         return body.startswith("```digraph") and body.endswith("```") and body.count("\n") >= 2
 
