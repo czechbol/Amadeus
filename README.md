@@ -9,7 +9,6 @@
   
 </p>
 
-
 ## About
 
 [Rubbergoddess](https://github.com/sinus-x/rubbergoddess)'s helper bot with functions not crucial to FEKTwide Discord but still helpful.
@@ -22,7 +21,6 @@ To be added when this bot is ready, in the mean time use [Rubbergoddess's wiki](
 
 Amadeus is mantained by [Czechbol](https://github.com/Czechbol) and 
 [sinus-x](https://github.com/sinus-x).
-
 
 ## License
 
