@@ -2,9 +2,10 @@ FROM python:3.8-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-RUN apt-get update && apt-get -qq install git tzdata
-RUN apt-get -qq install graphviz
-RUN apt-get clean && apt-get autoremove -y
+RUN apt-get update
+RUN apt-get -y --no-install-recommends install git tzdata graphviz \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/*
 ENV TZ=Europe/Prague
 
 VOLUME /Amadeus
