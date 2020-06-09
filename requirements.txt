@@ -7,3 +7,4 @@ graphviz
 xdot
 scipy
 matplotlib
+unidecode
