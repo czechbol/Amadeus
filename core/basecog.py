@@ -136,13 +136,15 @@ class Basecog(commands.Cog):
             self.logException(message, err)
             pass
 
-    def parseArg(self, arg: str = None):
+    @classmethod
+    def parseArg(cls, arg: str = None):
         """Return true if supported argument is matched"""
         # TODO Do this the proper way
         args = ["pin", "force"]
         return True if arg in args else False
 
-    def getTimestamp(self):
+    @classmethod
+    def getTimestamp(cls):
         """Get yyyy-mm-dd HH:MM:SS string"""
         return datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -251,7 +253,8 @@ class Basecog(commands.Cog):
             else:
                 await ctx.send(m)
 
-    def __formatHelp(self, text: str):
+    @classmethod
+    def __formatHelp(cls, text: str):
         if not text:
             return "_(No help available)_"
         text = text.split("\n")
