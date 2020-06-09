@@ -23,7 +23,8 @@ class VoteRepository(BaseRepository):
             result = None
         return result
 
-    def del_vote(self, channel_id: int = None, message_id: int = None):
+    @classmethod
+    def del_vote(cls, channel_id: int = None, message_id: int = None):
         users = (
             session.query(Vote)
             .filter(Vote.message_id == message_id)

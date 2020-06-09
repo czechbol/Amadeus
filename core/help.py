@@ -15,21 +15,26 @@ class Help(commands.MinimalHelpCommand):
 
         super().__init__(no_category="Nezařazeno", commands_heading="commands")
 
-    def command_not_found(self, string):
+    @classmethod
+    def command_not_found(cls, string):
         return f"Žádný příkaz jako `{string}` neexistuje."
 
-    def subcommand_not_found(self, command, string):
+    @classmethod
+    def subcommand_not_found(cls, command, string):
         if isinstance(command, commands.Group) and len(command.all_commands) > 0:
             return f"Příkaz `{command.qualified_name}` nemá podpříkaz `{string}`."
         return f"Příkaz `{command.qualified_name}` nemá žádný podpříkaz."
 
-    def get_command_signature(self, command, quote=True):
+    @classmethod
+    def get_command_signature(cls, command, quote=True):
         return f"**{command.qualified_name} {command.signature}**"
 
-    def get_opening_note(self):
+    @classmethod
+    def get_opening_note(cls):
         return
 
-    def get_ending_note(self):
+    @classmethod
+    def get_ending_note(cls):
         return " "
 
     def add_bot_commands_formatting(self, commands, heading):

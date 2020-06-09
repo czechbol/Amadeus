@@ -47,7 +47,8 @@ class Text:
                 string = string.replace("{" + key + "}", str(kwargs[key]))
         return string
 
-    def _replace(self, string: str):
+    @classmethod
+    def _replace(cls, string: str):
         # substitute emotes
         emotes = re.findall(r"{emote\.([a-z]+)}", string)
         for e in emotes:
@@ -58,26 +59,30 @@ class Text:
 
         return string
 
-    def _escape_user(self, user):
+    @classmethod
+    def _escape_user(cls, user):
         if isinstance(user, discord.Member):
             user = user.display_name
         return discord.utils.escape_markdown(str(user))
 
-    def _mention_user(self, user):
+    @classmethod
+    def _mention_user(cls, user):
         if isinstance(user, discord.Member):
             return user.mention
         if isinstance(user, int):
             return f"<@!{user}>"
         return str(user)
 
-    def _mention_channel(self, channel):
+    @classmethod
+    def _mention_channel(cls, channel):
         if isinstance(channel, discord.TextChannel) or isinstance(channel, discord.VoiceChannel):
             return channel.mention
         if isinstance(channel, int):
             return f"<#{channel}>"
         return str(channel)
 
-    def _mention_role(self, role):
+    @classmethod
+    def _mention_role(cls, role):
         if isinstance(role, discord.Role):
             return role.mention
         if isinstance(role, int):
