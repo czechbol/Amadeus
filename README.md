@@ -11,11 +11,13 @@
 
 ## About
 
-[Rubbergoddess](https://github.com/sinus-x/rubbergoddess)'s helper bot with functions not crucial to FEKTwide Discord but still helpful.
+[Rubbergoddess'](https://github.com/sinus-x/rubbergoddess) younger sibling
+adding more useful features to the FEKT Discord server.
 
 ## Installing and running the bot
 
-To be added when this bot is ready, in the mean time use [Rubbergoddess's wiki](https://github.com/sinus-x/rubbergoddess/wiki)
+To be added when this bot is ready. In the mean time use
+[Rubbergoddess' wiki](https://github.com/sinus-x/rubbergoddess/wiki).
 
 ## Authors
 
