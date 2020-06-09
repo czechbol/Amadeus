@@ -17,6 +17,69 @@ class Weeb(basecog.Basecog):
     def __init__(self, bot):
         self.bot = bot
 
+    @classmethod
+    def sauce_tags(cls, dic):
+        characters, parodies, tags, artists, groups, languages, categories = ([], [], [], [], [], [], [])
+        tags = []
+        for tag in dic["tags"]:
+            if tag["type"] == "character":
+                characters.append(tag["name"])
+            elif tag["type"] == "parody":
+                parodies.append(tag["name"])
+            elif tag["type"] == "tag":
+                tags.append(tag["name"])
+            elif tag["type"] == "artist":
+                artists.append(tag["name"])
+            elif tag["type"] == "group":
+                groups.append(tag["name"])
+            elif tag["type"] == "language":
+                languages.append(tag["name"])
+            elif tag["type"] == "category":
+                categories.append(tag["name"])
+
+        characters = ["Characters", ", ".join(str(e) for e in characters)]
+        parodies = ["Parodies", ", ".join(str(e) for e in parodies)]
+        tags = ["Tags", ", ".join(str(e) for e in tags)]
+        artists = ["Artists", ", ".join(str(e) for e in artists)]
+        groups = ["Groups", ", ".join(str(e) for e in groups)]
+        languages = ["Languages", ", ".join(str(e) for e in languages)]
+        categories = ["Categories", ", ".join(str(e) for e in categories)]
+
+        tags = [
+            characters,
+            parodies,
+            tags,
+            artists,
+            groups,
+            languages,
+            categories,
+        ]
+        return tags
+
+    def sauce_embed(self, dic, BOOK_ID):
+        tags = self.sauce_tags(dic)
+
+        url = "https://nhentai.net/g/{BOOK_ID}/".format(BOOK_ID=BOOK_ID)
+        if dic["images"]["pages"][0]["t"] == "j":
+            cover_url = "https://i.nhentai.net/galleries/{MEDIA_ID}/1.jpg".format(MEDIA_ID=dic["media_id"])
+        elif dic["images"]["pages"][0]["t"] == "p":
+            cover_url = "https://i.nhentai.net/galleries/{MEDIA_ID}/1.png".format(MEDIA_ID=dic["media_id"])
+
+        title = dic["title"]["pretty"]
+        num_pages = dic["num_pages"]
+
+        embed = discord.Embed(title=title, url=url, color=discord.Colour.from_rgb(227, 47, 86))
+        embed.set_image(url=cover_url)
+        embed.add_field(name="Number of pages", value=num_pages, inline=True)
+
+        for typ, tag in tags:
+            if tag != "":
+                if typ == "Tags":
+                    embed.add_field(name=typ, value=tag, inline=False)
+                else:
+                    embed.add_field(name=typ, value=tag, inline=True)
+        return embed
+
     @commands.is_nsfw()
     @commands.has_role("weeb")
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
@@ -32,77 +95,21 @@ class Weeb(basecog.Basecog):
             await ctx.send(">>> " + text.fill("weeb", "sauce_help", prefix=config.prefix))
             return
         BOOK_ID = args[1]
-        try:
-            response = requests.get("https://nhentai.net/api/gallery/{BOOK_ID}".format(BOOK_ID=BOOK_ID))
-            dic = response.json()
-            response.raise_for_status()
+        async with ctx.typing():
+            try:
+                response = requests.get("https://nhentai.net/api/gallery/{BOOK_ID}".format(BOOK_ID=BOOK_ID))
+                dic = response.json()
+                response.raise_for_status()
 
-        except requests.HTTPError as http_err:
-            await ctx.send(f"HTTP error occurred: {http_err}")
-        except Exception as err:
-            await ctx.send(f"Error occurred: {err}")
-        else:
-            # Request was successful
-            characters, parodies, tags, artists, groups, languages, categories = (
-                [],
-                [],
-                [],
-                [],
-                [],
-                [],
-                [],
-            )
-            for tag in dic["tags"]:
-                if tag["type"] == "character":
-                    characters.append(tag["name"])
-                elif tag["type"] == "parody":
-                    parodies.append(tag["name"])
-                elif tag["type"] == "tag":
-                    tags.append(tag["name"])
-                elif tag["type"] == "artist":
-                    artists.append(tag["name"])
-                elif tag["type"] == "group":
-                    groups.append(tag["name"])
-                elif tag["type"] == "language":
-                    languages.append(tag["name"])
-                elif tag["type"] == "category":
-                    categories.append(tag["name"])
-            url = "https://nhentai.net/g/{BOOK_ID}/".format(BOOK_ID=BOOK_ID)
-            if dic["images"]["pages"][0]["t"] == "j":
-                cover_url = "https://i.nhentai.net/galleries/{MEDIA_ID}/1.jpg".format(
-                    MEDIA_ID=dic["media_id"]
-                )
-            elif dic["images"]["pages"][0]["t"] == "p":
-                cover_url = "https://i.nhentai.net/galleries/{MEDIA_ID}/1.png".format(
-                    MEDIA_ID=dic["media_id"]
-                )
-            title = dic["title"]["pretty"]
-            num_pages = dic["num_pages"]
-            characters = ", ".join(str(e) for e in characters)
-            parodies = ", ".join(str(e) for e in parodies)
-            tags = ", ".join(str(e) for e in tags)
-            artists = ", ".join(str(e) for e in artists)
-            groups = ", ".join(str(e) for e in groups)
-            languages = ", ".join(str(e) for e in languages)
-            categories = ", ".join(str(e) for e in categories)
-            embed = discord.Embed(title=title, url=url, color=discord.Colour.from_rgb(227, 47, 86))
-            embed.set_image(url=cover_url)
-            embed.add_field(name="Number of pages", value=num_pages, inline=True)
-            if characters != "":
-                embed.add_field(name="Characters", value=characters, inline=True)
-            if parodies != "":
-                embed.add_field(name="Parodies", value=parodies, inline=True)
-            if tags != "":
-                embed.add_field(name="Tags", value=tags, inline=False)
-            if artists != "":
-                embed.add_field(name="Artists", value=artists, inline=True)
-            if groups != "":
-                embed.add_field(name="Groups", value=groups, inline=True)
-            if languages != "":
-                embed.add_field(name="Languages", value=languages, inline=True)
-            if categories != "":
-                embed.add_field(name="Categories", value=categories, inline=True)
-            await ctx.send(embed=embed)
+            except requests.HTTPError as http_err:
+                await ctx.send(f"HTTP error occurred: {http_err}")
+            except Exception as err:
+                await ctx.send(f"Error occurred: {err}")
+            else:
+                # Request was successful
+                embed = self.sauce_embed(dic, BOOK_ID)
+
+                await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message(self, message):
