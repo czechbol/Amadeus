@@ -3,7 +3,6 @@ import re
 import io
 import urllib
 import aiohttp
-import unidecode
 from typing import Optional
 
 import numpy
@@ -68,7 +67,9 @@ class Draw(basecog.Basecog):
             string = string.replace(old, new)
         string = " ".join(string.split())
 
-        string = unidecode.unidecode(string)
+        # string = unidecode.unidecode(string)
+        if not string.isascii():
+            raise ValueError("Non ASCII characters are forbidden to use in math expression")
 
         # find all words and check if all are allowed:
         for word in re.findall("[a-zA-Z_]+", string):
