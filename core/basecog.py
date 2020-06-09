@@ -48,7 +48,8 @@ class Basecog(commands.Cog):
         return self.roles_elevated
 
     # Helper functions
-    def _getEmbedTitle(self, ctx: commands.Context):
+    @classmethod
+    def _getEmbedTitle(cls, ctx: commands.Context):
         """Helper function assembling title for embeds"""
         if ctx.command is None:
             return "(no command)"
@@ -75,7 +76,8 @@ class Basecog(commands.Cog):
             embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
         return embed
 
-    def _getCommandSignature(self, ctx: commands.Context):
+    @classmethod
+    def _getCommandSignature(cls, ctx: commands.Context):
         """Return a 'cog:command_name' string"""
         if not ctx.command:
             return "UNKNOWN"
@@ -134,7 +136,6 @@ class Basecog(commands.Cog):
             await message.delete(delay=delay)
         except discord.HTTPException as err:
             self.logException(message, err)
-            pass
 
     @classmethod
     def parseArg(cls, arg: str = None):

@@ -43,7 +43,8 @@ class Help(commands.MinimalHelpCommand):
             self.paginator.add_line("> " + f"**{heading}**")
             self.paginator.add_line("> " + joined)
 
-    def add_aliases_formatting(self, aliases):
+    @classmethod
+    def add_aliases_formatting(cls, aliases):
         return
 
     def add_command_formatting(self, command):
