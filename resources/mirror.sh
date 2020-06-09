@@ -11,7 +11,7 @@ do
 	else
 		echo -e "$d\n" > ~/.amadeus
 	fi
-	echo $d > ~/.journalctl
+	echo "$d" > ~/.journalctl
 	sudo journalctl -u amadeus >> ~/.journalctl
 
 	docker cp ~/.amadeus amadeus_bot_1:/amadeus/amadeus.log

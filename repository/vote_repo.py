@@ -6,12 +6,14 @@ from repository.database.vote import Vote
 class VoteRepository(BaseRepository):
     # unknown - pending - verified - kicked - banned
 
-    def add_vote(self, channel_id: int, message_id: int, edit_id: int, date: str):
+    @classmethod
+    def add_vote(cls, channel_id: int, message_id: int, edit_id: int, date: str):
         """Add new vote"""
         session.add(Vote(channel_id=channel_id, message_id=message_id, edit_id=edit_id, date=date))
         session.commit()
 
-    def get_list(self):
+    @classmethod
+    def get_list(cls):
         """Update a specified user with a new verification code"""
         votes = session.query(Vote).all()
         result = []

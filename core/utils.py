@@ -34,7 +34,7 @@ def str_emoji_id(emoji):
 
 
 def has_role(user, role):
-    if type(user) != discord.Member:
+    if not isinstance(user, discord.Member):
         return None
 
     try:
