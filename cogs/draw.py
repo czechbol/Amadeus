@@ -3,6 +3,7 @@ import re
 import io
 import urllib
 import aiohttp
+import unidecode
 from typing import Optional
 
 import numpy
@@ -66,6 +67,8 @@ class Draw(basecog.Basecog):
         for old, new in self.rep_op.items():
             string = string.replace(old, new)
         string = " ".join(string.split())
+
+        string = unidecode.unidecode(string)
 
         # find all words and check if all are allowed:
         for word in re.findall("[a-zA-Z_]+", string):
