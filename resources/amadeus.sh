@@ -9,13 +9,13 @@ fi
 stop () {
 	# kill the bot process
 	if test -f "~/amadeus.pid"; then
-		kill `cat ~/amadeus.pid`
+		kill $(cat ~/amadeus.pid)
 		rm -f ~/amadeus.pid
 	fi
 
 	# stop log synchronisation
 	if test -f "~/journalctl.pid"; then
-		kill `cat ~/journalctl.pid`
+		kill $(cat ~/journalctl.pid)
 		rm -f ~/journalctl.pid
 	fi
 }

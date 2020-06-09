@@ -4,7 +4,7 @@ sleep 60
 
 while :
 do
-	d=`date +"MIRROR TIMESTAMP: %Y-%m-%d %H:%M:%S"`
+	d=$(date +"MIRROR TIMESTAMP: %Y-%m-%d %H:%M:%S")
 
 	if test -f "~/amadeus.log"; then
 		echo -e "$d\n$(cat ~/amadeus.log)" > ~/.amadeus
