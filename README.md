@@ -10,12 +10,11 @@
 </p>
 
 ## About
-
-[Rubbergoddess](https://github.com/sinus-x/rubbergoddess)'s helper bot with functions not crucial to FEKTwide Discord but still helpful.
+Amadeus is a Discord bot with message leaderboards, graph plotting, voting and other features. It works best with it's older sister [Rubbergoddess](https://github.com/sinus-x/rubbergoddess).
 
 ## Installing and running the bot
 
-To be added when this bot is ready, in the mean time use [Rubbergoddess's wiki](https://github.com/sinus-x/rubbergoddess/wiki)
+This bot is still in a pre-release state. If you want to contribute or you want to try it out, take look at the [Wiki](https://github.com/Czechbol/Amadeus/wiki).
 
 ## Authors
 
