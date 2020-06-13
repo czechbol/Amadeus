@@ -1,6 +1,6 @@
 backups/
 config/config.json
-config/emotes.py
+config/emotes.json
 __pycache__
 .idea
 .venv/
