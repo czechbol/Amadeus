@@ -3,9 +3,9 @@ FROM python:3.8.3-slim
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 RUN apt-get update && apt-get -y --no-install-recommends \
-install git=1:2.20.1-2+deb10u3 tzdata=2020a-0+deb10u1 graphviz=2.40.1-6 \
-&& apt-get clean \
-&& rm -rf /var/lib/apt/lists/*
+    install git=1:2.20.1-2+deb10u3 tzdata=2020a-0+deb10u1 graphviz=2.40.1-6 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 ENV TZ=Europe/Prague
 
 VOLUME /Amadeus

@@ -80,7 +80,7 @@ class Draw(basecog.Basecog):
             string = re.sub(rf"\b{old}\b", new, string)
 
         def func(x):
-            return eval(string)
+            return eval(string)  # nosec B307
 
         return func
 
