@@ -354,11 +354,12 @@ class Boards(basecog.Basecog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        bot_dev = self.bot.get_channel(config.channel_botdev)
         channels = repository.get_user_channels()
         results = None
         tasks = []
-        async with bot_dev.typing():
+        admin = self.bot.get_user(config.admin_id)
+
+        async with admin.typing():
 
             if channels is not None:
                 results = await self.sort_channels(channels, True)
@@ -381,7 +382,15 @@ class Boards(basecog.Basecog):
                                     messages = await self.get_history(channel, after)
                                     break
                             else:
+                                # try:
                                 messages = await self.get_history(channel, None)
+                                """except discord.errors.Forbidden:
+                                    print(
+                                        "Forbidden getting history for channel {channel} in guild {guild}".format(
+                                            channel=channel, guild=guild.name
+                                        )
+                                    )
+                                    continue"""  # TODO log this
 
                         if len(messages) > 0:
                             tasks.append(self.msg_iter(messages))
@@ -389,7 +398,7 @@ class Boards(basecog.Basecog):
         for task in tasks:
             await task
 
-        await bot_dev.send(text.get("boards", "synced"))
+        await admin.send(text.get("boards", "synced"))
 
 
 def setup(bot):
