@@ -1,6 +1,7 @@
 import discord
 import requests
 from discord.ext import commands
+from discord.abc import PrivateChannel
 
 from core import basecog
 from core.text import text
@@ -80,8 +81,14 @@ class Weeb(basecog.Basecog):
                     embed.add_field(name=typ, value=tag, inline=True)
         return embed
 
-    @commands.is_nsfw()
-    @commands.has_role("weeb")
+    def sauce_check(self, message):
+        if isinstance(message.channel, PrivateChannel):
+            return True
+        role = discord.utils.get(message.guild.roles, name="weeb")
+        if role in message.author.roles and message.channel.is_nsfw:
+            return True
+        return False
+
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
         brief=text.get("weeb", "sauce_desc"),
@@ -91,25 +98,31 @@ class Weeb(basecog.Basecog):
     async def sauce(self, ctx):
         message = ctx.message
         args = message.content.split(" ")
-        if len(args) != 2:
-            await ctx.send(">>> " + text.fill("weeb", "sauce_help", prefix=config.prefix))
-            return
-        BOOK_ID = args[1]
-        async with ctx.typing():
-            try:
-                response = requests.get("https://nhentai.net/api/gallery/{BOOK_ID}".format(BOOK_ID=BOOK_ID))
-                dic = response.json()
-                response.raise_for_status()
 
-            except requests.HTTPError as http_err:
-                await ctx.send(f"HTTP error occurred: {http_err}")
-            except Exception as err:
-                await ctx.send(f"Error occurred: {err}")
-            else:
-                # Request was successful
-                embed = self.sauce_embed(dic, BOOK_ID)
+        if not self.sauce_check(message):
+            raise commands.MissingPermissions
+        else:
+            if len(args) != 2:
+                await ctx.send(">>> " + text.fill("weeb", "sauce_help", prefix=config.prefix))
+                return
+            BOOK_ID = args[1]
+            async with ctx.typing():
+                try:
+                    response = requests.get(
+                        "https://nhentai.net/api/gallery/{BOOK_ID}".format(BOOK_ID=BOOK_ID)
+                    )
+                    dic = response.json()
+                    response.raise_for_status()
 
-                await ctx.send(embed=embed)
+                except requests.HTTPError as http_err:
+                    await ctx.send(f"HTTP error occurred: {http_err}")
+                except Exception as err:
+                    await ctx.send(f"Error occurred: {err}")
+                else:
+                    # Request was successful
+                    embed = self.sauce_embed(dic, BOOK_ID)
+
+            await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message(self, message):
