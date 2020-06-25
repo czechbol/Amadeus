@@ -38,12 +38,13 @@
 		],
 		"__comment": "cogs to load by default",
 		"extensions": [
-			"base",
-			"boards",
-			"draw",
-			"vote",
-			"weeb"
-		]
+            "base",
+            "boards",
+            "draw",
+            "urban",
+            "vote",
+            "weeb"
+        ]
 	},
 	"__comment": "Special channels",
 	"channels": {
@@ -65,10 +66,10 @@
 	},
 	"__comment": "Colors for embeds. They are standard hex RGB values in base 10",
 	"color": {
-		"main": 5518687,
-		"success": 2015049,
-		"notify": 15042615,
-		"error": 14166812,
+		"main": 14264615,
+		"success": 3655851,
+		"notify": 43732,
+		"error": 14942251,
 		"boost": 16023551
 	},
 	"__comment": "Timers for automatic deletion of bot's messages",
