@@ -1,6 +1,7 @@
 import re
 import discord
 import requests
+import asyncio
 from urllib import parse as url_parse
 from discord.ext import commands
 
@@ -19,20 +20,55 @@ class Urban(basecog.Basecog):
     def __init__(self, bot):
         self.bot = bot
 
-    def urban_embed(self, dic, pagenum):
-        num = pagenum - 1
+    def urban_embeds(self, dic):
         lis = dic["list"]
-        definition = re.sub(r"[!\[]|[!\]]", "", lis[num]["definition"])
-        example = re.sub(r"[!\[]|[!\]]", "", lis[num]["example"])
+        embed_list = []
 
-        embed = discord.Embed(title=lis[num]["word"], url=lis[num]["permalink"])
+        for idx in range(len(lis)):
+            definition = re.sub(r"[!\[]|[!\]]", "", lis[idx]["definition"])
+            example = re.sub(r"[!\[]|[!\]]", "", lis[idx]["example"])
 
-        embed.add_field(name="Definition", value=definition, inline=False)
-        embed.add_field(name="Example", value=example, inline=False)
-        """embed.add_field(
-            name="Page", value="{curr}/{total}".format(curr=pagenum, total=len(lis)), inline=False,
-        )"""  # TODO add pagination support
-        return embed
+            if len(definition) > 1024:
+                definition = definition[0:1021] + "`…`"
+            if len(example) > 1024:
+                definition = definition[0:1021] + "`…`"
+
+            embed = discord.Embed(title=lis[idx]["word"], url=lis[idx]["permalink"])
+            embed.add_field(name="Definition", value=definition, inline=False)
+            embed.add_field(name="Example", value=example, inline=False)
+            embed.add_field(
+                name="Page", value="{curr}/{total}".format(curr=idx + 1, total=len(lis)), inline=False,
+            )
+            embed_list.append(embed)
+        return embed_list
+
+    async def urban_pages(self, ctx, embeds):
+        message = await ctx.send(embed=embeds[0])
+        pagenum = 0
+        await message.add_reaction("◀️")
+        await message.add_reaction("▶️")
+        while True:
+            try:
+                reaction, user = await self.bot.wait_for("reaction_add", timeout=300.0)
+            except asyncio.TimeoutError:
+                break
+            else:
+                if reaction.emoji == "◀️" and not user.id == self.bot.user.id:
+                    if pagenum > 0:
+                        pagenum = pagenum - 1
+                        try:
+                            await message.remove_reaction("◀️", user)
+                        except discord.errors.Forbidden:
+                            pass
+                        await message.edit(embed=embeds[pagenum])
+                if reaction.emoji == "▶️" and not user.id == self.bot.user.id:
+                    if pagenum < len(embeds) - 1:
+                        pagenum = pagenum + 1
+                        try:
+                            await message.remove_reaction("▶️", user)
+                        except discord.errors.Forbidden:
+                            pass
+                        await message.edit(embed=embeds[pagenum])
 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
@@ -63,9 +99,11 @@ class Urban(basecog.Basecog):
                 await ctx.send(f"Error occurred: {err}")
             else:
                 # Request was successful
-                embed = self.urban_embed(dic, 1)
+                embeds = self.urban_embeds(dic)
 
-        await ctx.send(embed=embed)
+        await self.urban_pages(ctx, embeds)
+
+        return
 
 
 def setup(bot):
