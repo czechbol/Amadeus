@@ -48,27 +48,33 @@ class Urban(basecog.Basecog):
         await message.add_reaction("◀️")
         await message.add_reaction("▶️")
         while True:
+
+            def check(reaction, user):
+                return (
+                    reaction.message.id == msg.id
+                    and (str(reaction.emoji) == "◀️" or str(reaction.emoji) == "▶️")
+                    and not user == self.bot.user
+                )
+
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", timeout=300.0)
+                reaction, user = await self.bot.wait_for("reaction_add",check=check timeout=300.0)
             except asyncio.TimeoutError:
                 break
             else:
-                if reaction.emoji == "◀️" and not user.id == self.bot.user.id:
-                    if pagenum > 0:
-                        pagenum = pagenum - 1
-                        try:
-                            await message.remove_reaction("◀️", user)
-                        except discord.errors.Forbidden:
-                            pass
-                        await message.edit(embed=embeds[pagenum])
-                if reaction.emoji == "▶️" and not user.id == self.bot.user.id:
-                    if pagenum < len(embeds) - 1:
-                        pagenum = pagenum + 1
-                        try:
-                            await message.remove_reaction("▶️", user)
-                        except discord.errors.Forbidden:
-                            pass
-                        await message.edit(embed=embeds[pagenum])
+                if pagenum > 0 and reaction.emoji == "◀️":
+                    pagenum -= 1
+                    try:
+                        await message.remove_reaction("◀️", user)
+                    except discord.errors.Forbidden:
+                        pass
+                    await message.edit(embed=embeds[pagenum])
+                if (pagenum < len(embeds) - 1) and reaction.emoji == "▶️":
+                    pagenum += 1
+                    try:
+                        await message.remove_reaction("▶️", user)
+                    except discord.errors.Forbidden:
+                        pass
+                    await message.edit(embed=embeds[pagenum])
 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
