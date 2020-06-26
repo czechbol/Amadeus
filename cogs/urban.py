@@ -51,7 +51,7 @@ class Urban(basecog.Basecog):
 
             def check(reaction, user):
                 return (
-                    reaction.message.id == msg.id
+                    reaction.message.id == message.id
                     and (str(reaction.emoji) == "◀️" or str(reaction.emoji) == "▶️")
                     and not user == self.bot.user
                 )
