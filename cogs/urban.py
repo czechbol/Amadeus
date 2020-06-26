@@ -72,17 +72,17 @@ class Urban(basecog.Basecog):
 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
-        brief=text.get("weeb", "sauce_desc"),
-        description=text.get("weeb", "sauce_desc"),
-        help=text.fill("weeb", "sauce_help", prefix=config.prefix),
+        brief=text.get("urban", "urban_desc"),
+        description=text.get("urban", "urban_desc"),
+        help=text.fill("urban", "urban_help", prefix=config.prefix),
     )
     async def urban(self, ctx):
         message = ctx.message
         args = message.content.split(" ")
-        args.pop(0)
         if len(args) == 1:
-            await ctx.send(">>> " + text.fill("weeb", "sauce_help", prefix=config.prefix))
+            await ctx.send(">>> " + text.fill("urban", "urban_help", prefix=config.prefix))
             return
+        args.pop(0)
         search = " ".join(args)
         term = url_parse.quote(search)
         async with ctx.typing():

@@ -36,6 +36,10 @@
 		"plot_help": "`{prefix}plot od do rovnice1; rovnice2; rovnice3`; ...\nPříklad:\n`{prefix}plot -4 4 10*abs(x); x^2; x^3`",
 		"digraph_help": "Graphviz data musí být v code bloku.\nPro vykreslení je nutné kliknout na reakci kterou na zprávu bot přidá.\nZkus tento příklad:\n```digraph G {\n\t\"Welcome\" -> \"To\"\n\t\"To\" -> \"Web\"\n\t\"To\" -> \"GraphViz!\"\n}```"
 	},
+	"urban": {
+		"urban_desc": "Urban Dictionary v pohodlí tvého Discord serveru",
+		"urban_help": "`{prefix}urban výraz`\nPříklad:\n`{prefix}urban sure`"
+	},
 	"vote": {
 		"vote_desc": "Hlasovací příkaz",
 		"vote_help": "Použití vote:\n`{prefix}vote [datum] [čas] [otázka]\n[emoji] [odpověď 1]\n[emoji] [odpověď 2]\n... a tak dále`\n Datum je ve formátu `dd.MM.(yy)`. Čas je ve formátu `hh:mm`.\nPouze vyplněný čas použije den odeslání zprávy, pouze vyplněné datum použije čas 00:00.\nDatum a čas jsou nepovinné argumenty, hlasování bude bez jejich uvedení ukončeno po 1 hodině.\nLze použít jen custom emotes ze serverů kde je i bot.",
