@@ -220,7 +220,15 @@ class Boards(basecog.Basecog):
                     name = "#{}".format(channel.name)
                 else:
                     user = self.bot.get_user(item["user_id"])
-                    name = "{}".format(user.name)
+                    if user is None:
+                        try:
+                            user = await self.bot.fetch_user(item["user_id"])
+                        except discord.errors.NotFound:
+                            print(item["user_id"])
+                            user_name = "_(Unknown user)_"
+                    else:
+                        user_name = user.display_name
+                    name = "{}".format(user_name)
                     if user == ctx.author:  # displays author in bold, saves author position
                         author_position = position
                         name = "**" + name + "**"
@@ -268,9 +276,10 @@ class Boards(basecog.Basecog):
                     item = results[position]
                     user = self.bot.get_user(item["user_id"])
                     if user is None:
-                        user = await self.bot.fetch_user(item["user_id"])
-                    if user is None:
-                        user_name = "_(Unknown user)_"
+                        try:
+                            user = await self.bot.fetch_user(item["user_id"])
+                        except discord.errors.NotFound:
+                            user_name = "_(Unknown user)_"
                     else:
                         user_name = user.display_name
 
