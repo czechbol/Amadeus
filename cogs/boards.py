@@ -125,203 +125,211 @@ class Boards(basecog.Basecog):
 
     @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "channel board"))
-    async def channelboard(self, ctx, offset: int = 1):
-        await asyncio.sleep(0.5)
+    async def channelboard(self, ctx, offset: int = 0):
+        await asyncio.sleep(0.1)
         user_channels = repository.get_user_channels()
 
         if not user_channels:
             return ctx.send(text.get("boards", "not found"))
 
-        # convert to be zero-indexed
-        offset -= 1
-        if offset < 0:
-            return await ctx.send(text.get("boards", "invalid offset"))
-
         results = await self.sort_channels(user_channels, False)
+
+        offset -= 1  # convert to be zero-indexed
 
         if offset > len(results):
             return await ctx.send(text.get("boards", "offset too big"))
 
-        embed = discord.Embed(
-            title=text.get("boards", "channel board title"),
-            description=text.get("boards", "channel board desc"),
-            color=config.color,
-        )
+        boards, pagenum = await self.boards_generator(ctx, results, offset, "channel")
 
-        # get data for "TOP X" list
-        lines = []
-        for position, item in enumerate(results):
-            if position < offset:
-                continue
+        await self.board_pages(ctx, boards, pagenum)
 
-            if position - offset >= config.board_top:
-                break
-
-            channel = self.bot.get_channel(item["channel_id"])
-            if not hasattr(channel, "name"):
-                # channel was not found
-                continue
-
-            # fmt: off
-            if ctx.guild is not None and channel.guild.id == ctx.guild.id:
-                lines.append(text.fill("boards", "channel template",
-                    index=f"{position + 1:>2}",
-                    count=f"{item['count']:>5}",
-                    name=discord.utils.escape_markdown(channel.name)))
-            else:
-                # channel is on some other guild
-                lines.append(text.fill("boards", "channel template guild",
-                    index=f"{position + 1:>2}",
-                    count=f"{item['count']:>5}",
-                    name=discord.utils.escape_markdown(channel.name),
-                    guild=discord.utils.escape_markdown(channel.guild.name)))
-            # fmt: on
-        title = "top number" if offset == 0 else "top offset"
-        # fmt: off
-        embed.add_field(
-            name=text.fill("boards", title, top=config.board_top, offset=offset + 1),
-            value="\n".join(lines),
-            inline=False,
-        )
-        # fmt: on
-        await ctx.send(embed=embed)
+        return
 
     @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "user board"))
-    async def userboard(self, ctx, offset: int = 1):
-        await asyncio.sleep(0.5)
+    async def userboard(self, ctx, offset: int = 0):
+        await asyncio.sleep(0.1)
         user_channels = repository.get_user_channels()
+
         if not user_channels:
             return ctx.send(text.get("boards", "not found"))
 
-        # convert to be zero-indexed
-        offset -= 1
-        if offset < 0:
-            return await ctx.send(text.get("boards", "invalid offset"))
+        results = await self.sort_users(user_channels, False)
 
-        users = await self.sort_users(user_channels, False)
+        offset -= 1  # convert to be zero-indexed
 
-        if offset > len(users):
+        if offset > len(results):
             return await ctx.send(text.get("boards", "offset too big"))
 
-        await self.sendUserboard(ctx, users, ctx.author, offset)
+        boards, pagenum = await self.boards_generator(ctx, results, offset, "user")
+
+        await self.board_pages(ctx, boards, pagenum)
+
+        return
 
     @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command()
     async def stalk(self, ctx, member: discord.Member):
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
         user_channels = repository.get_user_channels()
+
         if not user_channels:
-            return ctx.send(text.get("boards", "not found"))
-
-        users = await self.sort_users(user_channels, False)
-
-        offset = -1
-        for position, item in enumerate(users):
-            if item["user_id"] == member.id:
-                offset = position
-                break
-
-        if offset < 0:
             return await ctx.send(text.get("boards", "not found"))
 
-        if offset < config.board_top - config.board_around:
-            offset = 0
-
-        if offset > len(users):
-            return await ctx.send(text.get("boards", "offset too big"))
-
-        await self.sendUserboard(ctx, users, member, offset=0)
-
-    async def sendUserboard(self, ctx, users, member: discord.Member, offset: int):
-        # note: this offset is zero-indexed here, not like in userboard()
-        # create an embed
-        embed = discord.Embed(
-            title=text.get("boards", "user board title"),
-            description=text.get("boards", "user board desc"),
-            color=config.color,
-        )
-
-        # get data for "TOP X" list
-        lines = []
-        author_position = -1
-        for position, item in enumerate(users):
-            if ctx.author.id == item["user_id"]:
-                author_position = position
-
-            if position < offset or position - offset >= config.board_top:
-                continue
-
-            # get user object
-            user = self.bot.get_user(item["user_id"])
-            if not hasattr(user, "display_name"):
-                # user was not found
-                continue
-
-            user_name = discord.utils.escape_mentions(user.display_name)
-
-            # get position string
-            # fmt: off
-            if item["user_id"] == member.id:
-                author_position = position
-                lines.append(text.fill("boards", "target template",
-                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
-            else:
-                lines.append(text.fill("boards", "user template",
-                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
-            # fmt: on
-
-        title = "top number" if offset == 0 else "top offset"
-        embed.add_field(
-            name=text.fill("boards", title, top=config.board_top, offset=offset + 1),
-            value="\n".join(lines),
-            inline=False,
-        )
-
-        # get data for "YOUR POSITION" list
-        positions = [
-            x + author_position for x in [y - config.board_around for y in range(config.board_around * 2)]
-        ]
-        lines = []
-        for position in positions:
-            # do not display "YOUR POSITION" if user has no place
-            if author_position < 0:
+        results = await self.sort_users(user_channels, False)
+        for idx, result in enumerate(results):
+            if member.id == result["user_id"]:
+                offset = idx
+                print(offset)
                 break
+        else:
+            return await ctx.send(text.get("boards", "not found"))
 
-            # do not display "YOUR POSITION" if user is in "TOP X" and OFFSET is not set
-            if offset == 0 and author_position < config.board_top - config.board_around:
-                break
+        boards, pagenum = await self.boards_generator(ctx, results, offset, "stalk")
 
-            # do not wrap around (if the 'around' number is too high)
-            if position < 0:
-                continue
+        await self.board_pages(ctx, boards, pagenum)
 
-            # get user object
-            item = users[position]
-            user = self.bot.get_user(item["user_id"])
-            if user is None:
-                user = await self.bot.fetch_user(item["user_id"])
-            if user is None:
-                user_name = "_(Unknown user)_"
-            else:
-                user_name = discord.utils.escape_mentions(user.display_name)
+        return
 
-            # get position string
-            # fmt: off
-            if item["user_id"] == ctx.author.id:
-                lines.append(text.fill("boards", "target template",
-                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
-            else:
-                lines.append(text.fill("boards", "user template",
-                    index=f"{position+1:>2}", name=user_name, count=f"{item['count']:>5}"))
-            # fmt: on
+    async def boards_generator(self, ctx, results, offset, typ):
+        # splits results into config.board_top sized chunks (chunks = list of lists)
+        chunks = [results[i : i + config.board_top] for i in range(0, len(results), config.board_top)]
 
-        if len(lines) > 0:
-            embed.add_field(
-                name=text.get("boards", "author position"), value="\n".join(lines), inline=False,
+        boards = []
+        # Iterates through chunks to get pages
+        for idx, chunk in enumerate(chunks):
+            chunk_position = idx * config.board_top
+
+            embed = discord.Embed(
+                title=text.get("boards", typ + " board title"),
+                description=text.get("boards", typ + " board desc"),
+                color=config.color,
             )
 
-        await ctx.send(embed=embed)
+            pagenum = 0  # index of board page to show first
+            lines = []
+            author_position = -1
+            # Iterates through channels in chunk to get lines of a single board
+            for pos, item in enumerate(chunk):
+                position = chunk_position + pos  # item position among all items
+
+                index = f"{position + 1:>2}"
+                count = f"{item['count']:>5}"
+                if typ == "channel":
+                    channel = self.bot.get_channel(item["channel_id"])
+                    name = "#{}".format(channel.name)
+                else:
+                    user = self.bot.get_user(item["user_id"])
+                    name = "{}".format(user.name)
+                    if user == ctx.author:  # displays author in bold, saves author position
+                        author_position = position
+                        name = "**" + name + "**"
+
+                if position == offset:  # displays offset user/channel in bold, saves page number
+                    pagenum = idx
+                    name = "**" + name + "**"
+                if typ == "channel" and (
+                    isinstance(ctx.channel, PrivateChannel) or channel.guild.id != ctx.guild.id
+                ):
+                    # only shows channel guild if message didn't come from guild or message guild is different than board channel's guild
+                    guild = discord.utils.escape_markdown(channel.guild.name)
+                    lines.append(
+                        text.fill(
+                            "boards", "template guild", index=index, count=count, name=name, guild=guild,
+                        )
+                    )
+                else:
+                    lines.append(text.fill("boards", "template", index=index, count=count, name=name,))
+
+            title = "top number" if idx == 0 else "top offset"
+
+            embed.add_field(
+                name=text.fill("boards", title, top=config.board_top, offset=(idx * config.board_top) + 1),
+                value="\n".join(lines),
+                inline=False,
+            )
+
+            # adds the YOUR POSITION field for userboard
+            if typ == "user" and chunk_position < author_position < chunk_position + config.board_top:
+                lines = []
+                range_floor = author_position - config.board_around
+                range_ceiling = author_position + config.board_around + 1
+                print(author_position)
+                print()
+                for position in range(range_floor, range_ceiling):
+
+                    print(position)
+
+                    # do not wrap around (if the 'around' number is too high)
+                    if position < 0:
+                        continue
+
+                    # get user object
+                    item = results[position]
+                    user = self.bot.get_user(item["user_id"])
+                    if user is None:
+                        user = await self.bot.fetch_user(item["user_id"])
+                    if user is None:
+                        user_name = "_(Unknown user)_"
+                    else:
+                        user_name = user.display_name
+
+                    # get position string
+                    index = f"{position + 1:>2}"
+                    count = f"{item['count']:>5}"
+                    user = self.bot.get_user(item["user_id"])
+                    name = "{}".format(user_name)
+                    if position == author_position:
+                        name = "**" + name + "**"
+
+                    lines.append(text.fill("boards", "template", index=index, name=name, count=count,))
+
+                if len(lines) > 0:
+                    embed.add_field(
+                        name=text.get("boards", "author position"), value="\n".join(lines), inline=False,
+                    )
+
+            boards.append(embed)
+
+        return boards, pagenum
+
+    async def board_pages(self, ctx, boards, pagenum):
+        msg = await ctx.send(embed=boards[pagenum])
+        await msg.add_reaction("◀️")
+        await msg.add_reaction("▶️")
+        while True:
+
+            def check(reaction, user):
+                return (
+                    reaction.message.id == msg.id
+                    and (str(reaction.emoji) == "◀️" or str(reaction.emoji) == "▶️")
+                    and not user == self.bot.user
+                )
+
+            try:
+                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
+            except asyncio.TimeoutError:
+                try:
+                    await msg.clear_reaction("◀️")
+                    await msg.clear_reaction("▶️")
+                except discord.errors.Forbidden:
+                    pass
+                break
+            else:
+                if pagenum > 0 and str(reaction.emoji) == "◀️":
+                    pagenum -= 1
+                    try:
+                        await msg.remove_reaction("◀️", user)
+                    except discord.errors.Forbidden:
+                        pass
+                    await msg.edit(embed=boards[pagenum])
+                if pagenum < (len(boards) - 1) and str(reaction.emoji) == "▶️":
+                    pagenum += 1
+                    try:
+                        await msg.remove_reaction("▶️", user)
+                    except discord.errors.Forbidden:
+                        pass
+                    await msg.edit(embed=boards[pagenum])
 
     @commands.Cog.listener()
     async def on_message(self, message):

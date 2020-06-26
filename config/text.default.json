@@ -67,13 +67,11 @@
 		"channel info": "Zobrazí informace o kanálu",
 		"channel board title": "Channelboard",
 		"channel board desc": "Celkový počet zpráv na kanál",
-		"channel template": "`{index}` ... `{count}` #{name}",
-		"channel template guild": "`{index}` ... `{count}` #{name} ({guild})",
+		"template": "`{index}` ... `{count}` {name}",
+		"template guild": "`{index}` ... `{count}` {name} ({guild})",
 		"user board": "Zobrazí uživatele s nejvíce odeslanými zprávami",
 		"user info": "Zobrazí informace o uživateli",
 		"user board title": "Userboard",
-		"user board desc": "Celkový počet zpráv na uživatele",
-		"user template": "`{index}` ... `{count}` {name}",
-		"target template": "`{index}` ... `{count}` **{name}**"
+		"user board desc": "Celkový počet zpráv na uživatele"
 	}
 }
