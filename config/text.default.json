@@ -58,7 +58,7 @@
 	"boards": {
 		"top number": "Top {top}",
 		"top offset": "{top} od pozice {offset}",
-		"synced": "Databáze zpráv byla úspěšně synchronizována.",
+		"synced": "Databáze zpráv byla úspěšně synchronizována. \nSynchronizováno {count} nových zpráv.",
 		"author position": "Tvoje umístění",
 		"not found": "V databázi takový záznam není",
 		"invalid offset": "Offset může být jen kladné celé číslo",

@@ -29,20 +29,53 @@ class Boards(basecog.Basecog):
         return messages
 
     async def add_to_db(self, msg):
+        if msg.webhook_id:
+            return
         repository.increment(
             channel_id=msg.channel.id,
             user_id=msg.author.id,
             guild_id=msg.guild.id,
             last_message_at=msg.created_at,
-            last_message_id=msg.id,
+            count=1,
         )
         return
 
     async def msg_iter(self, messages):
-        for idx, msg in enumerate(messages):
-            if idx % 2500 == 0:
-                await asyncio.sleep(2)
-            await self.add_to_db(msg)
+        userchannels = []
+        for msg in messages:
+            if msg.webhook_id:
+                continue
+            for row in userchannels:
+                if (
+                    row["channel_id"] == msg.channel.id
+                    and row["guild_id"] == msg.guild.id
+                    and row["user_id"] == msg.author.id
+                ):
+                    row["count"] += 1
+                    if row["last_message_at"] < msg.created_at:
+                        row["last_message_at"] = msg.created_at
+                    break
+            else:
+                userchannels.append(
+                    {
+                        "channel_id": msg.channel.id,
+                        "guild_id": msg.guild.id,
+                        "user_id": msg.author.id,
+                        "count": 1,
+                        "last_message_at": msg.created_at,
+                    }
+                )
+        userchannels = sorted(userchannels, key=lambda i: (i["count"]), reverse=True)
+
+        for usr_ch in userchannels:
+            repository.increment(
+                channel_id=usr_ch["channel_id"],
+                user_id=usr_ch["user_id"],
+                guild_id=usr_ch["guild_id"],
+                last_message_at=usr_ch["last_message_at"],
+                count=usr_ch["count"],
+            )
+
         return
 
     async def sort_channels(self, lis, all_allowed):
@@ -58,7 +91,6 @@ class Boards(basecog.Basecog):
                         row["count"] += ch["count"]
                         if row["last_message_at"] < ch["last_message_at"]:
                             row["last_message_at"] = ch["last_message_at"]
-                            row["last_message_id"] = ch["last_message_id"]
                         break
                 else:
                     results.append(
@@ -67,7 +99,6 @@ class Boards(basecog.Basecog):
                             "guild_id": ch["guild_id"],
                             "count": ch["count"],
                             "last_message_at": ch["last_message_at"],
-                            "last_message_id": ch["last_message_id"],
                         }
                     )
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
@@ -102,6 +133,9 @@ class Boards(basecog.Basecog):
     async def sort_users(self, lis, all_allowed):
         results = []
         for ch in lis:
+            for guild in self.bot.guilds:
+                if guild.get_member(ch["user_id"]) is None:
+                    continue
             if all_allowed is True or (
                 ch["channel_id"] not in config.board_ignored_channels
                 and ch["user_id"] not in config.board_ignored_users
@@ -195,6 +229,7 @@ class Boards(basecog.Basecog):
         chunks = [results[i : i + config.board_top] for i in range(0, len(results), config.board_top)]
 
         boards = []
+        author_position = -1
         # Iterates through chunks to get pages
         for idx, chunk in enumerate(chunks):
             chunk_position = idx * config.board_top
@@ -207,8 +242,7 @@ class Boards(basecog.Basecog):
 
             pagenum = 0  # index of board page to show first
             lines = []
-            author_position = -1
-            # Iterates through channels in chunk to get lines of a single board
+            # Iterates through users/channels in chunk to get lines of a single board
             for pos, item in enumerate(chunk):
                 position = chunk_position + pos  # item position among all items
 
@@ -222,10 +256,11 @@ class Boards(basecog.Basecog):
                     if user is None:
                         try:
                             user = await self.bot.fetch_user(item["user_id"])
+                            user_name = discord.utils.escape_markdown(user.display_name)
                         except discord.errors.NotFound:
                             user_name = "_(Unknown user)_"
                     else:
-                        user_name = user.display_name
+                        user_name = discord.utils.escape_markdown(user.display_name)
                     name = "{}".format(user_name)
                     if user == ctx.author:  # displays author in bold, saves author position
                         author_position = position
@@ -254,9 +289,16 @@ class Boards(basecog.Basecog):
                 value="\n".join(lines),
                 inline=False,
             )
+            boards.append(embed)
 
+        for idx, board in enumerate(boards):
+            chunk_position = idx * config.board_top
             # adds the YOUR POSITION field for userboard
-            if typ == "user" and chunk_position < author_position < chunk_position + config.board_top:
+            if (
+                typ == "user"
+                and not (chunk_position <= author_position <= chunk_position + config.board_top)
+                and author_position != -1
+            ):
                 lines = []
                 range_floor = author_position - config.board_around
                 range_ceiling = author_position + config.board_around + 1
@@ -272,15 +314,15 @@ class Boards(basecog.Basecog):
                     if user is None:
                         try:
                             user = await self.bot.fetch_user(item["user_id"])
+                            user_name = discord.utils.escape_markdown(user.display_name)
                         except discord.errors.NotFound:
                             user_name = "_(Unknown user)_"
                     else:
-                        user_name = user.display_name
+                        user_name = discord.utils.escape_markdown(user.display_name)
 
                     # get position string
                     index = f"{position + 1:>2}"
                     count = f"{item['count']:>5}"
-                    user = self.bot.get_user(item["user_id"])
                     name = "{}".format(user_name)
                     if position == author_position:
                         name = "**" + name + "**"
@@ -288,11 +330,9 @@ class Boards(basecog.Basecog):
                     lines.append(text.fill("boards", "template", index=index, name=name, count=count,))
 
                 if len(lines) > 0:
-                    embed.add_field(
+                    board.add_field(
                         name=text.get("boards", "author position"), value="\n".join(lines), inline=False,
                     )
-
-            boards.append(embed)
 
         return boards, pagenum
 
@@ -354,21 +394,16 @@ class Boards(basecog.Basecog):
             user_id = message.author.id
             guild_id = message.guild.id
             last_message_at = message.created_at
-            last_message_id = message.id
             repository.decrement(
-                channel_id=channel_id,
-                user_id=user_id,
-                guild_id=guild_id,
-                last_message_at=last_message_at,
-                last_message_id=last_message_id,
+                channel_id=channel_id, user_id=user_id, guild_id=guild_id, last_message_at=last_message_at,
             )
 
     @commands.Cog.listener()
     async def on_ready(self):
         channels = repository.get_user_channels()
         results = None
-        tasks = []
         admin = self.bot.get_user(config.admin_id)
+        messages = []
 
         async with admin.typing():
 
@@ -385,31 +420,30 @@ class Boards(basecog.Basecog):
                     ):
 
                         if results is None:
-                            messages = await self.get_history(channel, None)
+                            if messages is None:
+                                msgs = await self.get_history(channel, None)
                         else:
                             for res in results:
                                 if res["channel_id"] == channel.id:
                                     after = res["last_message_at"]
-                                    messages = await self.get_history(channel, after)
+                                    msgs = await self.get_history(channel, after)
                                     break
                             else:
-                                # try:
-                                messages = await self.get_history(channel, None)
-                                """except discord.errors.Forbidden:
+                                try:
+                                    msgs = await self.get_history(channel, None)
+                                except discord.errors.Forbidden:
                                     print(
                                         "Forbidden getting history for channel {channel} in guild {guild}".format(
                                             channel=channel, guild=guild.name
                                         )
                                     )
-                                    continue"""  # TODO log this
+                                    continue  # TODO log this
 
-                        if len(messages) > 0:
-                            tasks.append(self.msg_iter(messages))
+                        if len(msgs) > 0:
+                            messages.extend(msgs)
+        await self.msg_iter(messages)
 
-        for task in tasks:
-            await task
-
-        await admin.send(text.get("boards", "synced"))
+        await admin.send(text.fill("boards", "synced", count=len(messages)))
 
 
 def setup(bot):
