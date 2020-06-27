@@ -359,15 +359,19 @@ class Boards(basecog.Basecog):
                     pass
                 break
             else:
-                if pagenum > 0 and str(reaction.emoji) == "◀️":
+                if str(reaction.emoji) == "◀️":
                     pagenum -= 1
+                    if pagenum < 0:
+                        pagenum = len(boards) - 1
                     try:
                         await msg.remove_reaction("◀️", user)
                     except discord.errors.Forbidden:
                         pass
                     await msg.edit(embed=boards[pagenum])
-                if pagenum < (len(boards) - 1) and str(reaction.emoji) == "▶️":
+                if str(reaction.emoji) == "▶️":
                     pagenum += 1
+                    if pagenum >= len(boards):
+                        pagenum = 0
                     try:
                         await msg.remove_reaction("▶️", user)
                     except discord.errors.Forbidden:

@@ -61,15 +61,19 @@ class Urban(basecog.Basecog):
             except asyncio.TimeoutError:
                 break
             else:
-                if pagenum > 0 and reaction.emoji == "◀️":
+                if str(reaction.emoji) == "◀️":
                     pagenum -= 1
+                    if pagenum < 0:
+                        pagenum = len(embeds) - 1
                     try:
                         await message.remove_reaction("◀️", user)
                     except discord.errors.Forbidden:
                         pass
                     await message.edit(embed=embeds[pagenum])
-                if (pagenum < len(embeds) - 1) and reaction.emoji == "▶️":
+                if str(reaction.emoji) == "▶️":
                     pagenum += 1
+                    if pagenum >= len(embeds):
+                        pagenum = 0
                     try:
                         await message.remove_reaction("▶️", user)
                     except discord.errors.Forbidden:
