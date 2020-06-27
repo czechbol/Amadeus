@@ -180,7 +180,6 @@ class Boards(basecog.Basecog):
         for idx, result in enumerate(results):
             if member.id == result["user_id"]:
                 offset = idx
-                print(offset)
                 break
         else:
             return await ctx.send(text.get("boards", "not found"))
@@ -224,7 +223,6 @@ class Boards(basecog.Basecog):
                         try:
                             user = await self.bot.fetch_user(item["user_id"])
                         except discord.errors.NotFound:
-                            print(item["user_id"])
                             user_name = "_(Unknown user)_"
                     else:
                         user_name = user.display_name
@@ -262,11 +260,7 @@ class Boards(basecog.Basecog):
                 lines = []
                 range_floor = author_position - config.board_around
                 range_ceiling = author_position + config.board_around + 1
-                print(author_position)
-                print()
                 for position in range(range_floor, range_ceiling):
-
-                    print(position)
 
                     # do not wrap around (if the 'around' number is too high)
                     if position < 0:
