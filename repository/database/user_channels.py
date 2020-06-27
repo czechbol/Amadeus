@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, BigInteger, DateTime, String
+from sqlalchemy import Column, Integer, BigInteger, DateTime
 from repository.database import database
 
 
@@ -11,4 +11,3 @@ class UserChannel(database.base):
     user_id = Column(BigInteger)
     count = Column(BigInteger, default=1)
     last_message_at = Column(DateTime)
-    
