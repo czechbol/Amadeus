@@ -2,6 +2,7 @@ import re
 import discord
 import requests
 import asyncio
+from datetime import datetime
 from urllib import parse as url_parse
 from discord.ext import commands
 
@@ -20,7 +21,7 @@ class Urban(basecog.Basecog):
     def __init__(self, bot):
         self.bot = bot
 
-    def urban_embeds(self, dic):
+    def urban_embeds(self, ctx, dic):
         lis = dic["list"]
         embed_list = []
 
@@ -33,11 +34,17 @@ class Urban(basecog.Basecog):
             if len(example) > 1024:
                 definition = definition[0:1021] + "`…`"
 
-            embed = discord.Embed(title=lis[idx]["word"], url=lis[idx]["permalink"])
+            embed = discord.Embed(
+                title=lis[idx]["word"], url=lis[idx]["permalink"], timestamp=datetime.now(),
+            )
             embed.add_field(name="Definition", value=definition, inline=False)
             embed.add_field(name="Example", value=example, inline=False)
             embed.add_field(
                 name="Page", value="{curr}/{total}".format(curr=idx + 1, total=len(lis)), inline=False,
+            )
+            author = str(ctx.message.author.name + "#" + ctx.message.author.discriminator)
+            embed.set_footer(
+                text=text.fill("base", "embed footer", user=author,), icon_url=ctx.message.author.avatar_url,
             )
             embed_list.append(embed)
         return embed_list
@@ -87,6 +94,7 @@ class Urban(basecog.Basecog):
         help=text.fill("urban", "urban_help", prefix=config.prefix),
     )
     async def urban(self, ctx):
+        await self.deleteCommand(ctx, now=True)
         message = ctx.message
         args = message.content.split(" ")
         if len(args) == 1:
@@ -109,7 +117,7 @@ class Urban(basecog.Basecog):
                 await ctx.send(f"Error occurred: {err}")
             else:
                 # Request was successful
-                embeds = self.urban_embeds(dic)
+                embeds = self.urban_embeds(ctx, dic)
 
         await self.urban_pages(ctx, embeds)
 

@@ -284,6 +284,11 @@ class Boards(basecog.Basecog):
                 value="\n".join(lines),
                 inline=False,
             )
+            author_name = str(ctx.message.author.name + "#" + ctx.message.author.discriminator)
+            embed.set_footer(
+                text=text.fill("base", "embed footer", user=author_name,),
+                icon_url=ctx.message.author.avatar_url,
+            )
 
             boards.append(embed)
 
@@ -346,7 +351,7 @@ class Boards(basecog.Basecog):
                 )
 
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=60.0)
+                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
             except asyncio.TimeoutError:
                 try:
                     await msg.delete()

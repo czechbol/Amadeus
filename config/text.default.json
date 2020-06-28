@@ -25,7 +25,8 @@
 		"uhoh_desc": "Počet uh ohs od spuštění",
 		"uh oh": "{cnt} uh ohs od spuštění",
 		"not_booster_anymore": "Uživatel na serveru již není ServerBooster.",
-		"new_server_booster": "Uživatel na serveru je nyní ServerBooster."
+		"new_server_booster": "Uživatel na serveru je nyní ServerBooster.",
+		"embed footer":"Odpověď pro {user}"
 	},
 	"draw": {
 		"latex_desc": "Vykreslí LaTeX výraz",
