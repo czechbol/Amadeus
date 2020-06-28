@@ -9,7 +9,15 @@ class UserChannelRepository(BaseRepository):
     # unknown - pending - verified - kicked - banned
 
     @classmethod
-    def increment(cls, channel_id: int, user_id: int, guild_id: int, last_message_at: datetime, count: int):
+    def increment(
+        cls,
+        channel_id: int,
+        user_id: int,
+        guild_id: int,
+        last_msg_at: datetime,
+        count: int,
+        is_webhook: bool,
+    ):
         """Increment user_channel count, if it doesn't exist, create it"""
         user_channel = (
             session.query(UserChannel)
@@ -21,7 +29,7 @@ class UserChannelRepository(BaseRepository):
                 UserChannel(
                     channel_id=channel_id,
                     user_id=user_id,
-                    last_message_at=last_message_at,
+                    last_msg_at=last_msg_at,
                     guild_id=guild_id,
                     count=count,
                 )
@@ -29,14 +37,14 @@ class UserChannelRepository(BaseRepository):
 
         else:
             user_channel.count = user_channel.count + count
-            if user_channel.last_message_at < last_message_at:
-                user_channel.last_message_at = last_message_at
+            if user_channel.last_msg_at < last_msg_at:
+                user_channel.last_msg_at = last_msg_at
 
         session.commit()
 
     @classmethod
     def decrement(
-        cls, channel_id: int, user_id: int, guild_id: int, last_message_at: datetime,
+        cls, channel_id: int, user_id: int, guild_id: int, last_msg_at: datetime,
     ):
         """Decrement user_channel count."""
         user_channel = (
@@ -50,15 +58,15 @@ class UserChannelRepository(BaseRepository):
                     channel_id=channel_id,
                     user_id=user_id,
                     count=0,
-                    last_message_at=last_message_at,
+                    last_msg_at=last_msg_at,
                     guild_id=guild_id,
                 )
             )
 
         else:
             user_channel.count = user_channel.count - 1
-            if user_channel.last_message_at < last_message_at:
-                user_channel.last_message_at = last_message_at
+            if user_channel.last_msg_at < last_msg_at:
+                user_channel.last_msg_at = last_msg_at
 
         session.commit()
 

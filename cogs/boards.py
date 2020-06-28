@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import discord
 from discord import CategoryChannel, VoiceChannel
@@ -28,23 +29,9 @@ class Boards(basecog.Basecog):
             messages = await channel.history(limit=None, after=after, oldest_first=True).flatten()
         return messages
 
-    async def add_to_db(self, msg):
-        if msg.webhook_id:
-            return
-        repository.increment(
-            channel_id=msg.channel.id,
-            user_id=msg.author.id,
-            guild_id=msg.guild.id,
-            last_message_at=msg.created_at,
-            count=1,
-        )
-        return
-
     async def msg_iter(self, messages):
         userchannels = []
         for msg in messages:
-            if msg.webhook_id:
-                continue
             for row in userchannels:
                 if (
                     row["channel_id"] == msg.channel.id
@@ -52,27 +39,32 @@ class Boards(basecog.Basecog):
                     and row["user_id"] == msg.author.id
                 ):
                     row["count"] += 1
-                    if row["last_message_at"] < msg.created_at:
-                        row["last_message_at"] = msg.created_at
+                    if row["last_msg_at"] < msg.created_at:
+                        row["last_msg_at"] = msg.created_at
                     break
             else:
+                if msg.webhook_id:
+                    is_webhook = True
+                else:
+                    is_webhook = False
                 userchannels.append(
                     {
-                        "channel_id": msg.channel.id,
                         "guild_id": msg.guild.id,
+                        "channel_id": msg.channel.id,
                         "user_id": msg.author.id,
+                        "is_webhook": is_webhook,
+                        "last_msg_at": msg.created_at,
                         "count": 1,
-                        "last_message_at": msg.created_at,
                     }
                 )
-        userchannels = sorted(userchannels, key=lambda i: (i["count"]), reverse=True)
 
         for usr_ch in userchannels:
             repository.increment(
+                guild_id=usr_ch["guild_id"],
                 channel_id=usr_ch["channel_id"],
                 user_id=usr_ch["user_id"],
-                guild_id=usr_ch["guild_id"],
-                last_message_at=usr_ch["last_message_at"],
+                is_webhook=usr_ch["is_webhook"],
+                last_msg_at=usr_ch["last_msg_at"],
                 count=usr_ch["count"],
             )
 
@@ -80,25 +72,26 @@ class Boards(basecog.Basecog):
 
     async def sort_channels(self, lis, all_allowed):
         results = []
-        for ch in lis:
+        for usr_ch in lis:
             if all_allowed is True or (
-                ch["channel_id"] not in config.board_ignored_channels
-                and ch["user_id"] not in config.board_ignored_users
+                usr_ch["channel_id"] not in config.board_ignored_channels
+                and usr_ch["user_id"] not in config.board_ignored_users
+                and not usr_ch["is_webhook"]
             ):
 
                 for row in results:
-                    if row["channel_id"] == ch["channel_id"] and row["guild_id"] == ch["guild_id"]:
-                        row["count"] += ch["count"]
-                        if row["last_message_at"] < ch["last_message_at"]:
-                            row["last_message_at"] = ch["last_message_at"]
+                    if row["channel_id"] == usr_ch["channel_id"] and row["guild_id"] == usr_ch["guild_id"]:
+                        row["count"] += usr_ch["count"]
+                        if row["last_msg_at"] < usr_ch["last_msg_at"]:
+                            row["last_msg_at"] = usr_ch["last_msg_at"]
                         break
                 else:
                     results.append(
                         {
-                            "channel_id": ch["channel_id"],
-                            "guild_id": ch["guild_id"],
-                            "count": ch["count"],
-                            "last_message_at": ch["last_message_at"],
+                            "channel_id": usr_ch["channel_id"],
+                            "guild_id": usr_ch["guild_id"],
+                            "count": usr_ch["count"],
+                            "last_msg_at": usr_ch["last_msg_at"],
                         }
                     )
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
@@ -106,25 +99,25 @@ class Boards(basecog.Basecog):
 
     async def sort_userchannel(self, lis):
         results = []
-        for ch in lis:
+        for usr_ch in lis:
             for row in results:
                 if (
-                    row["channel_id"] == ch["channel_id"]
-                    and row["guild_id"] == ch["guild_id"]
-                    and row["user_id"] == ch["user_id"]
+                    row["channel_id"] == usr_ch["channel_id"]
+                    and row["guild_id"] == usr_ch["guild_id"]
+                    and row["user_id"] == usr_ch["user_id"]
                 ):
-                    row["count"] += ch["count"]
-                    if row["last_message_at"] < ch["last_message_at"]:
-                        row["last_message_at"] = ch["last_message_at"]
+                    row["count"] += usr_ch["count"]
+                    if row["last_msg_at"] < usr_ch["last_msg_at"]:
+                        row["last_msg_at"] = usr_ch["last_msg_at"]
                     break
             else:
                 results.append(
                     {
-                        "channel_id": ch["channel_id"],
-                        "guild_id": ch["guild_id"],
-                        "user_id": ch["user_id"],
-                        "count": ch["count"],
-                        "last_message_at": ch["last_message_at"],
+                        "channel_id": usr_ch["channel_id"],
+                        "guild_id": usr_ch["guild_id"],
+                        "user_id": usr_ch["user_id"],
+                        "count": usr_ch["count"],
+                        "last_msg_at": usr_ch["last_msg_at"],
                     }
                 )
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
@@ -132,26 +125,24 @@ class Boards(basecog.Basecog):
 
     async def sort_users(self, lis, all_allowed):
         results = []
-        for ch in lis:
-            for guild in self.bot.guilds:
-                if guild.get_member(ch["user_id"]) is None:
-                    continue
+        for usr_ch in lis:
             if all_allowed is True or (
-                ch["channel_id"] not in config.board_ignored_channels
-                and ch["user_id"] not in config.board_ignored_users
+                usr_ch["channel_id"] not in config.board_ignored_channels
+                and usr_ch["user_id"] not in config.board_ignored_users
+                and not usr_ch["is_webhook"]
             ):
                 for row in results:
-                    if row["user_id"] == ch["user_id"]:
-                        row["count"] += ch["count"]
-                        if row["last_message_at"] < ch["last_message_at"]:
-                            row["last_message_at"] = ch["last_message_at"]
+                    if row["user_id"] == usr_ch["user_id"]:
+                        row["count"] += usr_ch["count"]
+                        if row["last_msg_at"] < usr_ch["last_msg_at"]:
+                            row["last_msg_at"] = usr_ch["last_msg_at"]
                         break
                 else:
                     results.append(
                         {
-                            "user_id": ch["user_id"],
-                            "count": ch["count"],
-                            "last_message_at": ch["last_message_at"],
+                            "user_id": usr_ch["user_id"],
+                            "count": usr_ch["count"],
+                            "last_msg_at": usr_ch["last_msg_at"],
                         }
                     )
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
@@ -160,6 +151,7 @@ class Boards(basecog.Basecog):
     @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "channel board"))
     async def channelboard(self, ctx, offset: int = 0):
+        await self.deleteCommand(ctx, now=True)
         await asyncio.sleep(0.1)
         user_channels = repository.get_user_channels()
 
@@ -182,6 +174,7 @@ class Boards(basecog.Basecog):
     @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command(description=text.get("boards", "user board"))
     async def userboard(self, ctx, offset: int = 0):
+        await self.deleteCommand(ctx, now=True)
         await asyncio.sleep(0.1)
         user_channels = repository.get_user_channels()
 
@@ -204,6 +197,7 @@ class Boards(basecog.Basecog):
     @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
     @commands.command()
     async def stalk(self, ctx, member: discord.Member):
+        await self.deleteCommand(ctx, now=True)
         await asyncio.sleep(0.1)
         user_channels = repository.get_user_channels()
 
@@ -238,6 +232,7 @@ class Boards(basecog.Basecog):
                 title=text.get("boards", typ + " board title"),
                 description=text.get("boards", typ + " board desc"),
                 color=config.color,
+                timestamp=datetime.now(),
             )
 
             pagenum = 0  # index of board page to show first
@@ -289,6 +284,7 @@ class Boards(basecog.Basecog):
                 value="\n".join(lines),
                 inline=False,
             )
+
             boards.append(embed)
 
         for idx, board in enumerate(boards):
@@ -350,11 +346,10 @@ class Boards(basecog.Basecog):
                 )
 
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
+                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=60.0)
             except asyncio.TimeoutError:
                 try:
-                    await msg.clear_reaction("◀️")
-                    await msg.clear_reaction("▶️")
+                    await msg.delete()
                 except discord.errors.Forbidden:
                     pass
                 break
@@ -385,7 +380,18 @@ class Boards(basecog.Basecog):
             and not isinstance(message.channel, VoiceChannel)
             and not isinstance(message.channel, CategoryChannel)
         ):
-            await self.add_to_db(message)
+            if message.webhook_id:
+                is_webhook = True
+            else:
+                is_webhook = False
+            repository.increment(
+                guild_id=message.guild.id,
+                channel_id=message.channel.id,
+                user_id=message.author.id,
+                is_webhook=is_webhook,
+                last_msg_at=message.created_at,
+                count=1,
+            )
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
@@ -397,9 +403,9 @@ class Boards(basecog.Basecog):
             channel_id = message.channel.id
             user_id = message.author.id
             guild_id = message.guild.id
-            last_message_at = message.created_at
+            last_msg_at = message.created_at
             repository.decrement(
-                channel_id=channel_id, user_id=user_id, guild_id=guild_id, last_message_at=last_message_at,
+                channel_id=channel_id, user_id=user_id, guild_id=guild_id, last_msg_at=last_msg_at,
             )
 
     @commands.Cog.listener()
@@ -429,7 +435,7 @@ class Boards(basecog.Basecog):
                         else:
                             for res in results:
                                 if res["channel_id"] == channel.id:
-                                    after = res["last_message_at"]
+                                    after = res["last_msg_at"]
                                     msgs = await self.get_history(channel, after)
                                     break
                             else:

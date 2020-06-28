@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, BigInteger, DateTime
+from sqlalchemy import Column, Integer, BigInteger, Boolean, DateTime
 from repository.database import database
 
 
@@ -9,5 +9,6 @@ class UserChannel(database.base):
     guild_id = Column(BigInteger)
     channel_id = Column(BigInteger)
     user_id = Column(BigInteger)
+    is_webhook = Column(Boolean)
     count = Column(BigInteger, default=1)
-    last_message_at = Column(DateTime)
+    last_msg_at = Column(DateTime)
