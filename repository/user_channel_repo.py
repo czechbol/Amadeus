@@ -27,11 +27,12 @@ class UserChannelRepository(BaseRepository):
         if not user_channel:
             session.add(
                 UserChannel(
+                    guild_id=guild_id,
                     channel_id=channel_id,
                     user_id=user_id,
-                    last_msg_at=last_msg_at,
-                    guild_id=guild_id,
+                    is_webhook=is_webhook,
                     count=count,
+                    last_msg_at=last_msg_at,
                 )
             )
 
