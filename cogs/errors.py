@@ -16,8 +16,7 @@ class Errors(basecog.Basecog):
         """Handle errors"""
         if hasattr(ctx.command, "on_error") or hasattr(ctx.command, "on_command_error"):
             return
-        elif ctx.channel.id == self.bot.channel_botdev:
-            return
+
         error = getattr(error, "original", error)
 
         printed = False
@@ -67,7 +66,8 @@ class Errors(basecog.Basecog):
             await self.guildlog(ctx, "Missing argument", quote=True, msg=error)
             return
         # fmt: on
-
+        if ctx.channel.id == self.bot.channel_botdev:
+            return
         # display error message
         await self.throwError(ctx, error)
         await self.guildlog(ctx, "on_command_error", quote=True, msg=error)
