@@ -16,7 +16,7 @@ class Errors(basecog.Basecog):
         """Handle errors"""
         if hasattr(ctx.command, "on_error") or hasattr(ctx.command, "on_command_error"):
             return
-        elif ctx.channel.id == self.channel_botdev:
+        elif ctx.channel.id == self.bot.channel_botdev:
             return
         error = getattr(error, "original", error)
 
