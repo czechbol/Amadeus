@@ -218,6 +218,96 @@ class Boards(basecog.Basecog):
 
         return
 
+    @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
+    @commands.command()
+    async def channelinfo(self, ctx, channel: discord.TextChannel):
+        await self.deleteCommand(ctx, now=True)
+        await asyncio.sleep(0.1)
+        channels = repository.get_user_channels()
+        all_results = await self.sort_channels(channels)
+        users = await self.sort_users(repository.get_channel(channel.id))
+        offset = -1
+
+        if not users:
+            return await ctx.send(text.get("boards", "not found"))
+
+        for idx, result in enumerate(all_results, start=1):
+            if result["channel_id"] == channel.id:
+                total_count = result["count"]
+                last_msg_at = result["last_msg_at"]
+                position = idx
+
+        for user in users:
+            if user["last_msg_at"] == last_msg_at:
+                last_user = self.bot.fetch_user(user["user_id"]).nick
+
+        embed = self.create_embed(ctx, title=text.get("boards", "channel info title"))
+        embed.add_field(name="Jméno", value=str(channel.name), inline=True)
+        embed.add_field(name="ID", value=str(channel.id), inline=True)
+        embed.add_field(name="Server", value=str(channel.guild.name), inline=True)
+        if channel.category.name is not None:
+            embed.add_field(name="Kategorie", value=str(channel.category.name), inline=True)
+        embed.add_field(name="Poslední zpráva", value=f"{last_user} ({last_msg_at})", inline=True)
+        embed.add_field(name="Celkový počet zpráv", value=str(total_count), inline=True)
+        embed.add_field(
+            name="Pozice mezi kanály", value="{0}/{1}".format(position, len(all_results)), inline=True
+        )
+        embeds = []
+        embeds.append(embed)
+        boards, pagenum = await self.boards_generator(ctx, users, offset, "channel info")
+        embeds += boards
+
+        await self.board_pages(ctx, embeds, pagenum)
+        return
+
+    @commands.cooldown(rate=3, per=120.0, type=commands.BucketType.user)
+    @commands.command()
+    async def userinfo(self, ctx, member: discord.Member):
+        await self.deleteCommand(ctx, now=True)
+        await asyncio.sleep(0.1)
+        users = repository.get_user_channels()
+        all_results = await self.sort_users(users)
+        channels = await self.sort_channels(repository.get_user(member.id))
+        offset = -1
+
+        if not channels:
+            return await ctx.send(text.get("boards", "not found"))
+
+        for idx, result in enumerate(all_results, start=1):
+            if result["user_id"] == member.id:
+                total_count = result["count"]
+                last_msg_at = result["last_msg_at"]
+                position = idx
+        for channel in channels:
+            if channel["last_msg_at"] == last_msg_at:
+                last_channel = self.bot.get_channel(channel["channel_id"]).name
+        role_list = []
+        for role in member.roles:
+            if role.name != "@everyone":
+                role_list.append(role.name)
+
+        role_list.reverse()
+
+        embed = self.create_embed(ctx, title=text.get("boards", "user info title"))
+        embed.set_thumbnail(url=member.avatar_url)
+        embed.add_field(name="Jméno", value=str(member.display_name), inline=True)
+        embed.add_field(name="ID", value=str(member.id), inline=True)
+        embed.add_field(name="Připojen", value=str(member.joined_at), inline=True)
+        embed.add_field(name="Status", value=str(member.status), inline=True)
+        embed.add_field(name="Poslední zpráva", value=f"{last_channel} ({last_msg_at})", inline=True)
+        embed.add_field(name="Celkový počet zpráv", value=str(total_count), inline=True)
+        embed.add_field(
+            name="Pozice mezi uživateli", value="{0}/{1}".format(position, len(all_results)), inline=True
+        )
+        embed.add_field(name="Role", value=",".join(str(r) for r in role_list), inline=True)
+        embeds = []
+        embeds.append(embed)
+        boards, pagenum = await self.boards_generator(ctx, channels, offset, "user info")
+        embeds += boards
+
+        await self.board_pages(ctx, embeds, pagenum)
+        return
+
     async def boards_generator(self, ctx, results, offset, typ):
         # splits results into config.board_top sized chunks (chunks = list of lists)
         chunks = [results[i : i + config.board_top] for i in range(0, len(results), config.board_top)]
@@ -242,7 +332,7 @@ class Boards(basecog.Basecog):
 
                 index = f"{position + 1:>2}"
                 count = f"{item['count']:>5}"
-                if typ == "channel":
+                if typ == "channel" or typ == "user info":
                     channel = self.bot.get_channel(item["channel_id"])
                     name = "#{}".format(channel.name)
                 else:
@@ -289,9 +379,8 @@ class Boards(basecog.Basecog):
         for idx, board in enumerate(boards):
             chunk_position = idx * config.board_top
             # adds the YOUR POSITION field for userboard
-            if (
-                typ == "user"
-                and not (chunk_position <= author_position <= chunk_position + config.board_top)
+            if (typ == "user" or typ == "channel info") and (
+                not (chunk_position <= author_position <= chunk_position + config.board_top)
                 and author_position != -1
             ):
                 lines = []
@@ -331,13 +420,13 @@ class Boards(basecog.Basecog):
 
         return boards, pagenum
 
-    async def board_pages(self, ctx, boards, pagenum):
+    async def board_pages(self, ctx, boards, pagenum=0):
         msg = await ctx.send(embed=boards[pagenum])
         await msg.add_reaction("◀️")
         await msg.add_reaction("▶️")
         while True:
 
-            def check(reaction, user):
+            def chk(reaction, user):
                 return (
                     reaction.message.id == msg.id
                     and (str(reaction.emoji) == "◀️" or str(reaction.emoji) == "▶️")
@@ -345,7 +434,7 @@ class Boards(basecog.Basecog):
                 )
 
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
+                reaction, user = await self.bot.wait_for("reaction_add", check=chk, timeout=300.0)
             except asyncio.TimeoutError:
                 try:
                     await msg.delete()

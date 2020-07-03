@@ -67,6 +67,9 @@
 		"offset too big": "Moc velký offset",
 		"channel board": "Zobrazí kanály s nejvíce zprávami",
 		"channel info": "Zobrazí informace o kanálu",
+		"channel info title": "Informace o kanálu",
+		"channel info board title": "Channelinfo",
+		"channel info board desc": "Počet zpráv v kanálu od uživatele",
 		"channel board title": "Channelboard",
 		"channel board desc": "Celkový počet zpráv na kanál",
 		"template": "`{index}` ... `{count}` {name}",
@@ -74,6 +77,9 @@
 		"user board": "Zobrazí uživatele s nejvíce odeslanými zprávami",
 		"user info": "Zobrazí informace o uživateli",
 		"user board title": "Userboard",
-		"user board desc": "Celkový počet zpráv na uživatele"
+		"user board desc": "Celkový počet zpráv na uživatele",
+		"user info title": "Informace o uživateli",
+		"user info board title": "Userinfo",
+		"user info board desc": "Počet zpráv od uživatele v kanálech"
 	}
 }
