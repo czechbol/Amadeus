@@ -168,13 +168,10 @@ class Basecog(commands.Cog):
         content = content if len(content) < 512 else content[:512]
 
         # Construct the notification embed
-        embed = self._getEmbed(ctx, color=config.color_notify, pin=pin)
+        embed = self.create_embed(ctx, color=config.color_notify)
         embed.add_field(name="Notification", value=msg, inline=False)
         embed.add_field(name="Command", value=content, inline=False)
-        if pin:
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send(embed=embed, delete_after=config.delay_embed)
+        await ctx.send(embed=embed)
         await self.deleteCommand(ctx, now=True)
         # TODO Should we log this?
 
