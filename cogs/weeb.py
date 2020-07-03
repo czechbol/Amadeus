@@ -57,7 +57,7 @@ class Weeb(basecog.Basecog):
         ]
         return tags
 
-    def sauce_embed(self, dic, BOOK_ID):
+    def sauce_embed(self, ctx, dic, BOOK_ID):
         tags = self.sauce_tags(dic)
 
         url = "https://nhentai.net/g/{BOOK_ID}/".format(BOOK_ID=BOOK_ID)
@@ -69,7 +69,7 @@ class Weeb(basecog.Basecog):
         title = dic["title"]["pretty"]
         num_pages = dic["num_pages"]
 
-        embed = discord.Embed(title=title, url=url, color=discord.Colour.from_rgb(227, 47, 86))
+        embed = self.create_embed(ctx, title=title, url=url, color=discord.Colour.from_rgb(227, 47, 86))
         embed.set_image(url=cover_url)
         embed.add_field(name="Number of pages", value=num_pages, inline=True)
 
@@ -120,7 +120,7 @@ class Weeb(basecog.Basecog):
                     await ctx.send(f"Error occurred: {err}")
                 else:
                     # Request was successful
-                    embed = self.sauce_embed(dic, BOOK_ID)
+                    embed = self.sauce_embed(ctx, dic, BOOK_ID)
 
             await ctx.send(embed=embed)
 

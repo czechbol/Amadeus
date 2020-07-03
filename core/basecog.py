@@ -1,6 +1,6 @@
-import re
-import datetime
 import traceback
+from datetime import datetime
+from datetime import timezone
 
 import discord
 from discord.ext import commands
@@ -48,47 +48,29 @@ class Basecog(commands.Cog):
         return self.roles_elevated
 
     # Helper functions
-    @classmethod
-    def _getEmbedTitle(cls, ctx: commands.Context):
-        """Helper function assembling title for embeds"""
-        if ctx.command is None:
-            return "(no command)"
+    def create_embed(self, ctx, error=False, **kwargs):
+        if "color" not in kwargs:
+            kwargs["color"] = config.color
+        if "timestamp" not in kwargs:
+            kwargs["timestamp"] = datetime.now(tz=timezone.utc)
 
-        path = " ".join((p.name) for p in ctx.command.parents[::-1]) + " " if ctx.command.parents else ""
-        return config.prefix + path + ctx.command.name
+        author_name = f"{ctx.message.author.name}#{ctx.message.author.discriminator}"
 
-    def _getEmbed(self, ctx: commands.Context, color: int = None, pin=False):
-        """Helper function for creating embeds
-
-        color: embed color
-        pin: whether to pin the embed or let it be deleted
-        """
-        if color not in config.colors:
-            color = config.color
-        if pin is not None and pin:
-            title = "📌 " + self._getEmbedTitle(ctx)
+        embed = discord.Embed(**kwargs)
+        if not error:
+            embed.set_footer(
+                text=text.fill("basecog", "embed footer", user=author_name),
+                icon_url=ctx.message.author.avatar_url,
+            )
         else:
-            title = self._getEmbedTitle(ctx)
-        description = "**{}**".format(ctx.command.cog_name) if ctx.command else ""
-
-        embed = discord.Embed(title=title, description=description, color=color)
-        if ctx.author is not None:
-            embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+            embed.set_footer(
+                text=text.fill("basecog", "error footer", user=author_name),
+                icon_url=ctx.message.author.avatar_url,
+            )
         return embed
 
-    @classmethod
-    def _getCommandSignature(cls, ctx: commands.Context):
-        """Return a 'cog:command_name' string"""
-        if not ctx.command:
-            return "UNKNOWN"
-        name = ctx.command.qualified_name.replace(" ", "_")
-        if not ctx.command.cog:
-            return name
-        else:
-            return "{}:{}".format(ctx.command.cog.qualified_name.lower(), name)
-
     # Utils
-    async def log(self, ctx, action: str, quote: bool = True, msg=None):
+    async def guildlog(self, ctx, action: str, quote: bool = True, msg=None):
         """Log event"""
         channel = self.getGuild().get_channel(config.channel_guildlog)
         author = self.getGuild().get_member(ctx.author.id)
@@ -117,12 +99,12 @@ class Basecog(commands.Cog):
         # TODO Save to log
 
     async def roomCheck(self, ctx: commands.Context):
-        """Send an message to prevent bot spamming"""
+        """Send a message to prevent bot spamming"""
         if isinstance(ctx.channel, discord.DMChannel):
             return
         botspam = self.getGuild().get_channel(config.channel_botspam)
         if ctx.channel.id not in config.bot_allowed:
-            await ctx.send(text.fill("server", "botroom redirect", user=ctx.author, channel=botspam))
+            await ctx.send(text.fill("basecog", "botroom redirect", user=ctx.author, channel=botspam))
 
     async def deleteCommand(self, message, now: bool = True):
         """Try to delete the context message.
@@ -137,31 +119,14 @@ class Basecog(commands.Cog):
         except discord.HTTPException as err:
             self.logException(message, err)
 
-    @classmethod
-    def parseArg(cls, arg: str = None):
-        """Return true if supported argument is matched"""
-        # TODO Do this the proper way
-        args = ["pin", "force"]
-        return True if arg in args else False
-
-    @classmethod
-    def getTimestamp(cls):
-        """Get yyyy-mm-dd HH:MM:SS string"""
-        return datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-
     # Embeds
-    # TODO Create RubbergoddessException class
-    async def throwError(self, ctx: commands.Context, err, delete: bool = False, pin: bool = False):
+    async def throwError(self, ctx: commands.Context, err):
         """Show an embed and log the error"""
         # Get error information
-        # err_desc = err if type(err) == "str" else str(err)
-        if isinstance(err, Exception):
-            err = getattr(err, "original", err)
-            err_type = type(err).__name__
-            err_trace = "".join(traceback.format_exception(type(err), err, err.__traceback__))
-        else:
-            err_type = "RubbergoddessException"
-            err_trace = "No traceback\n**{}**".format(err)
+
+        err = getattr(err, "original", err)
+        err_type = type(err).__name__
+        err_trace = "".join(traceback.format_exception(type(err), err, err.__traceback__))
         err_title = "{}: {}".format(ctx.author, ctx.message.content)
 
         # Do the debug
@@ -173,20 +138,17 @@ class Basecog(commands.Cog):
         # Clean the input
         content = ctx.message.content
         content = content if len(content) < 600 else content[:600]
-        delete = False if pin else delete
 
         if len(err_trace) > 600:
             err_trace = err_trace[-600:]
+
         # Construct the error embed
-        embed = self._getEmbed(ctx, color=config.color_error, pin=pin)
-        embed.add_field(name=err_type, value=f"```{err_trace}```", inline=False)
-        embed.add_field(name="Command", value=content, inline=False)
-        if delete:
-            await ctx.send(embed=embed, delete_after=config.delay_embed)
-        else:
-            await ctx.send(embed=embed)
+        embed = self.create_embed(ctx, error=True, title=err_type, color=config.color_error)
+        embed.add_field(name="Command", value=content, inline=True)
+        embed.add_field(name="Error trace", value=f"```{err_trace}```", inline=False)
+
+        await ctx.send(embed=embed)
         await self.deleteCommand(ctx, now=True)
-        await self.log(ctx, self._getCommandSignature(ctx), quote=True, msg=err_type)
 
     async def throwNotification(self, ctx: commands.Context, msg: str, pin: bool = False):
         """Show an embed with a message."""
@@ -216,29 +178,6 @@ class Basecog(commands.Cog):
         await self.deleteCommand(ctx, now=True)
         # TODO Should we log this?
 
-    async def throwDescription(self, ctx: commands.Context, pin: bool = False):
-        """Show an embed with full docstring content."""
-        embed = self._getEmbed(ctx)
-        embed.add_field(name="About", value=ctx.command.short_doc)
-        if pin:
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send(embed=embed, delete_after=config.delay_embed)
-        await self.deleteCommand(ctx, now=True)
-
-    async def throwHelp(self, ctx: commands.Context, pin: bool = False):
-        """Show help for command groups"""
-        embed = self._getEmbed(ctx)
-        embed.add_field(name="Help", value=self.__formatHelp(ctx.command.help))
-
-        if isinstance(ctx.command, commands.Group) and ctx.command.commands:
-            embed.add_field(name="-" * 60, value="**SUBCOMMANDS**:", inline=False)
-            # TODO Sort by lambda or something
-            for opt in ctx.command.commands:
-                embed.add_field(name=opt.name, value=opt.short_doc, inline=False)
-        await ctx.send(embed=embed, delete_after=config.delay_embed)
-        await self.deleteCommand(ctx, now=True)
-
     # TODO Move helper functions here
     # HELPER FUNCTIONS
     async def sendLong(self, ctx: commands.Context, message: str, code: bool = False):
@@ -253,14 +192,3 @@ class Basecog(commands.Cog):
                 await ctx.send("```\n{}```".format(m))
             else:
                 await ctx.send(m)
-
-    @classmethod
-    def __formatHelp(cls, text: str):
-        if not text:
-            return "_(No help available)_"
-        text = text.split("\n")
-        text[0] = f"**{text[0]}**"
-        for i in range(2, len(text)):
-            match = re.findall(r"([a-zA-Z]+)(:)", text[i])[0][0]
-            text[i] = text[i].replace(match, f"**{match}**", 1)
-        return "\n".join(text)

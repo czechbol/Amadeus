@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime
 
 import discord
 from discord import CategoryChannel, VoiceChannel
@@ -228,11 +227,10 @@ class Boards(basecog.Basecog):
         for idx, chunk in enumerate(chunks):
             chunk_position = idx * config.board_top
 
-            embed = discord.Embed(
+            embed = self.create_embed(
+                ctx,
                 title=text.get("boards", typ + " board title"),
                 description=text.get("boards", typ + " board desc"),
-                color=config.color,
-                timestamp=datetime.now(),
             )
 
             pagenum = 0  # index of board page to show first
@@ -283,11 +281,6 @@ class Boards(basecog.Basecog):
                 name=text.fill("boards", title, top=config.board_top, offset=(idx * config.board_top) + 1),
                 value="\n".join(lines),
                 inline=False,
-            )
-            author_name = str(ctx.message.author.name + "#" + ctx.message.author.discriminator)
-            embed.set_footer(
-                text=text.fill("base", "embed footer", user=author_name,),
-                icon_url=ctx.message.author.avatar_url,
             )
 
             boards.append(embed)

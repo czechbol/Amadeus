@@ -1,4 +1,11 @@
 {
+	"basecog": {
+		"guild only": "Tohle funguje jenom na VUT FEKT serveru",
+		"channel only": "Tohle funguje jenom v {channel}",
+		"botroom redirect": "{user} {emote.sad} 👉 {channel}",
+		"embed footer": "Odpověď pro {user}",
+		"error footer": "{user}"
+	},
 	"error": {
 		"not implemented": "To ještě neumím... {emote.sad}",
 		"not supported": "To nejde.",
@@ -12,11 +19,6 @@
 		"extension": "Chyba v rozšíření {emote.ree}",
 		"argument": "Chyba v argumentu {emote.sad}"
 	},
-	"server": {
-		"guild only": "Tohle funguje jenom na VUT FEKT serveru",
-		"channel only": "Tohle funguje jenom v {channel}",
-		"botroom redirect": "{user} {emote.sad} 👉 {channel}"
-	},
 	"base": {
 		"uptime_desc": "Checks bot uptime",
 		"ping_desc": "Checks bot latency",
@@ -25,8 +27,7 @@
 		"uhoh_desc": "Počet uh ohs od spuštění",
 		"uh oh": "{cnt} uh ohs od spuštění",
 		"not_booster_anymore": "Uživatel na serveru již není ServerBooster.",
-		"new_server_booster": "Uživatel na serveru je nyní ServerBooster.",
-		"embed footer":"Odpověď pro {user}"
+		"new_server_booster": "Uživatel na serveru je nyní ServerBooster."
 	},
 	"draw": {
 		"latex_desc": "Vykreslí LaTeX výraz",

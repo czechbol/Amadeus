@@ -16,6 +16,8 @@ class Errors(basecog.Basecog):
         """Handle errors"""
         if hasattr(ctx.command, "on_error") or hasattr(ctx.command, "on_command_error"):
             return
+        elif ctx.channel.id == self.channel_botdev:
+            return
         error = getattr(error, "original", error)
 
         printed = False
@@ -26,22 +28,22 @@ class Errors(basecog.Basecog):
         # fmt: off
         if isinstance(error, commands.MissingPermissions):
             await self.throwNotification(ctx, text.get("error", "no user permission"))
-            await self.log(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
+            await self.guildlog(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
             return
 
-        if isinstance(error, commands.BotMissingPermissions):
+        elif isinstance(error, commands.BotMissingPermissions):
             await self.throwNotification(ctx, text.get("error", "no bot permission"))
-            await self.log(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
+            await self.guildlog(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
             return
 
-        if isinstance(error, commands.CommandOnCooldown):
+        elif isinstance(error, commands.CommandOnCooldown):
             await self.throwNotification(ctx, text.fill("error", "cooldown", time=int(error.retry_after)))
             return
 
         elif isinstance(error, commands.CheckFailure):
             # TODO Extract requirements and add them to the embed
             await self.throwNotification(ctx, text.get("error", "no requirements"))
-            await self.log(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
+            await self.guildlog(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
             return
 
         elif isinstance(error, commands.BadArgument):
@@ -62,13 +64,13 @@ class Errors(basecog.Basecog):
 
         elif isinstance(error, commands.MissingRequiredArgument):
             await self.throwNotification(ctx, error)
-            await self.log(ctx, "Missing argument", quote=True, msg=error)
+            await self.guildlog(ctx, "Missing argument", quote=True, msg=error)
             return
         # fmt: on
 
         # display error message
         await self.throwError(ctx, error)
-        await self.log(ctx, "on_command_error", quote=True, msg=error)
+        await self.guildlog(ctx, "on_command_error", quote=True, msg=error)
 
         output = "Ignoring exception in command {}: \n\n".format(ctx.command)
         output += "".join(traceback.format_exception(type(error), error, error.__traceback__))

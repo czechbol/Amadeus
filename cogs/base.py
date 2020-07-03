@@ -18,18 +18,6 @@ class Base(basecog.Basecog):
     def __init__(self, bot: commands.Bot):
         super().__init__(bot)
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        global uhoh_ctr
-
-        if message.content == "PR":
-            await message.channel.send("https://github.com/Czechbol/Amadeus/pulls")
-        elif message.content == "🔧":
-            await message.channel.send("https://github.com/Czechbol/Amadeus/issues")
-        elif "uh oh" in message.content.lower() and not message.author.bot:
-            await message.channel.send("uh oh")
-            uhoh_ctr += 1
-
     @commands.command(description=text.get("base", "uhoh_desc"))
     async def uhoh(self, ctx):
         global uhoh_ctr
@@ -42,11 +30,11 @@ class Base(basecog.Basecog):
         now = datetime.datetime.now().replace(microsecond=0)
         delta = now - boottime
 
-        embed = self._getEmbed(ctx)
+        embed = self.create_embed(ctx, title="Uptime")
         embed.add_field(name="Boot", value=str(boottime), inline=False)
         embed.add_field(name="Uptime", value=str(delta), inline=False)
         await ctx.send(embed=embed, delete_after=config.delay_embed)
-        await self.deleteCommand(ctx, now=True)
+        await self.deleteCommand(ctx)
 
     @commands.command(description=text.get("base", "ping_desc"))
     async def ping(self, ctx):
@@ -55,6 +43,22 @@ class Base(basecog.Basecog):
     @commands.command(hidden=True, description=text.get("base", "pong_desc"))
     async def pong(self, ctx):
         await ctx.send(text.get("base", "really"))
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        global uhoh_ctr
+
+        if message.content == "PR":
+            await message.channel.send("https://github.com/Czechbol/Amadeus/pulls")
+        elif message.content == "🔧":
+            await message.channel.send("https://github.com/Czechbol/Amadeus/issues")
+        elif "uh oh" in message.content.lower() and not message.author.bot:
+            await message.channel.send("uh oh")
+            uhoh_ctr += 1
+
+    @commands.Cog.listener()
+    async def on_command(self, ctx):
+        await self.roomCheck(ctx)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):

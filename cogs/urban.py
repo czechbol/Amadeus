@@ -2,7 +2,6 @@ import re
 import discord
 import requests
 import asyncio
-from datetime import datetime
 from urllib import parse as url_parse
 from discord.ext import commands
 
@@ -34,17 +33,11 @@ class Urban(basecog.Basecog):
             if len(example) > 1024:
                 definition = definition[0:1021] + "`…`"
 
-            embed = discord.Embed(
-                title=lis[idx]["word"], url=lis[idx]["permalink"], timestamp=datetime.now(),
-            )
+            embed = self.create_embed(ctx, title=lis[idx]["word"], url=lis[idx]["permalink"],)
             embed.add_field(name="Definition", value=definition, inline=False)
             embed.add_field(name="Example", value=example, inline=False)
             embed.add_field(
                 name="Page", value="{curr}/{total}".format(curr=idx + 1, total=len(lis)), inline=False,
-            )
-            author = str(ctx.message.author.name + "#" + ctx.message.author.discriminator)
-            embed.set_footer(
-                text=text.fill("base", "embed footer", user=author,), icon_url=ctx.message.author.avatar_url,
             )
             embed_list.append(embed)
         return embed_list
