@@ -74,39 +74,14 @@ class UserChannelRepository(BaseRepository):
     @classmethod
     def get_user_channels(cls):
         """Retrieves the whole table"""
-        channels = session.query(UserChannel).all()
-        result = []
-
-        if channels is not None:
-            for ch in channels:
-                result.append(ch.__dict__)
-        else:
-            result = None
-        return result
+        return session.query(UserChannel).all()
 
     @classmethod
     def get_channel(cls, channel_id: int):
         """Retrieves table, filtered by channel id"""
-        channels = session.query(UserChannel).filter_by(channel_id=channel_id).all()
-        result = []
-
-        if channels is not None:
-            for ch in channels:
-                result.append(ch.__dict__)
-        else:
-            result = None
-        return result
+        return session.query(UserChannel).filter_by(channel_id=channel_id).all()
 
     @classmethod
     def get_user(cls, user_id: int):
         """Retrieves table, filtered by user id"""
-        users = session.query(UserChannel).filter_by(user_id=user_id).all()
-        result = []
-
-        if users is not None:
-            for usr in users:
-                result.append(usr.__dict__)
-
-        else:
-            result = None
-        return result
+        return session.query(UserChannel).filter_by(user_id=user_id).all()

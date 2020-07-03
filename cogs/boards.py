@@ -69,80 +69,81 @@ class Boards(basecog.Basecog):
 
         return
 
-    async def sort_channels(self, lis, all_allowed):
+    async def sort_channels(self, lis, all_allowed=False):
         results = []
         for usr_ch in lis:
             if all_allowed is True or (
-                usr_ch["channel_id"] not in config.board_ignored_channels
-                and usr_ch["user_id"] not in config.board_ignored_users
-                and not usr_ch["is_webhook"]
+                usr_ch.channel_id not in config.board_ignored_channels
+                and usr_ch.user_id not in config.board_ignored_users
+                and not usr_ch.is_webhook
             ):
 
                 for row in results:
-                    if row["channel_id"] == usr_ch["channel_id"] and row["guild_id"] == usr_ch["guild_id"]:
-                        row["count"] += usr_ch["count"]
-                        if row["last_msg_at"] < usr_ch["last_msg_at"]:
-                            row["last_msg_at"] = usr_ch["last_msg_at"]
+                    if row["channel_id"] == usr_ch.channel_id and row["guild_id"] == usr_ch.guild_id:
+                        row["count"] += usr_ch.count
+                        if row["last_msg_at"] < usr_ch.last_msg_at:
+                            row["last_msg_at"] = usr_ch.last_msg_at
                         break
                 else:
                     results.append(
                         {
-                            "channel_id": usr_ch["channel_id"],
-                            "guild_id": usr_ch["guild_id"],
-                            "count": usr_ch["count"],
-                            "last_msg_at": usr_ch["last_msg_at"],
+                            "channel_id": usr_ch.channel_id,
+                            "guild_id": usr_ch.guild_id,
+                            "count": usr_ch.count,
+                            "last_msg_at": usr_ch.last_msg_at,
                         }
                     )
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
 
-    async def sort_userchannel(self, lis):
-        results = []
-        for usr_ch in lis:
-            for row in results:
-                if (
-                    row["channel_id"] == usr_ch["channel_id"]
-                    and row["guild_id"] == usr_ch["guild_id"]
-                    and row["user_id"] == usr_ch["user_id"]
-                ):
-                    row["count"] += usr_ch["count"]
-                    if row["last_msg_at"] < usr_ch["last_msg_at"]:
-                        row["last_msg_at"] = usr_ch["last_msg_at"]
-                    break
-            else:
-                results.append(
-                    {
-                        "channel_id": usr_ch["channel_id"],
-                        "guild_id": usr_ch["guild_id"],
-                        "user_id": usr_ch["user_id"],
-                        "count": usr_ch["count"],
-                        "last_msg_at": usr_ch["last_msg_at"],
-                    }
-                )
-        results = sorted(results, key=lambda i: (i["count"]), reverse=True)
-        return results
-
-    async def sort_users(self, lis, all_allowed):
+    async def sort_userchannel(self, lis, all_allowed=False):
         results = []
         for usr_ch in lis:
             if all_allowed is True or (
-                usr_ch["channel_id"] not in config.board_ignored_channels
-                and usr_ch["user_id"] not in config.board_ignored_users
-                and not usr_ch["is_webhook"]
+                usr_ch.channel_id not in config.board_ignored_channels
+                and usr_ch.user_id not in config.board_ignored_users
+                and not usr_ch.is_webhook
             ):
                 for row in results:
-                    if row["user_id"] == usr_ch["user_id"]:
-                        row["count"] += usr_ch["count"]
-                        if row["last_msg_at"] < usr_ch["last_msg_at"]:
-                            row["last_msg_at"] = usr_ch["last_msg_at"]
+                    if (
+                        row["channel_id"] == usr_ch.channel_id
+                        and row["guild_id"] == usr_ch.guild_id
+                        and row["user_id"] == usr_ch.user_id
+                    ):
+                        row["count"] += usr_ch.count
+                        if row["last_msg_at"] < usr_ch.last_msg_at:
+                            row["last_msg_at"] = usr_ch.last_msg_at
                         break
                 else:
                     results.append(
                         {
-                            "user_id": usr_ch["user_id"],
-                            "count": usr_ch["count"],
-                            "last_msg_at": usr_ch["last_msg_at"],
+                            "channel_id": usr_ch.channel_id,
+                            "guild_id": usr_ch.guild_id,
+                            "user_id": usr_ch.user_id,
+                            "count": usr_ch.count,
+                            "last_msg_at": usr_ch.last_msg_at,
                         }
+                    )
+        results = sorted(results, key=lambda i: (i["count"]), reverse=True)
+        return results
+
+    async def sort_users(self, lis, all_allowed=False):
+        results = []
+        for usr_ch in lis:
+            if all_allowed is True or (
+                usr_ch.channel_id not in config.board_ignored_channels
+                and usr_ch.user_id not in config.board_ignored_users
+                and not usr_ch.is_webhook
+            ):
+                for row in results:
+                    if row["user_id"] == usr_ch.user_id:
+                        row["count"] += usr_ch.count
+                        if row["last_msg_at"] < usr_ch.last_msg_at:
+                            row["last_msg_at"] = usr_ch.last_msg_at
+                        break
+                else:
+                    results.append(
+                        {"user_id": usr_ch.user_id, "count": usr_ch.count, "last_msg_at": usr_ch.last_msg_at}
                     )
         results = sorted(results, key=lambda i: (i["count"]), reverse=True)
         return results
@@ -157,7 +158,7 @@ class Boards(basecog.Basecog):
         if not user_channels:
             return ctx.send(text.get("boards", "not found"))
 
-        results = await self.sort_channels(user_channels, False)
+        results = await self.sort_channels(user_channels)
 
         offset -= 1  # convert to be zero-indexed
 
@@ -180,7 +181,7 @@ class Boards(basecog.Basecog):
         if not user_channels:
             return ctx.send(text.get("boards", "not found"))
 
-        results = await self.sort_users(user_channels, False)
+        results = await self.sort_users(user_channels)
 
         offset -= 1  # convert to be zero-indexed
 
@@ -203,7 +204,7 @@ class Boards(basecog.Basecog):
         if not user_channels:
             return await ctx.send(text.get("boards", "not found"))
 
-        results = await self.sort_users(user_channels, False)
+        results = await self.sort_users(user_channels)
         for idx, result in enumerate(results):
             if member.id == result["user_id"]:
                 offset = idx
@@ -414,7 +415,6 @@ class Boards(basecog.Basecog):
         messages = []
 
         async with admin.typing():
-
             if channels is not None:
                 results = await self.sort_channels(channels, True)
 
