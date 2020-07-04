@@ -1,11 +1,12 @@
 import asyncio
+from datetime import timezone
 
 import discord
 from discord import CategoryChannel, VoiceChannel
 from discord.ext import commands
 from discord.abc import PrivateChannel
 
-from core import basecog
+from core import basecog, check
 from core.text import text
 from core.config import config
 from repository import user_channel_repo
@@ -239,15 +240,31 @@ class Boards(basecog.Basecog):
 
         for user in users:
             if user["last_msg_at"] == last_msg_at:
-                last_user = self.bot.fetch_user(user["user_id"]).nick
+                user = self.bot.get_user(user["user_id"])
+                if user is None:
+                    try:
+                        user = await self.bot.fetch_user(user["user_id"])
+                        user_name = discord.utils.escape_markdown(f"{user.display_name}#{user.discriminator}")
+                    except discord.errors.NotFound:
+                        user_name = "_(Unknown user)_"
+                else:
+                    user_name = discord.utils.escape_markdown(f"{user.display_name}#{user.discriminator}")
+                break
+        else:
+            user_name = "_(Unknown user)_"
+
+        last_msg_at = last_msg_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        last_msg_at = last_msg_at.strftime("%d.%m.%Y %H:%M:%S")
 
         embed = self.create_embed(ctx, title=text.get("boards", "channel info title"))
         embed.add_field(name="Jméno", value=str(channel.name), inline=True)
         embed.add_field(name="ID", value=str(channel.id), inline=True)
         embed.add_field(name="Server", value=str(channel.guild.name), inline=True)
-        if channel.category.name is not None:
+        try:
             embed.add_field(name="Kategorie", value=str(channel.category.name), inline=True)
-        embed.add_field(name="Poslední zpráva", value=f"{last_user} ({last_msg_at})", inline=True)
+        except AttributeError:
+            pass
+        embed.add_field(name="Poslední zpráva", value=f"{user_name}\n{last_msg_at}", inline=True)
         embed.add_field(name="Celkový počet zpráv", value=str(total_count), inline=True)
         embed.add_field(
             name="Pozice mezi kanály", value="{0}/{1}".format(position, len(all_results)), inline=True
@@ -280,32 +297,51 @@ class Boards(basecog.Basecog):
                 position = idx
         for channel in channels:
             if channel["last_msg_at"] == last_msg_at:
-                last_channel = self.bot.get_channel(channel["channel_id"]).name
+                last_channel = self.bot.get_channel(channel["channel_id"])
+                channel_name = last_channel.name
         role_list = []
         for role in member.roles:
             if role.name != "@everyone":
                 role_list.append(role.name)
 
         role_list.reverse()
+        last_msg_at = last_msg_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        last_msg_at = last_msg_at.strftime("%d.%m.%Y %H:%M:%S")
+        joined_at = member.joined_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        joined_at = joined_at.strftime("%d.%m.%Y %H:%M:%S")
 
-        embed = self.create_embed(ctx, title=text.get("boards", "user info title"))
+        if member.colour != discord.Colour.default():
+            embed = self.create_embed(ctx, title=text.get("boards", "user info title"), colour=member.colour)
+        else:
+            embed = self.create_embed(ctx, title=text.get("boards", "user info title"))
+
+        status = "Do not diturb" if str(member.status) == "dnd" else str(member.status).title()
+
         embed.set_thumbnail(url=member.avatar_url)
-        embed.add_field(name="Jméno", value=str(member.display_name), inline=True)
+        embed.add_field(
+            name="Jméno",
+            value=str(f"{member.display_name}\n({member.name}#{member.discriminator})"),
+            inline=True,
+        )
         embed.add_field(name="ID", value=str(member.id), inline=True)
-        embed.add_field(name="Připojen", value=str(member.joined_at), inline=True)
-        embed.add_field(name="Status", value=str(member.status), inline=True)
-        embed.add_field(name="Poslední zpráva", value=f"{last_channel} ({last_msg_at})", inline=True)
+        embed.add_field(name="Připojen", value=str(joined_at), inline=True)
+        embed.add_field(name="Status", value=status, inline=True)
         embed.add_field(name="Celkový počet zpráv", value=str(total_count), inline=True)
         embed.add_field(
             name="Pozice mezi uživateli", value="{0}/{1}".format(position, len(all_results)), inline=True
         )
-        embed.add_field(name="Role", value=",".join(str(r) for r in role_list), inline=True)
-        embeds = []
-        embeds.append(embed)
-        boards, pagenum = await self.boards_generator(ctx, channels, offset, "user info")
-        embeds += boards
+        if check.is_mod(ctx):
+            embed.add_field(name="Poslední zpráva", value=f"{channel_name}\n{last_msg_at}", inline=True)
+        embed.add_field(name="Role", value=", ".join(str(r) for r in role_list), inline=False)
+        if check.is_mod(ctx):
+            embeds = []
+            embeds.append(embed)
+            boards, pagenum = await self.boards_generator(ctx, channels, offset, "user info")
+            embeds += boards
+            await self.board_pages(ctx, embeds, pagenum)
+        else:
+            await ctx.send(embed=embed, delete_after=config.delay_embed)
 
-        await self.board_pages(ctx, embeds, pagenum)
         return
 
     async def boards_generator(self, ctx, results, offset, typ):
@@ -434,12 +470,18 @@ class Boards(basecog.Basecog):
                 )
 
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", check=chk, timeout=300.0)
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add", check=chk, timeout=config.delay_embed
+                )
             except asyncio.TimeoutError:
-                try:
-                    await msg.delete()
-                except discord.errors.Forbidden:
-                    pass
+                if msg.channel != self.bot.get_channel(config.channel_mods) or pagenum != 0:
+                    try:
+                        await msg.delete()
+                    except discord.errors.Forbidden:
+                        pass
+                else:
+                    await msg.clear_reaction("◀️")
+                    await msg.clear_reaction("▶️")
                 break
             else:
                 if str(reaction.emoji) == "◀️":
