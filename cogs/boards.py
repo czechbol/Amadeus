@@ -308,7 +308,9 @@ class Boards(basecog.Basecog):
         last_msg_at = last_msg_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
         last_msg_at = last_msg_at.strftime("%d.%m.%Y %H:%M:%S")
         joined_at = member.joined_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
-        joined_at = joined_at.strftime("%d.%m.%Y %H:%M:%S")
+        joined_at = joined_at.strftime("%d.%m.%Y\n%H:%M:%S")
+        joined_dc = member.created_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        joined_dc = joined_dc.strftime("%d.%m.%Y\n%H:%M:%S")
 
         if member.colour != discord.Colour.default():
             embed = self.create_embed(ctx, title=text.get("boards", "user info title"), colour=member.colour)
@@ -324,9 +326,10 @@ class Boards(basecog.Basecog):
             inline=True,
         )
         embed.add_field(name="ID", value=str(member.id), inline=True)
-        embed.add_field(name="Připojen", value=str(joined_at), inline=True)
         embed.add_field(name="Status", value=status, inline=True)
-        embed.add_field(name="Celkový počet zpráv", value=str(total_count), inline=True)
+        embed.add_field(name="Účet založen", value=str(joined_dc), inline=True)
+        embed.add_field(name="Připojen", value=str(joined_at), inline=True)
+        embed.add_field(name="Počet zpráv", value=str(total_count), inline=True)
         embed.add_field(
             name="Pozice mezi uživateli", value="{0}/{1}".format(position, len(all_results)), inline=True
         )
