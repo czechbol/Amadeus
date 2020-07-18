@@ -256,7 +256,7 @@ class Boards(basecog.Basecog):
         last_msg_at = last_msg_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
         last_msg_at = last_msg_at.strftime("%d.%m.%Y %H:%M:%S")
 
-        embed = self.create_embed(ctx, title=text.get("boards", "channel info title"))
+        embed = self.create_embed(author=ctx.message.author, title=text.get("boards", "channel info title"))
         embed.add_field(name="Jméno", value=str(channel.name), inline=True)
         embed.add_field(name="ID", value=str(channel.id), inline=True)
         embed.add_field(name="Server", value=str(channel.guild.name), inline=True)
@@ -313,9 +313,9 @@ class Boards(basecog.Basecog):
         joined_dc = joined_dc.strftime("%d.%m.%Y\n%H:%M:%S")
 
         if member.colour != discord.Colour.default():
-            embed = self.create_embed(ctx, title=text.get("boards", "user info title"), colour=member.colour)
+            embed = self.create_embed(author=ctx.message.author, title=text.get("boards", "user info title"), colour=member.colour)
         else:
-            embed = self.create_embed(ctx, title=text.get("boards", "user info title"))
+            embed = self.create_embed(author=ctx.message.author, title=text.get("boards", "user info title"))
 
         status = "Do not diturb" if str(member.status) == "dnd" else str(member.status).title()
 
@@ -358,7 +358,7 @@ class Boards(basecog.Basecog):
             chunk_position = idx * config.board_top
 
             embed = self.create_embed(
-                ctx,
+                author=ctx.message.author,
                 title=text.get("boards", typ + " board title"),
                 description=text.get("boards", typ + " board desc"),
             )

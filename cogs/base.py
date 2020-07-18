@@ -30,7 +30,7 @@ class Base(basecog.Basecog):
         now = datetime.datetime.now().replace(microsecond=0)
         delta = now - boottime
 
-        embed = self.create_embed(ctx, title="Uptime")
+        embed = self.create_embed(author=ctx.message.author, title="Uptime")
         embed.add_field(name="Boot", value=str(boottime), inline=False)
         embed.add_field(name="Uptime", value=str(delta), inline=False)
         await ctx.send(embed=embed, delete_after=config.delay_embed)

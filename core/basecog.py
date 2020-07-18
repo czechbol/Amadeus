@@ -48,24 +48,22 @@ class Basecog(commands.Cog):
         return self.roles_elevated
 
     # Helper functions
-    def create_embed(self, ctx, error=False, **kwargs):
+    def create_embed(self, error=False, author=None, **kwargs):
         if "color" not in kwargs:
             kwargs["color"] = config.color
         if "timestamp" not in kwargs:
             kwargs["timestamp"] = datetime.now(tz=timezone.utc)
 
-        author_name = f"{ctx.message.author.name}#{ctx.message.author.discriminator}"
+        author_name = f"{author.name}#{author.discriminator}"
 
         embed = discord.Embed(**kwargs)
         if not error:
             embed.set_footer(
-                text=text.fill("basecog", "embed footer", user=author_name),
-                icon_url=ctx.message.author.avatar_url,
+                text=text.fill("basecog", "embed footer", user=author_name), icon_url=author.avatar_url,
             )
         else:
             embed.set_footer(
-                text=text.fill("basecog", "error footer", user=author_name),
-                icon_url=ctx.message.author.avatar_url,
+                text=text.fill("basecog", "error footer", user=author_name), icon_url=author.avatar_url,
             )
         return embed
 
@@ -143,7 +141,9 @@ class Basecog(commands.Cog):
             err_trace = err_trace[-600:]
 
         # Construct the error embed
-        embed = self.create_embed(ctx, error=True, title=err_type, color=config.color_error)
+        embed = self.create_embed(
+            author=ctx.message.author, error=True, title=err_type, color=config.color_error
+        )
         embed.add_field(name="Command", value=content, inline=True)
         embed.add_field(name="Error trace", value=f"```{err_trace}```", inline=False)
 
@@ -168,7 +168,7 @@ class Basecog(commands.Cog):
         content = content if len(content) < 512 else content[:512]
 
         # Construct the notification embed
-        embed = self.create_embed(ctx, color=config.color_notify)
+        embed = self.create_embed(author=ctx.message.author, color=config.color_notify)
         embed.add_field(name="Notification", value=msg, inline=False)
         embed.add_field(name="Command", value=content, inline=False)
         await ctx.send(embed=embed)

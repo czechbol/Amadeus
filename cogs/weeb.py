@@ -69,7 +69,7 @@ class Weeb(basecog.Basecog):
         title = dic["title"]["pretty"]
         num_pages = dic["num_pages"]
 
-        embed = self.create_embed(ctx, title=title, url=url, color=discord.Colour.from_rgb(227, 47, 86))
+        embed = self.create_embed(author=ctx.message.author, title=title, url=url, color=discord.Colour.from_rgb(227, 47, 86))
         embed.set_image(url=cover_url)
         embed.add_field(name="Number of pages", value=num_pages, inline=True)
 
