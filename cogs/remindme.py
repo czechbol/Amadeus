@@ -64,19 +64,23 @@ class Reminder(basecog.Basecog):
         else:
             reminder_user_name = discord.utils.escape_markdown(reminder_user.display_name)
 
-        embed = self.create_embed(author=reminder_user, title="Reminder")
-        embed.add_field(name="Original message", value=row.permalink, inline=True)
+        embed = self.create_embed(author=reminder_user, title=text.get("remindme", "reminder"))
         if row.user_id != row.reminder_user_id:
-            embed.add_field(name="By", value=reminder_user_name, inline=True)
+            embed.add_field(name=text.get("remindme", "reminder by"), value=reminder_user_name, inline=True)
         if row.message != "":
-            embed.add_field(name="Message", value=row.message, inline=False)
+            embed.add_field(name=text.get("remindme", "reminder message"), value=row.message, inline=False)
+        embed.add_field(name=text.get("remindme", "reminder link"), value=row.permalink, inline=True)
         if time is not None:
             await asyncio.sleep(time)
         await user.send(embed=embed)
         repository.delete(row.idx)
 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
-    @commands.command()
+    @commands.command(
+        brief=text.get("remindme", "remindme desc"),
+        description=text.get("remindme", "remindme desc"),
+        help=text.fill("remindme", "remindme help", prefix=config.prefix),
+    )
     async def remindme(self, ctx):
         message = ctx.message
         lines = message.content.split("\n")
@@ -89,7 +93,7 @@ class Reminder(basecog.Basecog):
             if len(lines) == 0:
                 await ctx.send(">>> " + text.fill("vote", "vote_help", prefix=config.prefix))
                 return
-            await ctx.send("Nepodařilo se mi přečíst kdy chceš připomenout.\nPoužíji výchozích 24h.")
+            await ctx.send(text.get("remindme", "datetime not found"))
             date = datetime.now() + timedelta(days=1)
         repository.add(
             user_id=ctx.author.id,
@@ -99,7 +103,43 @@ class Reminder(basecog.Basecog):
             origin_date=ctx.message.created_at,
             new_date=date,
         )
-        await ctx.send(f"I will remind you on {date}")
+        date = date.strftime("%d.%m.%Y %H:%M")
+        await ctx.message.author.send(text.fill("remindme", "reminder confirmation", name="tebe", date=date))
+        return
+
+    @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
+    @commands.command(
+        brief=text.get("remindme", "remind desc"),
+        description=text.get("remindme", "remind desc"),
+        help=text.fill("remindme", "remind help", prefix=config.prefix),
+    )
+    async def remind(self, ctx, member: discord.Member):
+        message = ctx.message
+        lines = message.content.split("\n")
+        arg = lines.pop(0)
+        arg = arg.replace("weekend", "saturday")
+        date = await self.parse_datetime(arg)
+        lines = "\n".join(lines)
+
+        if len(lines) == 0:
+            await ctx.send(">>> " + text.fill("vote", "vote_help", prefix=config.prefix))
+            return
+
+        if date is None:
+            await ctx.send(text.get("remindme", "datetime not found"))
+            date = datetime.now() + timedelta(days=1)
+        repository.add(
+            user_id=member.id,
+            reminder_user_id=ctx.author.id,
+            permalink=ctx.message.jump_url,
+            message=lines,
+            origin_date=ctx.message.created_at,
+            new_date=date,
+        )
+        date = date.strftime("%d.%m.%Y %H:%M")
+        await ctx.message.author.send(
+            text.fill("remindme", "reminder confirmation", name=member.display_name, date=date)
+        )
         return
 
     @commands.Cog.listener()

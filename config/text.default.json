@@ -81,5 +81,19 @@
 		"user info title": "Informace o uživateli",
 		"user info board title": "Userinfo",
 		"user info board desc": "Počet zpráv od uživatele v kanálech"
+	},
+	"remindme": {
+		"remindme desc": "Příkaz na upomínky pro sebe",
+		"remindme help": "Použití remindme:\n`{prefix}remindme [datum] [čas]\n[zpráva]`\n Datum lze psát ve formátu `dd.MM.(yy)` a orientuje se vždy do budoucnosti (Pokud je 15.7.2020 a použije se datum 14.7, upomínka přijde až následující rok, toto platí i pro čas).\nČas je ve formátu `hh:mm`.\nPouze vyplněné datum použije čas 09:00.\nDatum a čas jsou nepovinné argumenty, upomínka se provede bez jejich uvedení po 1 dni.\nMísto data lze ještě použít den v týdnu (anglicky) + weekend (= sobota)",
+		"remindme brief": "Použití remindme:\n`{prefix}remindme [datum] [čas]\n[zpráva]`",
+		"remind desc": "Příkaz na upomínky pro ostatní",
+		"remind help": "Použití remind:\n`{prefix}remind [uživatel] [datum] [čas]\n[zpráva]`\n Datum lze psát ve formátu `dd.MM.(yy)` a orientuje se vždy do budoucnosti (Pokud je 15.7.2020 a použije se datum 14.7, upomínka přijde až následující rok, toto platí i pro čas).\nČas je ve formátu `hh:mm`.\nPouze vyplněné datum použije čas 09:00.\nDatum a čas jsou nepovinné argumenty, upomínka se provede bez jejich uvedení po 1 dni.\nMísto data lze ještě použít den v týdnu (anglicky) + weekend (= sobota)",
+		"remind brief": "Použití remind:\n`{prefix}remind [uživatel] [datum] [čas]\n[zpráva]",
+		"reminder": "Upomínka",
+		"reminder by": "Od",
+		"reminder message": "Zpráva",
+		"reminder link": "Link na zprávu",
+		"reminder confirmation": "Upomínka pro {name} vytvořena, čas: {date}",
+		"datetime not found": "Nepodařilo se mi přečíst kdy chceš připomenout.\nPoužíji výchozích 24h."
 	}
 }
