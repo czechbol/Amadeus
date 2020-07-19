@@ -40,6 +40,11 @@ class Reminder(basecog.Basecog):
         else:
             date = dates[0][1]
 
+        if date < datetime.now():
+            date = date.replace(day=(datetime.now().day))
+            if date < datetime.now():
+                date = date + timedelta(days=1)
+
         x = re.search(r"([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]", dates[0][0])
         if x is None:
             date = date.replace(hour=9, minute=0, second=0)
@@ -63,6 +68,8 @@ class Reminder(basecog.Basecog):
                 reminder_user_name = "_(Unknown user)_"
         else:
             reminder_user_name = discord.utils.escape_markdown(reminder_user.display_name)
+
+        print(len(row.message))
 
         embed = self.create_embed(author=reminder_user, title=text.get("remindme", "reminder"))
         if row.user_id != row.reminder_user_id:
@@ -89,9 +96,13 @@ class Reminder(basecog.Basecog):
         date = await self.parse_datetime(arg)
         lines = "\n".join(lines)
 
+        if len(lines) > 1024:
+            lines = lines[:1024]
+            lines = lines[:-3] + "```" if lines.count("```") % 2 != 0 else lines
+
         if date is None:
             if len(lines) == 0:
-                await ctx.send(">>> " + text.fill("vote", "vote_help", prefix=config.prefix))
+                await ctx.send(">>> " + text.fill("remindme", "remindme help", prefix=config.prefix))
                 return
             await ctx.send(text.get("remindme", "datetime not found"))
             date = datetime.now() + timedelta(days=1)
@@ -122,8 +133,11 @@ class Reminder(basecog.Basecog):
         lines = "\n".join(lines)
 
         if len(lines) == 0:
-            await ctx.send(">>> " + text.fill("vote", "vote_help", prefix=config.prefix))
+            await ctx.send(">>> " + text.fill("remindme", "remind help", prefix=config.prefix))
             return
+        elif len(lines) > 1024:
+            lines = lines[:1024]
+        print(len(lines))
 
         if date is None:
             await ctx.send(text.get("remindme", "datetime not found"))
