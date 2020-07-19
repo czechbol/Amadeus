@@ -69,8 +69,6 @@ class Reminder(basecog.Basecog):
         else:
             reminder_user_name = discord.utils.escape_markdown(reminder_user.display_name)
 
-        print(len(row.message))
-
         embed = self.create_embed(author=reminder_user, title=text.get("remindme", "reminder"))
         if row.user_id != row.reminder_user_id:
             embed.add_field(name=text.get("remindme", "reminder by"), value=reminder_user_name, inline=True)
@@ -137,7 +135,6 @@ class Reminder(basecog.Basecog):
             return
         elif len(lines) > 1024:
             lines = lines[:1024]
-        print(len(lines))
 
         if date is None:
             await ctx.send(text.get("remindme", "datetime not found"))
