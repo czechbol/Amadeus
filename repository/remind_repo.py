@@ -1,5 +1,4 @@
 from datetime import datetime
-import sqlalchemy
 
 from repository.base_repository import BaseRepository
 from repository.database import session
@@ -58,7 +57,7 @@ class RemindRepository(BaseRepository):
         else:
             session.delete(reminder)
             removed = reminder
-        
+
         session.commit()
 
         return removed

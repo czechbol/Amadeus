@@ -12,4 +12,3 @@ class Reminder(database.base):
     message = Column(String)
     origin_date = Column(DateTime)
     new_date = Column(DateTime)
-
