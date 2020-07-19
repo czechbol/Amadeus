@@ -313,7 +313,9 @@ class Boards(basecog.Basecog):
         joined_dc = joined_dc.strftime("%d.%m.%Y\n%H:%M:%S")
 
         if member.colour != discord.Colour.default():
-            embed = self.create_embed(author=ctx.message.author, title=text.get("boards", "user info title"), colour=member.colour)
+            embed = self.create_embed(
+                author=ctx.message.author, title=text.get("boards", "user info title"), colour=member.colour
+            )
         else:
             embed = self.create_embed(author=ctx.message.author, title=text.get("boards", "user info title"))
 
