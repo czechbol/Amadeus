@@ -66,7 +66,7 @@ class Errors(basecog.Basecog):
             await self.guildlog(ctx, "Missing argument", quote=True, msg=error)
             return
         # fmt: on
-        if ctx.channel.id == self.bot.channel_botdev:
+        if ctx.channel.id == config.channel_botdev:
             return
         # display error message
         await self.throwError(ctx, error)

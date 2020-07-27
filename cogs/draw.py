@@ -122,8 +122,8 @@ class Draw(basecog.Basecog):
         ax.spines["top"].set_color("none")
 
         # Show ticks in the left and lower axes only
-        ax.xaxis.set_tick_params("bottom", direction="inout")
-        ax.yaxis.set_tick_params("left", direction="inout")
+        ax.xaxis.set_tick_params(bottom=True, direction="inout")
+        ax.yaxis.set_tick_params(left=True, direction="inout")
 
         successful_eq = 0
         msg = text.get("draw", "plot_err")
