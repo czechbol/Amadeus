@@ -3,6 +3,7 @@ import json
 import zipfile
 import traceback
 from datetime import datetime
+from datetime import timezone
 from datetime import timedelta
 
 import discord
@@ -76,13 +77,13 @@ class Basecog(commands.Cog):
     async def log(self, level: str, message: str, command=None):
         levels = ["debug", "info", "user error", "warning", "error"]
         if level not in levels:
-            raise "Unknown Log Level"
+            raise ValueError
 
-        if level == "DEBUG" and config.debug == 0:
+        if level == "debug" and config.debug == 0:
             return
 
-        now = datetime.now()
-        today = now.strftime("%Y-%m-%d")
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        today = datetime.now().strftime("%Y-%m-%d")
         if not os.path.isfile(f"logs/{today}.json"):
             with open(f"logs/{today}.json", mode="w", encoding="utf-8") as f:
                 json.dump([], f)
@@ -92,18 +93,13 @@ class Basecog(commands.Cog):
             feeds = json.load(feedsjson)
         with open(f"logs/{today}.json", mode="w", encoding="utf-8") as writejson:
             if command is None:
-                feeds.append({"level": level, "message": message, "time": now.strftime("%Y-%m-%d %H:%M:%S")})
+                feeds.append({"level": level, "message": message, "time": now})
             else:
-                feeds.append(
-                    {
-                        "level": level,
-                        "message": message,
-                        "command": command,
-                        "time": now.strftime("%Y-%m-%d %H:%M:%S"),
-                    }
-                )
+                feeds.append({"level": level, "message": message, "command": command, "time": now})
 
             json.dump(feeds, writejson, indent=2)
+        if level != "user error" or level != "error":
+            print(f"{level.upper()}: {message} - {now}")
 
     async def log_archive(self):
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)

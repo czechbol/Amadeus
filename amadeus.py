@@ -27,7 +27,6 @@ async def on_ready():
         login = "Logged in"
     else:
         login = "Logged with debug(" + str(config.debug) + ")"
-    print(login + ": " + datetime.today().strftime("%Y-%m-%d %H:%M:%S"))
     await basecog.log(level="info", message=login)
     await presence.set_presence()
 
@@ -53,7 +52,7 @@ async def load(ctx, extension):
         await basecog.log(level="info", message=f"Cog {extension} loaded")
     except Exception as e:
         await ctx.send(f"Načtení rozšíření **{extension}** se nezdařilo.")
-        await basecog.log(level="error", message="Cog loading failed\n" + str(e))
+        await basecog.log(level="error", message="Cog loading failed" + str(e))
 
 
 @commands.check(check.is_mod)
@@ -66,7 +65,7 @@ async def unload(ctx, extension):
         await basecog.log(level="info", message=f"Cog {extension} unloaded")
     except Exception as e:
         await ctx.send(f"Odebrání rozšíření **{extension}** se nezdařilo.")
-        await basecog.log(level="error", message="Cog loading failed\n" + str(e))
+        await basecog.log(level="error", message="Cog loading failed" + str(e))
 
 
 @commands.check(check.is_mod)
@@ -79,7 +78,7 @@ async def reload(ctx, extension):
         await basecog.log(level="info", message=f"Cog {extension} reloaded")
     except Exception as e:
         await ctx.send(f"Aktualizace rozšíření **{extension}** se nepovedla.")
-        await basecog.log(level="error", message="Cog loading failed\n" + str(e))
+        await basecog.log(level="error", message="Cog loading failed" + str(e))
 
 
 @reload.error
