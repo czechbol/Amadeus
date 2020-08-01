@@ -1,4 +1,5 @@
 backups/
+logs/
 config/config.json
 config/emotes.json
 __pycache__

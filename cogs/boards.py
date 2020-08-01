@@ -581,12 +581,12 @@ class Boards(basecog.Basecog):
                                 try:
                                     msgs = await self.get_history(channel, None)
                                 except discord.errors.Forbidden:
-                                    print(
-                                        "Forbidden getting history for channel {channel} in guild {guild}".format(
+                                    await self.log(
+                                        level="warning",
+                                        message="Forbidden getting history for channel {channel} in guild {guild}".format(
                                             channel=channel, guild=guild.name
-                                        )
+                                        ),
                                     )
-                                    continue  # TODO log this
 
                         if len(msgs) > 0:
                             messages.extend(msgs)

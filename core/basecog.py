@@ -1,6 +1,10 @@
+import os
+import json
+import zipfile
 import traceback
 from datetime import datetime
 from datetime import timezone
+from datetime import timedelta
 
 import discord
 from discord.ext import commands
@@ -20,6 +24,8 @@ class Basecog(commands.Cog):
         self.role_mod = None
         self.role_verify = None
         self.roles_elevated = None
+        if not os.path.isdir("logs"):
+            os.mkdir("logs")
 
     # OBJECT GETTERS
     def getGuild(self):
@@ -68,7 +74,46 @@ class Basecog(commands.Cog):
         return embed
 
     # Utils
-    async def guildlog(self, ctx, action: str, quote: bool = True, msg=None):
+    async def log(self, level: str, message: str, command=None):
+        levels = ["debug", "info", "user error", "warning", "error"]
+        if level not in levels:
+            raise ValueError
+
+        if level == "debug" and config.debug == 0:
+            return
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        today = datetime.now().strftime("%Y-%m-%d")
+        if not os.path.isfile(f"logs/{today}.json"):
+            with open(f"logs/{today}.json", mode="w", encoding="utf-8") as f:
+                json.dump([], f)
+                await self.log_archive()
+
+        with open(f"logs/{today}.json", mode="r", encoding="utf-8") as feedsjson:
+            feeds = json.load(feedsjson)
+        with open(f"logs/{today}.json", mode="w", encoding="utf-8") as writejson:
+            if command is None:
+                feeds.append({"level": level, "message": message, "time": now})
+            else:
+                feeds.append({"level": level, "message": message, "command": command, "time": now})
+
+            json.dump(feeds, writejson, indent=2)
+        if level != "user error" or level != "error":
+            print(f"{level.upper()}: {message} - {now}")
+
+    async def log_archive(self):
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        with os.scandir("logs/") as entries:
+            for entry in entries:
+                if entry.is_file() and ".json" in entry.name:
+                    entry_date = datetime.strptime(entry.name.replace(".json", ""), "%Y-%m-%d")
+                    if entry_date < today - timedelta(days=7):
+                        filepath = "logs/archive.zip"
+                        with zipfile.ZipFile(filepath, "a") as zipf:
+                            zipf.write(entry.path)
+                            os.remove(entry.path)
+
+    async def guildlog(self, ctx, action: str, log_level: str, quote: bool = True, msg=None):
         """Log event"""
         channel = self.getGuild().get_channel(config.channel_guildlog)
         author = self.getGuild().get_member(ctx.author.id)
@@ -94,7 +139,7 @@ class Basecog(commands.Cog):
         if quote:
             message += "\n> _{}_".format(ctx.message.content)
         await channel.send(message)
-        # TODO Save to log
+        await self.log(level=log_level, message=msg, command=ctx.message.content)
 
     async def roomCheck(self, ctx: commands.Context):
         """Send a message to prevent bot spamming"""
