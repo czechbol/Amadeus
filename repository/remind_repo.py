@@ -32,7 +32,7 @@ class RemindRepository(BaseRepository):
             session.add(added)
 
         else:
-            if Reminder.user_id == user_id and Reminder.message == message and Reminder.new_date == new_date:
+            if reminder.user_id == user_id and reminder.message == message and reminder.new_date == new_date:
                 added = None
             else:
                 added = Reminder(
@@ -47,6 +47,36 @@ class RemindRepository(BaseRepository):
 
         session.commit()
         return added
+
+    def set_scheduled(self, idx: int):
+        """Set reminder as scheduled"""
+        reminder = session.query(Reminder).filter_by(idx=idx).one_or_none()
+
+        if not reminder:
+            return None
+
+        else:
+            if reminder.status != "waiting":
+                return None
+            else:
+                reminder.status = "waiting"
+                session.commit()
+        return reminder
+
+    def set_postponed(self, idx: int):
+        """Set reminder as postponed"""
+        reminder = session.query(Reminder).filter_by(idx=idx).one_or_none()
+
+        if not reminder:
+            return None
+
+        else:
+            if reminder.status != "waiting":
+                return None
+            else:
+                reminder.status = "waiting"
+                session.commit()
+        return reminder
 
     @classmethod
     def delete(self, idx: int):
