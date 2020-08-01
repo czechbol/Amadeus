@@ -27,12 +27,12 @@ class Errors(basecog.Basecog):
         # fmt: off
         if isinstance(error, commands.MissingPermissions):
             await self.throwNotification(ctx, text.get("error", "no user permission"))
-            await self.guildlog(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
+            await self.guildlog(ctx, self._getCommandSignature(ctx), quote=True, msg=error, log_level="user error")
             return
 
         elif isinstance(error, commands.BotMissingPermissions):
             await self.throwNotification(ctx, text.get("error", "no bot permission"))
-            await self.guildlog(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
+            await self.guildlog(ctx, self._getCommandSignature(ctx), quote=True, msg=error, log_level="user error")
             return
 
         elif isinstance(error, commands.CommandOnCooldown):
@@ -42,7 +42,7 @@ class Errors(basecog.Basecog):
         elif isinstance(error, commands.CheckFailure):
             # TODO Extract requirements and add them to the embed
             await self.throwNotification(ctx, text.get("error", "no requirements"))
-            await self.guildlog(ctx, self._getCommandSignature(ctx), quote=True, msg=error)
+            await self.guildlog(ctx, self._getCommandSignature(ctx), quote=True, msg=error, log_level="user error")
             return
 
         elif isinstance(error, commands.BadArgument):
@@ -63,14 +63,14 @@ class Errors(basecog.Basecog):
 
         elif isinstance(error, commands.MissingRequiredArgument):
             await self.throwNotification(ctx, error)
-            await self.guildlog(ctx, "Missing argument", quote=True, msg=error)
+            await self.guildlog(ctx, "Missing argument", quote=True, msg=error, log_level="user error")
             return
         # fmt: on
         if ctx.channel.id == config.channel_botdev:
             return
         # display error message
         await self.throwError(ctx, error)
-        await self.guildlog(ctx, "on_command_error", quote=True, msg=error)
+        await self.guildlog(ctx, "on_command_error", quote=True, msg=error, log_level="error")
 
         output = "Ignoring exception in command {}: \n\n".format(ctx.command)
         output += "".join(traceback.format_exception(type(error), error, error.__traceback__))

@@ -24,10 +24,11 @@ basecog = basecog.Basecog(bot)
 async def on_ready():
     """If Amadeus is ready."""
     if config.debug < 1:
-        login = "Logged in: "
+        login = "Logged in"
     else:
-        login = "Logged with debug(" + str(config.debug) + "): "
-    print(login + datetime.today().strftime("%Y-%m-%d %H:%M:%S"))
+        login = "Logged with debug(" + str(config.debug) + ")"
+    print(login + ": " + datetime.today().strftime("%Y-%m-%d %H:%M:%S"))
+    await basecog.log(level="info", message=login)
     await presence.set_presence()
 
 
@@ -45,39 +46,40 @@ async def on_error(event, *args, **kwargs):
 @commands.check(check.is_mod)
 @bot.command()
 async def load(ctx, extension):
+    extension = extension.lower()
     try:
         bot.load_extension(f"cogs.{extension}")
         await ctx.send(f"Rozšíření **{extension}** načteno.")
-        await basecog.log(ctx, f"Cog {extension} loaded")
+        await basecog.log(level="info", message=f"Cog {extension} loaded")
     except Exception as e:
         await ctx.send(f"Načtení rozšíření **{extension}** se nezdařilo.")
-        await basecog.log(ctx, "Cog loading failed", msg=e)
+        await basecog.log(level="error", message="Cog loading failed\n" + str(e))
 
 
 @commands.check(check.is_mod)
 @bot.command()
 async def unload(ctx, extension):
+    extension = extension.lower()
     try:
         bot.unload_extension(f"cogs.{extension}")
         await ctx.send(f"Rozšíření **{extension}** odebráno.")
-        await basecog.log(ctx, f"Cog {extension} unloaded")
+        await basecog.log(level="info", message=f"Cog {extension} unloaded")
     except Exception as e:
         await ctx.send(f"Odebrání rozšíření **{extension}** se nezdařilo.")
-        await basecog.log(ctx, "Cog unloading failed", msg=e)
+        await basecog.log(level="error", message="Cog loading failed\n" + str(e))
 
 
 @commands.check(check.is_mod)
 @bot.command()
 async def reload(ctx, extension):
+    extension = extension.lower()
     try:
         bot.reload_extension(f"cogs.{extension}")
         await ctx.send(f"Rozšíření **{extension}** aktualizováno.")
-        await basecog.log(ctx, f"Cog {extension} reloaded")
-        if "docker" in config.loader:
-            await ctx.send("Jsem ale zavřený v Dockeru, víš o tom?")
+        await basecog.log(level="info", message=f"Cog {extension} reloaded")
     except Exception as e:
         await ctx.send(f"Aktualizace rozšíření **{extension}** se nepovedla.")
-        await basecog.log(ctx, "Cog reloading failed", msg=e)
+        await basecog.log(level="error", message="Cog loading failed\n" + str(e))
 
 
 @reload.error
