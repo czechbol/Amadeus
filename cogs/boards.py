@@ -375,6 +375,11 @@ class Boards(basecog.Basecog):
                 count = f"{item['count']:>5}"
                 if typ == "channel" or typ == "user info":
                     channel = self.bot.get_channel(item["channel_id"])
+                    if channel is None:
+                        try:
+                            channel = await self.bot.fetch_user(item["channel_id"])
+                        except discord.errors.NotFound:
+                            continue
                     name = "#{}".format(channel.name)
                 else:
                     user = self.bot.get_user(item["user_id"])
