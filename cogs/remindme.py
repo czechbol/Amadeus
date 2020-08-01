@@ -113,6 +113,7 @@ class Reminder(basecog.Basecog):
             new_date=date,
         )
         date = date.strftime("%d.%m.%Y %H:%M")
+        await ctx.message.add_reaction("✅")
         await ctx.message.author.send(text.fill("remindme", "reminder confirmation", name="tebe", date=date))
         return
 
@@ -148,6 +149,7 @@ class Reminder(basecog.Basecog):
             new_date=date,
         )
         date = date.strftime("%d.%m.%Y %H:%M")
+        await ctx.message.add_reaction("✅")
         await ctx.message.author.send(
             text.fill("remindme", "reminder confirmation", name=member.display_name, date=date)
         )
