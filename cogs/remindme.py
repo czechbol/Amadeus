@@ -99,6 +99,9 @@ class Reminder(basecog.Basecog):
         embed.add_field(name=text.get("remindme", "reminder link"), value=row.permalink, inline=True)
         if time is not None:
             await asyncio.sleep(time)
+
+        await self.log(level="debug", message=f"Sending reminder to {user.name}")
+
         await user.send(embed=embed)
         repository.delete(row.idx)
 
@@ -135,6 +138,9 @@ class Reminder(basecog.Basecog):
             new_date=date,
         )
         date = date.strftime("%d.%m.%Y %H:%M")
+
+        await self.log(level="debug", message=f"Reminder created for {ctx.author.name}")
+
         await ctx.message.add_reaction("✅")
         await ctx.message.author.send(text.fill("remindme", "reminder confirmation", name="tebe", date=date))
         return
@@ -171,6 +177,9 @@ class Reminder(basecog.Basecog):
             new_date=date,
         )
         date = date.strftime("%d.%m.%Y %H:%M")
+
+        await self.log(level="debug", message=f"Reminder created for {ctx.author.name}")
+
         await ctx.message.add_reaction("✅")
         await ctx.message.author.send(
             text.fill("remindme", "reminder confirmation", name=member.display_name, date=date)
