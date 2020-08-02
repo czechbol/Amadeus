@@ -5,7 +5,7 @@ from datetime import timedelta
 from dateparser.search import search_dates
 
 import discord
-from discord.ext import commands
+from discord.ext import tasks, commands
 
 from core import basecog
 from core.text import text
@@ -21,7 +21,28 @@ class Reminder(basecog.Basecog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.looping = False
+        self.remind_loop.start()
+
+    def cog_unload(self):
+        self.remind_loop.cancel()
+
+    @tasks.loop(seconds=10.0)
+    async def remind_loop(self):
+        repo = repository.get_ordered()
+        if repo != []:
+            for row in repo:
+                duration = row.new_date - datetime.now()
+                duration_in_s = duration.total_seconds()
+                if row.new_date < datetime.now():
+                    await self.log(level="info", message="Remind loop - waiting until ready()")
+                    await self.send_reminder(row)
+                elif duration_in_s < 10:
+                    await self.send_reminder(row, time=duration_in_s)
+
+    @remind_loop.before_loop
+    async def before_printer(self):
+        await self.log(level="info", message="Remind loop - waiting until ready()")
+        await self.bot.wait_until_ready()
 
     async def parse_datetime(self, arg):
         dates = search_dates(
@@ -155,22 +176,6 @@ class Reminder(basecog.Basecog):
             text.fill("remindme", "reminder confirmation", name=member.display_name, date=date)
         )
         return
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        if not self.looping:
-            self.looping = True
-            while True:
-                repo = repository.get_ordered()
-                if repo != []:
-                    for row in repo:
-                        duration = row.new_date - datetime.now()
-                        duration_in_s = duration.total_seconds()
-                        if row.new_date < datetime.now():
-                            await self.send_reminder(row)
-                        elif duration_in_s < 10:
-                            await self.send_reminder(row, time=duration_in_s)
-                await asyncio.sleep(10)
 
 
 def setup(bot):
