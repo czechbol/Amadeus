@@ -7,7 +7,7 @@ from dateparser.search import search_dates
 import discord
 from discord.ext import tasks, commands
 
-from core import basecog
+from core import check, basecog
 from core.text import text
 from core.config import config
 from repository import remind_repo
@@ -196,6 +196,155 @@ class Reminder(basecog.Basecog):
             text.fill("remindme", "reminder confirmation", name=member.display_name, date=date)
         )
         return
+
+    @commands.group(pass_context=True)
+    async def reminders(self, ctx):
+        if ctx.invoked_subcommand is None:
+            repo = repository.get_user(user_id=ctx.author.id)
+            if repo is None:
+                await ctx.send("Nemáš žádné upomínky.")
+                return
+            await self.reminder_list(ctx, repo)
+
+    @commands.check(check.is_mod)
+    @reminders.command(pass_context=True)
+    async def all(self, ctx):
+        repo = repository.get_ordered()
+        if repo is None:
+            await ctx.send("Nenalezeny žádné upomínky.")
+            return
+        await self.reminder_list(ctx, repo)
+
+    @commands.check(check.is_mod)
+    @reminders.command(pass_context=True)
+    async def finished(self, ctx):
+        repo = repository.get_finished()
+        if repo is None:
+            await ctx.send("Nenalezeny žádné upomínky.")
+            return
+        await self.reminder_list(ctx, repo)
+
+    async def reminder_list(self, ctx, repo):
+
+        message = "```"
+        for row in repo:
+            date = row.new_date.strftime("%d.%m.%Y %H:%M")
+            if row.message == "":
+                msg_row = f"ID: {row.idx}, time: {date}, status: {row.status}\n"
+            else:
+                msg_row = f"ID: {row.idx}, time: {date}, status: {row.status}, \nmessage: {row.message}\n"
+
+            if len(message + msg_row + "```") > 2000:
+                await ctx.send(str(message))
+                message = "```"
+            message += msg_row
+        message = (message + "```") if message != "```" else "Žádné upomínky"
+
+        await ctx.send(str(message))
+
+    @commands.group(pass_context=True)
+    async def reminder(self, ctx):
+        # reminders (shows reminders for user)
+        # reminders all (shows all upcoming reminders)
+        # reminders finished (shows finished reminders that weren't deleted yet)
+        if ctx.invoked_subcommand is None:
+            await ctx.send("Zkus toto: `!help reminder`")
+
+    @reminder.command(pass_context=True, aliases=["postpone", "delay"])
+    async def reschedule(self, ctx, idx: int):
+        row = repository.get_idx(idx)
+        if row == []:
+            await ctx.send("Špatné ID")
+            return
+        if row[0].user_id != ctx.author.id:
+            await ctx.send("Nemůžeš mazat upomínky ostatních")
+            return
+
+        message = ctx.message.content
+        message = message.replace("weekend", "saturday").replace(str(idx), "")
+        date = await self.parse_datetime(message)
+
+        embed, user = await self.get_embed(row[0])
+        embed.add_field(
+            name="Opravdu chceš změnit datum/čas upomínky?",
+            value="✅ pro změnu\n❎ pro zachování",
+            inline=False,
+        )
+        user_id = user.id
+        message = await ctx.send(embed=embed)
+        await message.add_reaction("✅")
+        await message.add_reaction("❎")
+        while True:
+
+            def chk(reaction, usr):
+                return (
+                    reaction.message.id == message.id
+                    and (str(reaction.emoji) == "✅" or str(reaction.emoji) == "❎")
+                    and usr.id == user_id
+                )
+
+            try:
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add", check=chk, timeout=config.delay_embed
+                )
+            except asyncio.TimeoutError:
+                pass
+            else:
+                if str(reaction.emoji) == "✅":
+                    await self.log(
+                        level="debug",
+                        message=f"Rescheduling reminder - ID: {row[0].idx}, time: {date}, status: {row[0].status}, \nmessage: {row[0].message}",
+                    )
+                    repository.postpone(row[0].idx, date)
+            try:
+                await message.delete()
+            except discord.errors.Forbidden:
+                pass
+
+    @reminder.command(pass_context=True, aliases=["remove"])
+    async def delete(self, ctx, idx: int):
+        row = repository.get_idx(idx)
+        if row == []:
+            await ctx.send("Špatné ID")
+            return
+        if row[0].user_id != ctx.author.id:
+            await ctx.send("Nemůžeš mazat upomínky ostatních")
+            return
+
+        embed, user = await self.get_embed(row[0])
+        embed.add_field(
+            name="Opravdu chceš upomínku smazat?", value="✅ pro smazání\n❎ pro zachování", inline=False
+        )
+        user_id = user.id
+        message = await ctx.send(embed=embed)
+        await message.add_reaction("✅")
+        await message.add_reaction("❎")
+        while True:
+
+            def chk(reaction, usr):
+                return (
+                    reaction.message.id == message.id
+                    and (str(reaction.emoji) == "✅" or str(reaction.emoji) == "❎")
+                    and usr.id == user_id
+                )
+
+            try:
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add", check=chk, timeout=config.delay_embed
+                )
+            except asyncio.TimeoutError:
+                pass
+            else:
+                if str(reaction.emoji) == "✅":
+                    await self.log(
+                        level="debug",
+                        message=f"Deleting reminder from db - ID: {row[0].idx}, time: {row[0].new_date}, status: {row[0].status}, \nmessage: {row[0].message}",
+                    )
+                    repository.delete(row[0].idx)
+            try:
+                await message.delete()
+            except discord.errors.Forbidden:
+                pass
 
 
 def setup(bot):
