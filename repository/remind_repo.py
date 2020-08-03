@@ -32,7 +32,7 @@ class RemindRepository(BaseRepository):
             session.add(added)
 
         else:
-            if Reminder.user_id == user_id and Reminder.message == message and Reminder.new_date == new_date:
+            if reminder.user_id == user_id and reminder.message == message and reminder.new_date == new_date:
                 added = None
             else:
                 added = Reminder(
@@ -47,6 +47,32 @@ class RemindRepository(BaseRepository):
 
         session.commit()
         return added
+
+    def set_finished(self, idx: int):
+        """Set reminder as finished"""
+        reminder = session.query(Reminder).filter_by(idx=idx).one_or_none()
+
+        if not reminder:
+            return None
+
+        else:
+            reminder.status = "finished"
+            session.commit()
+        return reminder
+
+    def postpone(self, idx: int, new_date: datetime):
+        """Set reminder as postponed"""
+        reminder = session.query(Reminder).filter_by(idx=idx).one_or_none()
+
+        if not reminder:
+            return None
+
+        else:
+            if reminder.status != "waiting":
+                reminder.status = "waiting"
+            reminder.new_date = new_date
+            session.commit()
+        return reminder
 
     @classmethod
     def delete(self, idx: int):
@@ -73,6 +99,11 @@ class RemindRepository(BaseRepository):
         return session.query(Reminder).filter_by(user_id=user_id).order_by(Reminder.new_date.asc()).all()
 
     @classmethod
-    def get_permalink(cls, permalink):
-        """Retrieves table, filtered by permalink."""
-        return session.query(Reminder).filter_by(permalink=permalink).order_by(Reminder.new_date.asc()).all()
+    def get_finished(cls):
+        """Retrieves table, only finished."""
+        return session.query(Reminder).filter_by(status="finished").order_by(Reminder.new_date.asc()).all()
+
+    @classmethod
+    def get_idx(cls, idx: int):
+        """Retrieves table, filtered by idx."""
+        return session.query(Reminder).filter_by(idx=idx).order_by(Reminder.new_date.asc()).all()

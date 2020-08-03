@@ -5,9 +5,9 @@ from datetime import timedelta
 from dateparser.search import search_dates
 
 import discord
-from discord.ext import commands
+from discord.ext import tasks, commands
 
-from core import basecog
+from core import check, basecog
 from core.text import text
 from core.config import config
 from repository import remind_repo
@@ -21,6 +21,35 @@ class Reminder(basecog.Basecog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.remind_loop.start()
+
+    def cog_unload(self):
+        self.remind_loop.cancel()
+
+    @tasks.loop(seconds=10.0)
+    async def remind_loop(self):
+        repo = repository.get_ordered()
+        if repo != []:
+            for row in repo:
+                duration = row.new_date - datetime.now()
+                duration_in_s = duration.total_seconds()
+                if row.status in {"waiting", "postponed"}:
+                    if row.new_date < datetime.now():
+                        await self.send_reminder(row)
+                    elif duration_in_s < 10:
+                        await self.send_reminder(row, time=duration_in_s)
+                elif row.status == "finished":
+                    if row.new_date < (datetime.now() - timedelta(days=7)):
+                        await self.log(
+                            level="debug",
+                            message=f"Deleting reminder from db: ID: {row.idx}, time: {row.new_date}, status: {row.status}, \nmessage: {row.message}",
+                        )
+                        repository.delete(row.idx)
+
+    @remind_loop.before_loop
+    async def before_remind_loop(self):
+        await self.log(level="info", message="Remind loop - waiting until ready()")
+        await self.bot.wait_until_ready()
 
     async def parse_datetime(self, arg):
         dates = search_dates(
@@ -51,7 +80,7 @@ class Reminder(basecog.Basecog):
 
         return date
 
-    async def send_reminder(self, row, time=None):
+    async def get_embed(self, row):
         user = self.bot.get_user(row.user_id)
         if user is None:
             try:
@@ -75,10 +104,17 @@ class Reminder(basecog.Basecog):
         if row.message != "":
             embed.add_field(name=text.get("remindme", "reminder message"), value=row.message, inline=False)
         embed.add_field(name=text.get("remindme", "reminder link"), value=row.permalink, inline=True)
+
+        return embed, user
+
+    async def send_reminder(self, row, time=None):
+        embed, user = await self.get_embed(row)
+
         if time is not None:
             await asyncio.sleep(time)
+        await self.log(level="info", message=f"Sending reminder to {user.name}")
         await user.send(embed=embed)
-        repository.delete(row.idx)
+        repository.set_finished(row.idx)
 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
@@ -113,6 +149,9 @@ class Reminder(basecog.Basecog):
             new_date=date,
         )
         date = date.strftime("%d.%m.%Y %H:%M")
+
+        await self.log(level="debug", message=f"Reminder created for {ctx.author.name}")
+
         await ctx.message.add_reaction("✅")
         await ctx.message.author.send(text.fill("remindme", "reminder confirmation", name="tebe", date=date))
         return
@@ -149,25 +188,167 @@ class Reminder(basecog.Basecog):
             new_date=date,
         )
         date = date.strftime("%d.%m.%Y %H:%M")
+
+        await self.log(level="debug", message=f"Reminder created for {ctx.author.name}")
+
         await ctx.message.add_reaction("✅")
         await ctx.message.author.send(
             text.fill("remindme", "reminder confirmation", name=member.display_name, date=date)
         )
         return
 
-    @commands.Cog.listener()
-    async def on_ready(self):
+    @commands.group(pass_context=True)
+    async def reminders(self, ctx):
+        """Zobrazí upomínky uživatele"""
+        if ctx.invoked_subcommand is None:
+            repo = repository.get_user(user_id=ctx.author.id)
+            if repo is None:
+                await ctx.send(text.get("remindme", "no reminders for you"))
+                return
+            await self.reminder_list(ctx, repo)
+
+    @commands.check(check.is_mod)
+    @reminders.command(pass_context=True)
+    async def all(self, ctx):
+        """Zobrazí všechny upomínky"""
+        repo = repository.get_ordered()
+        if repo is None:
+            await ctx.send(text.get("remindme", "no reminders"))
+            return
+        await self.reminder_list(ctx, repo)
+
+    @commands.check(check.is_mod)
+    @reminders.command(pass_context=True)
+    async def finished(self, ctx):
+        """Zobrazí dokončené upomínky"""
+        repo = repository.get_finished()
+        if repo is None:
+            await ctx.send(text.get("remindme", "no reminders"))
+            return
+        await self.reminder_list(ctx, repo)
+
+    async def reminder_list(self, ctx, repo):
+
+        message = "```"
+        for row in repo:
+            date = row.new_date.strftime("%d.%m.%Y %H:%M")
+            if row.message == "":
+                msg_row = f"ID: {row.idx}, time: {date}, status: {row.status}\n"
+            else:
+                msg_row = f"ID: {row.idx}, time: {date}, status: {row.status}, \nmessage: {row.message}\n"
+
+            if len(message + msg_row + "```") > 2000:
+                await ctx.send(str(message))
+                message = "```"
+            message += msg_row
+        message = (message + "```") if message != "```" else "Žádné upomínky"
+
+        await ctx.send(str(message))
+
+    @commands.group(pass_context=True)
+    async def reminder(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await ctx.send("Zkus toto: `!help reminder`")
+
+    @reminder.command(pass_context=True, aliases=["postpone", "delay"])
+    async def reschedule(self, ctx, idx: int):
+        """Přesune upomínku na jindy"""
+        row = repository.get_idx(idx)
+        if row == []:
+            await ctx.send(text.get("remindme", "wrong ID"))
+            return
+        if row[0].user_id != ctx.author.id:
+            await ctx.send(text.get("remindme", "cannot edit other's reminders"))
+            return
+
+        message = ctx.message.content
+        message = message.replace("weekend", "saturday").replace(str(idx), "")
+        date = await self.parse_datetime(message)
+
+        embed, user = await self.get_embed(row[0])
+        embed.add_field(
+            name=ctx.send(text.get("remindme", "reminder edit confirmation")),
+            value=ctx.send(text.get("remindme", "reminder edit text")),
+            inline=False,
+        )
+        user_id = user.id
+        message = await ctx.send(embed=embed)
+        await message.add_reaction("✅")
+        await message.add_reaction("❎")
         while True:
-            repo = repository.get_ordered()
-            if repo != []:
-                for row in repo:
-                    duration = row.new_date - datetime.now()
-                    duration_in_s = duration.total_seconds()
-                    if row.new_date < datetime.now():
-                        await self.send_reminder(row)
-                    elif duration_in_s < 10:
-                        await self.send_reminder(row, time=duration_in_s)
-            await asyncio.sleep(10)
+
+            def chk(reaction, usr):
+                return (
+                    reaction.message.id == message.id
+                    and (str(reaction.emoji) == "✅" or str(reaction.emoji) == "❎")
+                    and usr.id == user_id
+                )
+
+            try:
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add", check=chk, timeout=config.delay_embed
+                )
+            except asyncio.TimeoutError:
+                pass
+            else:
+                if str(reaction.emoji) == "✅":
+                    await self.log(
+                        level="debug",
+                        message=f"Rescheduling reminder - ID: {row[0].idx}, time: {date}, status: {row[0].status}, \nmessage: {row[0].message}",
+                    )
+                    repository.postpone(row[0].idx, date)
+            try:
+                await message.delete()
+            except discord.errors.Forbidden:
+                pass
+
+    @reminder.command(pass_context=True, aliases=["remove"])
+    async def delete(self, ctx, idx: int):
+        """Smaže upomínku"""
+        row = repository.get_idx(idx)
+        if row == []:
+            await ctx.send(text.get("remindme", "wrong ID"))
+            return
+        if row[0].user_id != ctx.author.id:
+            await ctx.send(text.get("remindme", "cannot delete other's reminders"))
+            return
+
+        embed, user = await self.get_embed(row[0])
+        embed.add_field(
+            name=text.get("remindme", "reminder delete confirmation"),
+            value=text.get("remindme", "reminder delete text"),
+            inline=False,
+        )
+        user_id = user.id
+        message = await ctx.send(embed=embed)
+        await message.add_reaction("✅")
+        await message.add_reaction("❎")
+        while True:
+
+            def chk(reaction, usr):
+                return (
+                    reaction.message.id == message.id
+                    and (str(reaction.emoji) == "✅" or str(reaction.emoji) == "❎")
+                    and usr.id == user_id
+                )
+
+            try:
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add", check=chk, timeout=config.delay_embed
+                )
+            except asyncio.TimeoutError:
+                pass
+            else:
+                if str(reaction.emoji) == "✅":
+                    await self.log(
+                        level="debug",
+                        message=f"Deleting reminder from db - ID: {row[0].idx}, time: {row[0].new_date}, status: {row[0].status}, \nmessage: {row[0].message}",
+                    )
+                    repository.delete(row[0].idx)
+            try:
+                await message.delete()
+            except discord.errors.Forbidden:
+                pass
 
 
 def setup(bot):

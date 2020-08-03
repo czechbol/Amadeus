@@ -94,6 +94,15 @@
 		"reminder message": "Zpráva",
 		"reminder link": "Link na zprávu",
 		"reminder confirmation": "Upomínka pro {name} vytvořena, čas: {date}",
-		"datetime not found": "Nepodařilo se mi přečíst kdy chceš připomenout.\nPoužíji výchozích 24h."
+		"datetime not found": "Nepodařilo se mi přečíst kdy chceš připomenout.\nPoužíji výchozích 24h.",
+		"no reminders for you": "Nemáš žádné upomínky.",
+		"no reminders": "Nenalezeny žádné upomínky.",
+		"wrong ID": "Špatné ID",
+		"cannot edit other's reminders": "Nemůžeš upravovat upomínky ostatních",
+		"cannot delete other's reminders": "Nemůžeš mazat upomínky ostatních",
+		"reminder edit confirmation": "Opravdu chceš změnit datum/čas upomínky?",
+		"reminder edit text": "✅ pro změnu\n❎ pro zachování",
+		"reminder delete confirmation": "Opravdu chceš upomínku smazat?",
+		"reminder delete text": "✅ pro smazání\n❎ pro zachování"
 	}
 }
