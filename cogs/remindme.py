@@ -33,14 +33,21 @@ class Reminder(basecog.Basecog):
             for row in repo:
                 duration = row.new_date - datetime.now()
                 duration_in_s = duration.total_seconds()
-                if row.new_date < datetime.now():
-                    await self.log(level="info", message="Remind loop - waiting until ready()")
-                    await self.send_reminder(row)
-                elif duration_in_s < 10:
-                    await self.send_reminder(row, time=duration_in_s)
+                if row.status in {"waiting", "postponed"}:
+                    if row.new_date < datetime.now():
+                        await self.send_reminder(row)
+                    elif duration_in_s < 10:
+                        await self.send_reminder(row, time=duration_in_s)
+                elif row.status == "finished":
+                    if row.new_date < (datetime.now() - timedelta(days=7)):
+                        await self.log(
+                            level="debug",
+                            message=f"Deleting reminder from db: ID: {row.idx}, time: {row.new_date}, status: {row.status}, \nmessage: {row.message}",
+                        )
+                        repository.delete(row.idx)
 
     @remind_loop.before_loop
-    async def before_printer(self):
+    async def before_remind_loop(self):
         await self.log(level="info", message="Remind loop - waiting until ready()")
         await self.bot.wait_until_ready()
 
@@ -73,7 +80,7 @@ class Reminder(basecog.Basecog):
 
         return date
 
-    async def send_reminder(self, row, time=None):
+    async def get_embed(self, row):
         user = self.bot.get_user(row.user_id)
         if user is None:
             try:
@@ -97,13 +104,17 @@ class Reminder(basecog.Basecog):
         if row.message != "":
             embed.add_field(name=text.get("remindme", "reminder message"), value=row.message, inline=False)
         embed.add_field(name=text.get("remindme", "reminder link"), value=row.permalink, inline=True)
+
+        return embed, user
+
+    async def send_reminder(self, row, time=None):
+        embed, user = await self.get_embed(row)
+
         if time is not None:
             await asyncio.sleep(time)
-
-        await self.log(level="debug", message=f"Sending reminder to {user.name}")
-
+        await self.log(level="info", message=f"Sending reminder to {user.name}")
         await user.send(embed=embed)
-        repository.delete(row.idx)
+        repository.set_finished(row.idx)
 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
