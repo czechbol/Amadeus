@@ -199,28 +199,31 @@ class Reminder(basecog.Basecog):
 
     @commands.group(pass_context=True)
     async def reminders(self, ctx):
+        """Zobrazí upomínky uživatele"""
         if ctx.invoked_subcommand is None:
             repo = repository.get_user(user_id=ctx.author.id)
             if repo is None:
-                await ctx.send("Nemáš žádné upomínky.")
+                await ctx.send(text.get("remindme", "no reminders for you"))
                 return
             await self.reminder_list(ctx, repo)
 
     @commands.check(check.is_mod)
     @reminders.command(pass_context=True)
     async def all(self, ctx):
+        """Zobrazí všechny upomínky"""
         repo = repository.get_ordered()
         if repo is None:
-            await ctx.send("Nenalezeny žádné upomínky.")
+            await ctx.send(text.get("remindme", "no reminders"))
             return
         await self.reminder_list(ctx, repo)
 
     @commands.check(check.is_mod)
     @reminders.command(pass_context=True)
     async def finished(self, ctx):
+        """Zobrazí dokončené upomínky"""
         repo = repository.get_finished()
         if repo is None:
-            await ctx.send("Nenalezeny žádné upomínky.")
+            await ctx.send(text.get("remindme", "no reminders"))
             return
         await self.reminder_list(ctx, repo)
 
@@ -244,20 +247,18 @@ class Reminder(basecog.Basecog):
 
     @commands.group(pass_context=True)
     async def reminder(self, ctx):
-        # reminders (shows reminders for user)
-        # reminders all (shows all upcoming reminders)
-        # reminders finished (shows finished reminders that weren't deleted yet)
         if ctx.invoked_subcommand is None:
             await ctx.send("Zkus toto: `!help reminder`")
 
     @reminder.command(pass_context=True, aliases=["postpone", "delay"])
     async def reschedule(self, ctx, idx: int):
+        """Přesune upomínku na jindy"""
         row = repository.get_idx(idx)
         if row == []:
-            await ctx.send("Špatné ID")
+            await ctx.send(text.get("remindme", "wrong ID"))
             return
         if row[0].user_id != ctx.author.id:
-            await ctx.send("Nemůžeš mazat upomínky ostatních")
+            await ctx.send(text.get("remindme", "cannot edit other's reminders"))
             return
 
         message = ctx.message.content
@@ -266,8 +267,8 @@ class Reminder(basecog.Basecog):
 
         embed, user = await self.get_embed(row[0])
         embed.add_field(
-            name="Opravdu chceš změnit datum/čas upomínky?",
-            value="✅ pro změnu\n❎ pro zachování",
+            name=ctx.send(text.get("remindme", "reminder edit confirmation")),
+            value=ctx.send(text.get("remindme", "reminder edit text")),
             inline=False,
         )
         user_id = user.id
@@ -303,17 +304,20 @@ class Reminder(basecog.Basecog):
 
     @reminder.command(pass_context=True, aliases=["remove"])
     async def delete(self, ctx, idx: int):
+        """Smaže upomínku"""
         row = repository.get_idx(idx)
         if row == []:
-            await ctx.send("Špatné ID")
+            await ctx.send(text.get("remindme", "wrong ID"))
             return
         if row[0].user_id != ctx.author.id:
-            await ctx.send("Nemůžeš mazat upomínky ostatních")
+            await ctx.send(text.get("remindme", "cannot delete other's reminders"))
             return
 
         embed, user = await self.get_embed(row[0])
         embed.add_field(
-            name="Opravdu chceš upomínku smazat?", value="✅ pro smazání\n❎ pro zachování", inline=False
+            name=text.get("remindme", "reminder delete confirmation"),
+            value=text.get("remindme", "reminder delete text"),
+            inline=False,
         )
         user_id = user.id
         message = await ctx.send(embed=embed)
