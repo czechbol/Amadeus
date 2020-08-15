@@ -79,19 +79,22 @@ class Basecog(commands.Cog):
         if level not in levels:
             raise ValueError
 
-        if level == "debug" and config.debug == 0:
-            return
-
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         today = datetime.now().strftime("%Y-%m-%d")
-        if not os.path.isfile(f"logs/{today}.json"):
-            with open(f"logs/{today}.json", mode="w", encoding="utf-8") as f:
+        year = datetime.now().strftime("%Y")
+        month = datetime.now().strftime("%Y-%m")
+        if not os.path.exists(f"logs/{year}"):
+            os.mkdir(f"logs/{year}")
+        if not os.path.exists(f"logs/{year}/{month}"):
+            os.mkdir(f"logs/{year}/{month}")
+        if not os.path.isfile(f"logs/{year}/{month}/{today}.json"):
+            with open(f"logs/{year}/{month}/{today}.json", mode="w", encoding="utf-8") as f:
                 json.dump([], f)
                 await self.log_archive()
 
-        with open(f"logs/{today}.json", mode="r", encoding="utf-8") as feedsjson:
+        with open(f"logs/{year}/{month}/{today}.json", mode="r", encoding="utf-8") as feedsjson:
             feeds = json.load(feedsjson)
-        with open(f"logs/{today}.json", mode="w", encoding="utf-8") as writejson:
+        with open(f"logs/{year}/{month}/{today}.json", mode="w", encoding="utf-8") as writejson:
             if command is None:
                 feeds.append({"level": level, "message": message, "time": now})
             else:
@@ -103,15 +106,29 @@ class Basecog(commands.Cog):
 
     async def log_archive(self):
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        with os.scandir("logs/") as entries:
+        files = self.scan_log_dir("logs/")
+        for entry in files:
+            if entry.is_file() and ".json" in entry.name:
+                entry_date = datetime.strptime(entry.name.replace(".json", ""), "%Y-%m-%d")
+                if entry_date < today - timedelta(days=7):
+                    filepath = "logs/archive.zip"
+                    with zipfile.ZipFile(filepath, "a") as zipf:
+                        zipf.write(entry.path)
+                        os.remove(entry.path)
+
+    def scan_log_dir(self, dir):
+        files = []
+        with os.scandir(dir) as entries:
             for entry in entries:
                 if entry.is_file() and ".json" in entry.name:
-                    entry_date = datetime.strptime(entry.name.replace(".json", ""), "%Y-%m-%d")
-                    if entry_date < today - timedelta(days=7):
-                        filepath = "logs/archive.zip"
-                        with zipfile.ZipFile(filepath, "a") as zipf:
-                            zipf.write(entry.path)
-                            os.remove(entry.path)
+                    files.append(entry)
+                if entry.is_dir():
+                    directory = os.listdir(entry.path)
+                    if len(directory) == 0:
+                        os.rmdir(entry.path)
+                    else:
+                        files.extend(self.scan_log_dir(entry.path))
+        return files
 
     async def guildlog(self, ctx, action: str, log_level: str, quote: bool = True, msg=None):
         """Log event"""
