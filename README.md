@@ -6,7 +6,7 @@
   <a href="https://github.com/Czechbol/Amadeus/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-brightgreen?style=for-the-badge" alt="GPLv3 license" /></a>
   <a href="https://app.codacy.com/manual/Czechbol/Amadeus?utm_source=github.com&utm_medium=referral&utm_content=Czechbol/Amadeus&utm_campaign=Badge_Grade_Dashboard"><img src="https://img.shields.io/codacy/grade/226d8bbd49e242d1a710cb03c2f2764a?style=for-the-badge"></a>
   <a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge" alt="Formatted with Black" /></a>
-  
+
 </p>
 
 ## About
@@ -18,7 +18,7 @@ This bot is still in a pre-release state. If you want to contribute or you want 
 
 ## Authors
 
-Amadeus is mantained by [Czechbol](https://github.com/Czechbol) and 
+Amadeus is mantained by [Czechbol](https://github.com/Czechbol) and
 [sinus-x](https://github.com/sinus-x).
 
 ## License

@@ -12,7 +12,7 @@ stop () {
         kill $(cat ~/amadeus.pid)
         rm -f ~/amadeus.pid
     fi
-    
+
     # stop log synchronisation
     if test -f "~/journalctl.pid"; then
         kill $(cat ~/journalctl.pid)
@@ -25,7 +25,7 @@ start () {
     rm -f ~/amadeus.log
     nohup python3 -u amadeus/amadeus.py > ~/amadeus.log &
     echo $! > ~/amadeus.pid
-    
+
     # start log synchronisation
     rm -f ~/journalctl.log
     nohup python3 -u amadeus/resources/mirror.py > ~/journalctl.log &
