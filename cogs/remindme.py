@@ -267,8 +267,8 @@ class Reminder(basecog.Basecog):
 
         embed, user = await self.get_embed(row[0])
         embed.add_field(
-            name=ctx.send(text.get("remindme", "reminder edit confirmation")),
-            value=ctx.send(text.get("remindme", "reminder edit text")),
+            name=text.get("remindme", "reminder edit confirmation"),
+            value=text.get("remindme", "reminder edit text"),
             inline=False,
         )
         user_id = user.id
@@ -300,6 +300,8 @@ class Reminder(basecog.Basecog):
             try:
                 await message.delete()
             except discord.errors.Forbidden:
+                pass
+            except discord.errors.NotFound:
                 pass
 
     @reminder.command(pass_context=True, aliases=["remove"])
@@ -348,6 +350,8 @@ class Reminder(basecog.Basecog):
             try:
                 await message.delete()
             except discord.errors.Forbidden:
+                pass
+            except discord.errors.NotFound:
                 pass
 
 
