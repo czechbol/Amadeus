@@ -104,5 +104,17 @@
 		"reminder edit text": "✅ pro změnu\n❎ pro zachování",
 		"reminder delete confirmation": "Opravdu chceš upomínku smazat?",
 		"reminder delete text": "✅ pro smazání\n❎ pro zachování"
+	},
+	"unverify": {
+		"unverify desc": "TODO",
+		"unverify help": "TODO",
+		"unverify brief": "TODO",
+		"selfunverify desc": "TODO",
+		"selfunverify help": "TODO",
+		"selfunverify brief": "TODO",
+		"unverified": "TODO",
+		"unverified by": "TODO",
+		"reverify on": "TODO",
+		"reason title": "TODO"
 	}
 }
