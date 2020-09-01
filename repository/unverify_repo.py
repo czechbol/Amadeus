@@ -15,11 +15,14 @@ class UnverifyRepository(BaseRepository):
         start_time: datetime,
         end_time: datetime,
         roles_to_return: list,
-        channel_overrides: list,
+        channels_to_return: list,
+        channels_to_remove: list,
         reason: str,
     ):
         """Adds unverify to the database"""
-        unverify = session.query(Unverify).filter_by(user_id=user_id).one_or_none()
+        unverify = (
+            session.query(Unverify).filter_by(user_id=user_id).filter_by(status="waiting").one_or_none()
+        )
 
         if not unverify:
             added = Unverify(
@@ -28,7 +31,8 @@ class UnverifyRepository(BaseRepository):
                 start_time=start_time,
                 end_time=end_time,
                 roles_to_return=roles_to_return,
-                channel_overrides=channel_overrides,
+                channels_to_return=channels_to_return,
+                channels_to_remove=channels_to_remove,
                 reason=reason,
             )
             session.add(added)

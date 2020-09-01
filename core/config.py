@@ -75,6 +75,7 @@ class Config:
         self.role_verify = self.get("roles", "verify_id")
         self.role_mod = self.get("roles", "mod_id")
         self.roles_elevated = self.get("roles", "elevated_ids")
+        self.roles_unverify = self.get("roles", "unverify_ids")
         self.booster_role = self.get("roles", "server_booster")
 
         # BOARDS
