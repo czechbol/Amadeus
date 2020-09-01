@@ -8,7 +8,7 @@ import discord
 from discord import CategoryChannel
 from discord.ext import tasks, commands
 
-from core import basecog
+from core import basecog, check
 from core.text import text
 from core.config import config
 from repository import unverify_repo
@@ -211,6 +211,59 @@ class Unverify(basecog.Basecog):
         )
         return result
 
+    @commands.check(check.is_elevated)
+    @commands.command(
+        brief=text.get("unverify", "unverify desc"),
+        description=text.get("unverify", "unverify desc"),
+        help=text.fill("unverify", "unverify help", prefix=config.prefix),
+    )
+    async def unverify(self, ctx, member: discord.Member):
+        message = ctx.message
+        lines = message.content.split("\n")
+        arg = lines[0]
+        arg = arg.replace("weekend", "saturday")
+        date, date_str = await self.parse_datetime(arg)
+        await self.log(level="info", message=f"Unverify: Member - {member.name}, Until - {date}")
+
+        if date is None:
+            if len(lines) == 0:
+                await ctx.send(">>> " + text.fill("unverify", "unverify help", prefix=config.prefix))
+                return
+            await ctx.send(text.get("unverify", "datetime not found"))
+            date = datetime.now() + timedelta(days=1)
+        printdate = date.strftime("%d.%m.%Y %H:%M")
+
+        lines = "\n".join(lines)
+        for prefix in config.prefixes:
+            if lines[0] == prefix:
+                lines = lines.replace(f"{prefix}unverify ", "")
+        if member.name in lines:
+            lines = lines = lines.replace(member.name, "")
+
+        elif f"<@!{member.id}>" in lines:
+            lines = lines.replace(f"<@!{member.id}>", "")
+
+        if len(lines) > 1024:
+            lines = lines[:1024]
+            lines = lines[:-3] + "```" if lines.count("```") % 2 != 0 else lines
+        lines = lines if not lines == "" else "Unverify"
+
+        lines = lines.replace(date_str, "")
+        lines = re.split(" ", lines)
+        while "" in lines:
+            lines.remove("")
+        lines = " ".join(lines)
+
+        result = await self.unverify_user(ctx, member=member, lines=lines, date=date, func="Unverify")
+
+        if result is not None:
+            await self.log(level="debug", message=f"Unverify success: Member - {member.name}, Until - {date}")
+
+        await member.send(
+            f"Byly ti dočasně odebrány všechny práva na serveru {ctx.guild.name}. Přístup ti bude navrácen {printdate}. Důvod: {lines}"
+        )
+        # TODO embed this
+
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
         brief=text.get("unverify", "selfunverify desc"),  # TODO fix
@@ -223,7 +276,6 @@ class Unverify(basecog.Basecog):
         arg = lines.pop(0)
         arg = arg.replace("weekend", "saturday")
         date, date_str = await self.parse_datetime(arg)
-        printdate = date.strftime("%d.%m.%Y %H:%M:%S")
         member = ctx.message.author
         await self.log(level="info", message=f"Selfunverify: Member - {member.name}, Until - {date}")
 
@@ -233,6 +285,7 @@ class Unverify(basecog.Basecog):
                 return
             await ctx.send(text.get("unverify", "datetime not found"))
             date = datetime.now() + timedelta(days=1)
+        printdate = date.strftime("%d.%m.%Y %H:%M:%S")
 
         for prefix in config.prefixes:
             if arg[0] == prefix:
@@ -255,6 +308,10 @@ class Unverify(basecog.Basecog):
         await member.send(
             f"Byly ti dočasně odebrány všechny práva na serveru {ctx.guild.name}. Přístup ti bude navrácen {printdate}. Důvod: Self unverify"
         )
+        # TODO embed this
+
+
+# TODO add reverify command
 
 
 def setup(bot):
