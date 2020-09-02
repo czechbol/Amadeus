@@ -31,20 +31,22 @@
 		"host": "",
 		"__comment": "How is the bot hosted? This is needed in some Admin cog commands.",
 		"__comment": "Supported options: standalone, docker, systemd, systemd+docker",
-		"loader": "systemd+docker",
+		"loader": "docker",
 		"prefixes": [
-			"?",
 			"!"
 		],
 		"__comment": "cogs to load by default",
 		"extensions": [
-            "base",
-            "boards",
-            "draw",
-            "urban",
-            "vote",
-            "weeb"
-        ]
+			"base",
+			"boards",
+			"draw",
+			"remindme",
+			"tempverify",
+			"unverify",
+			"urban",
+			"vote",
+			"weeb"
+		]
 	},
 	"__comment": "Special channels",
 	"channels": {
@@ -81,6 +83,10 @@
 		"mod_id": 0,
 		"elevated_ids": [
 			0,
+			0,
+			0
+		],
+		"unverify_ids": [
 			0,
 			0
 		],
