@@ -6,6 +6,7 @@ from dateparser.search import search_dates
 
 import discord
 from discord import CategoryChannel
+from discord.abc import PrivateChannel
 from discord.ext import tasks, commands
 
 from core import basecog, check
@@ -21,7 +22,7 @@ class Unverify(basecog.Basecog):
     """Voting based commands"""
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.unverify_loop.start()
 
     def cog_unload(self):
@@ -138,13 +139,18 @@ class Unverify(basecog.Basecog):
         func: str,
         args: str = "",
     ):
+        if isinstance(ctx.channel, PrivateChannel):
+            guild = self.getGuild()
+            member = guild.get_member(member.id)
+        else:
+            guild = ctx.guild
         roles_to_keep = []
         roles_to_remove = []
         channels_to_keep = []
         removed_channels = []
 
         for id in config.roles_unverify:
-            role = discord.utils.get(ctx.guild.roles, id=id)
+            role = discord.utils.get(guild.roles, id=id)
             if role is not None:
                 unverify_role = role
                 break
@@ -152,8 +158,8 @@ class Unverify(basecog.Basecog):
                 return None
 
         for value in args:
-            role = discord.utils.get(ctx.guild.roles, name=value)
-            channel = discord.utils.get(ctx.guild.channels, name=value)
+            role = discord.utils.get(guild.roles, name=value)
+            channel = discord.utils.get(guild.channels, name=value)
             if role is not None and role in member.roles:
                 roles_to_keep.append(role)
             elif channel is not None:
@@ -225,6 +231,12 @@ class Unverify(basecog.Basecog):
         date, date_str = await self.parse_datetime(arg)
         await self.log(level="info", message=f"Unverify: Member - {member.name}, Until - {date}")
 
+        if isinstance(ctx.channel, PrivateChannel):
+            guild = self.getGuild()
+            member = guild.get_member(member.id)
+        else:
+            guild = ctx.guild
+
         if date is None:
             if len(lines) == 0:
                 await ctx.send(">>> " + text.fill("unverify", "unverify help", prefix=config.prefix))
@@ -261,11 +273,15 @@ class Unverify(basecog.Basecog):
 
             embed = self.create_embed(
                 author=ctx.message.author,
-                title=text.fill("unverify", "unverified", guild_name=ctx.guild.name),
+                title=text.fill("unverify", "unverified", guild_name=guild.name),
             )
             embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
             embed.add_field(name=text.get("unverify", "reason title"), value=lines, inline=False)
             await member.send(embed=embed)
+        else:
+            await self.log(
+                level="debug", message=f"Unverify failed: Member - {member.name} already unverified."
+            )
 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
@@ -281,6 +297,11 @@ class Unverify(basecog.Basecog):
         date, date_str = await self.parse_datetime(arg)
         member = ctx.message.author
         await self.log(level="info", message=f"Selfunverify: Member - {member.name}, Until - {date}")
+        if isinstance(ctx.channel, PrivateChannel):
+            guild = self.getGuild()
+            member = guild.get_member(member.id)
+        else:
+            guild = ctx.guild
 
         if date is None:
             if len(lines) == 0:
@@ -309,10 +330,14 @@ class Unverify(basecog.Basecog):
             )
             embed = self.create_embed(
                 author=ctx.message.author,
-                title=text.fill("unverify", "unverified", guild_name=ctx.guild.name),
+                title=text.fill("unverify", "unverified", guild_name=guild.name),
             )
             embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
             await member.send(embed=embed)
+        else:
+            await self.log(
+                level="debug", message=f"Selfunverify failed: Member - {member.name} already unverified."
+            )
 
 
 # TODO add reverify command
