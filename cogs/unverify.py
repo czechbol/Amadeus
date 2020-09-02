@@ -78,10 +78,6 @@ class Unverify(basecog.Basecog):
             if date < datetime.now():
                 date = date + timedelta(days=1)
 
-        x = re.search(r"([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]", dates[0][0])
-        if x is None:
-            date = date.replace(hour=9, minute=0, second=0)
-
         date_str = dates[0][0]
 
         return date, date_str
@@ -276,7 +272,8 @@ class Unverify(basecog.Basecog):
                 title=text.fill("unverify", "unverified", guild_name=guild.name),
             )
             embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
-            embed.add_field(name=text.get("unverify", "reason title"), value=lines, inline=False)
+            if lines != "":
+                embed.add_field(name=text.get("unverify", "reason title"), value=lines, inline=False)
             await member.send(embed=embed)
         else:
             await self.log(
