@@ -14,6 +14,7 @@ from repository.database.vote import Vote  # noqa F401
 from repository.database.remind import Reminder  # noqa F401
 from repository.database.user_channels import UserChannel  # noqa F401
 from repository.database.unverify import Unverify  # noqa F401
+from repository.database.tempverify import Tempverify  # noqa F401
 
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(*config.prefixes),
