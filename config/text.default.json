@@ -106,15 +106,15 @@
 		"reminder delete text": "✅ pro smazání\n❎ pro zachování"
 	},
 	"unverify": {
-		"unverify desc": "TODO",
-		"unverify help": "TODO",
-		"unverify brief": "TODO",
-		"selfunverify desc": "TODO",
-		"selfunverify help": "TODO",
-		"selfunverify brief": "TODO",
-		"unverified": "TODO",
-		"unverified by": "TODO",
-		"reverify on": "TODO",
-		"reason title": "TODO"
+		"unverify desc": "Odebrání práv na serveru",
+		"unverify help": "Použití remind:\n`{prefix}unverify [uživatel] *[datum] *[čas]\n[důvod]`",
+		"unverify brief": "Použití remind:\n`{prefix}unverify [uživatel] *[datum] *[čas]\n[důvod]`",
+		"selfunverify desc": "Odebrání práv na serveru",
+		"selfunverify help": "Použití remind:\n`{prefix}selfunverify *[datum] *[čas]\n[předměty a role k ponechání]`",
+		"selfunverify brief": "Použití remind:\n`{prefix}selfunverify *[datum] *[čas]\n[předměty a role k ponechání]`",
+		"unverified": "Byly ti dočasně odebrány práva na serveru {guild_name}",
+		"reverify on": "Přístup ti bude navrácen",
+		"reason title": "Důvod",
+		"to keep": "K ponechání"
 	}
 }
