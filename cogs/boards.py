@@ -406,11 +406,24 @@ class Boards(basecog.Basecog):
                     guild = discord.utils.escape_markdown(channel.guild.name)
                     lines.append(
                         text.fill(
-                            "boards", "template guild", index=index, count=count, name=name, guild=guild,
+                            "boards",
+                            "template guild",
+                            index=index,
+                            count=count,
+                            name=name,
+                            guild=guild,
                         )
                     )
                 else:
-                    lines.append(text.fill("boards", "template", index=index, count=count, name=name,))
+                    lines.append(
+                        text.fill(
+                            "boards",
+                            "template",
+                            index=index,
+                            count=count,
+                            name=name,
+                        )
+                    )
 
             title = "top number" if idx == 0 else "top offset"
 
@@ -457,11 +470,21 @@ class Boards(basecog.Basecog):
                     if position == author_position:
                         name = "**" + name + "**"
 
-                    lines.append(text.fill("boards", "template", index=index, name=name, count=count,))
+                    lines.append(
+                        text.fill(
+                            "boards",
+                            "template",
+                            index=index,
+                            name=name,
+                            count=count,
+                        )
+                    )
 
                 if len(lines) > 0:
                     board.add_field(
-                        name=text.get("boards", "author position"), value="\n".join(lines), inline=False,
+                        name=text.get("boards", "author position"),
+                        value="\n".join(lines),
+                        inline=False,
                     )
 
         return boards, pagenum
@@ -545,7 +568,10 @@ class Boards(basecog.Basecog):
             guild_id = message.guild.id
             last_msg_at = message.created_at
             repository.decrement(
-                channel_id=channel_id, user_id=user_id, guild_id=guild_id, last_msg_at=last_msg_at,
+                channel_id=channel_id,
+                user_id=user_id,
+                guild_id=guild_id,
+                last_msg_at=last_msg_at,
             )
 
     @commands.Cog.listener()
