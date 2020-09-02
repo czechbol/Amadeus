@@ -45,7 +45,11 @@ class UserChannelRepository(BaseRepository):
 
     @classmethod
     def decrement(
-        cls, channel_id: int, user_id: int, guild_id: int, last_msg_at: datetime,
+        cls,
+        channel_id: int,
+        user_id: int,
+        guild_id: int,
+        last_msg_at: datetime,
     ):
         """Decrement user_channel count."""
         user_channel = (

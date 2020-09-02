@@ -34,12 +34,16 @@ class Urban(basecog.Basecog):
                 definition = definition[0:1021] + "`…`"
 
             embed = self.create_embed(
-                author=ctx.message.author, title=lis[idx]["word"], url=lis[idx]["permalink"],
+                author=ctx.message.author,
+                title=lis[idx]["word"],
+                url=lis[idx]["permalink"],
             )
             embed.add_field(name="Definition", value=definition, inline=False)
             embed.add_field(name="Example", value=example, inline=False)
             embed.add_field(
-                name="Page", value="{curr}/{total}".format(curr=idx + 1, total=len(lis)), inline=False,
+                name="Page",
+                value="{curr}/{total}".format(curr=idx + 1, total=len(lis)),
+                inline=False,
             )
             embed_list.append(embed)
         return embed_list

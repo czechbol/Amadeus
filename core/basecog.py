@@ -65,11 +65,13 @@ class Basecog(commands.Cog):
         embed = discord.Embed(**kwargs)
         if not error:
             embed.set_footer(
-                text=text.fill("basecog", "embed footer", user=author_name), icon_url=author.avatar_url,
+                text=text.fill("basecog", "embed footer", user=author_name),
+                icon_url=author.avatar_url,
             )
         else:
             embed.set_footer(
-                text=text.fill("basecog", "error footer", user=author_name), icon_url=author.avatar_url,
+                text=text.fill("basecog", "error footer", user=author_name),
+                icon_url=author.avatar_url,
             )
         return embed
 

@@ -67,7 +67,10 @@ class Vote(basecog.Basecog):
                     votes = sorted(votes, key=lambda i: (i["num_votes"]), reverse=True)
                     for option in votes:
                         content += text.fill(
-                            "vote", "option", option=option["option"], num=option["num_votes"] - 1,
+                            "vote",
+                            "option",
+                            option=option["option"],
+                            num=option["num_votes"] - 1,
                         )
                     content += text.fill("vote", "ends", date=date.strftime("%Y-%m-%d %H:%M:%S"))
                     content = escape_mentions(escape_markdown(content))
@@ -115,7 +118,12 @@ class Vote(basecog.Basecog):
         content += lines[0] + "\n"
         votes = sorted(votes, key=lambda i: (i["num_votes"]), reverse=True)
         for option in votes:
-            content += text.fill("vote", "option", option=option["option"], num=option["num_votes"] - 1,)
+            content += text.fill(
+                "vote",
+                "option",
+                option=option["option"],
+                num=option["num_votes"] - 1,
+            )
         content = escape_mentions(escape_markdown(content))
 
         await edit_msg.channel.send(content=content)

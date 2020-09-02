@@ -217,7 +217,9 @@ class Draw(basecog.Basecog):
             author=user,
         )
         await self.digraph.callback(
-            self, ctx, equasion=message.content.strip("` ` `").replace("digraph\n", "", 1),
+            self,
+            ctx,
+            equasion=message.content.strip("` ` `").replace("digraph\n", "", 1),
         )
 
         await ctx.message.remove_reaction("▶", ctx.author)
