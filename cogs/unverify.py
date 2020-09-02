@@ -259,16 +259,19 @@ class Unverify(basecog.Basecog):
         if result is not None:
             await self.log(level="debug", message=f"Unverify success: Member - {member.name}, Until - {date}")
 
-        await member.send(
-            f"Byly ti dočasně odebrány všechny práva na serveru {ctx.guild.name}. Přístup ti bude navrácen {printdate}. Důvod: {lines}"
-        )
-        # TODO embed this
+            embed = self.create_embed(
+                author=ctx.message.author,
+                title=text.fill("unverify", "unverified", guild_name=ctx.guild.name),
+            )
+            embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
+            embed.add_field(name=text.get("unverify", "reason title"), value=lines, inline=False)
+            await member.send(embed=embed)
 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
-        brief=text.get("unverify", "selfunverify desc"),  # TODO fix
-        description=text.get("unverify", "selfunverify desc"),  # TODO fix
-        help=text.fill("unverify", "selfunverify help", prefix=config.prefix),  # TODO fix
+        brief=text.get("unverify", "selfunverify desc"),
+        description=text.get("unverify", "selfunverify desc"),
+        help=text.fill("unverify", "selfunverify help", prefix=config.prefix),
     )
     async def selfunverify(self, ctx):
         message = ctx.message
@@ -304,11 +307,12 @@ class Unverify(basecog.Basecog):
             await self.log(
                 level="debug", message=f"Selfunverify success: Member - {member.name}, Until - {date}"
             )
-
-        await member.send(
-            f"Byly ti dočasně odebrány všechny práva na serveru {ctx.guild.name}. Přístup ti bude navrácen {printdate}. Důvod: Self unverify"
-        )
-        # TODO embed this
+            embed = self.create_embed(
+                author=ctx.message.author,
+                title=text.fill("unverify", "unverified", guild_name=ctx.guild.name),
+            )
+            embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
+            await member.send(embed=embed)
 
 
 # TODO add reverify command
