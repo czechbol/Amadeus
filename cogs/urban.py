@@ -18,7 +18,7 @@ class Urban(basecog.Basecog):
     """Weeb shit based commands"""
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
     def urban_embeds(self, ctx, dic):
         lis = dic["list"]

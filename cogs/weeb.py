@@ -16,7 +16,7 @@ class Weeb(basecog.Basecog):
     """Weeb shit based commands"""
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
     @classmethod
     def sauce_tags(cls, dic):

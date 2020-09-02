@@ -19,7 +19,7 @@ class Boards(basecog.Basecog):
     """Commands for leaderboards"""
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.handled = []
 
     async def get_history(self, channel, after):

@@ -23,7 +23,7 @@ class Draw(basecog.Basecog):
     """LaTeX and Graph drawing commands"""
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.rep_exp = {
             "x": "x",
             "sin": "numpy.sin",

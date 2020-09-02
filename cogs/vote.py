@@ -23,7 +23,7 @@ class Vote(basecog.Basecog):
     """Voting based commands"""
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.handled = []
 
     async def fetch_repo_votes(self):

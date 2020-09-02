@@ -20,7 +20,7 @@ class Reminder(basecog.Basecog):
     """Voting based commands"""
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.remind_loop.start()
 
     def cog_unload(self):
