@@ -578,7 +578,7 @@ class Boards(basecog.Basecog):
     async def on_ready(self):
         channels = repository.get_user_channels()
         results = None
-        admin = self.bot.get_user(config.admin_id)
+        admin = await self.bot.fetch_user(config.admin_id)
         messages = []
 
         async with admin.typing():
