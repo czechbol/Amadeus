@@ -1,10 +1,10 @@
 dateparser>=0.7.6
-discord.py>=1.4.1
-gitpython>=3.1.3
-graphviz>=0.14
-matplotlib>=3.2.2
-psycopg2-binary>=2.8.5
+discord.py>=1.5.0
+gitpython>=3.1.8
+graphviz>=0.14.1
+matplotlib>=3.3.2
+psycopg2-binary>=2.8.6
 requests>=2.24.0
-scipy>=1.5.1
-sqlalchemy>=1.3.18
+scipy>=1.5.2
+sqlalchemy>=1.3.19
 xdot>=1.1
