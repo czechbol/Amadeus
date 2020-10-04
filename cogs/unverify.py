@@ -269,6 +269,9 @@ class Unverify(basecog.Basecog):
             if lines != "":
                 embed.add_field(name=text.get("unverify", "reason title"), value=lines, inline=False)
             await member.send(embed=embed)
+            await ctx.send(
+                f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"
+            )
         else:
             await self.log(
                 level="debug", message=f"Unverify failed: Member - {member.name} already unverified."
@@ -325,6 +328,9 @@ class Unverify(basecog.Basecog):
             )
             embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
             await member.send(embed=embed)
+            await ctx.send(
+                f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"
+            )
         else:
             await self.log(
                 level="debug", message=f"Selfunverify failed: Member - {member.name} already unverified."
@@ -459,8 +465,25 @@ class Unverify(basecog.Basecog):
                         pass
                     await message.edit(embed=embeds[pagenum])
 
-
-# TODO add reverify command
+    @commands.check(check.is_mod)
+    @commands.command()
+    async def reverify(self, ctx, idx: int):
+        repo = repository.get_idx(idx)
+        if repo != [] and repo[0].status == "waiting":
+            row = repo[0]
+            user = self.bot.get_user(row.user_id)
+            if user is None:
+                try:
+                    user = await self.bot.fetch_user(row.user_id)
+                    user_name = discord.utils.escape_markdown(user.display_name)
+                except discord.errors.NotFound:
+                    user_name = "_(Unknown user)_"
+            else:
+                user_name = discord.utils.escape_markdown(user.display_name)
+            await self.reverify_user(row)
+            await ctx.send(f"Reverified {user_name}")
+        else:
+            await ctx.send("ID not found or already finished.")
 
 
 def setup(bot):
