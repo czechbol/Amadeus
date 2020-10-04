@@ -112,8 +112,9 @@
 		"selfunverify desc": "Odebrání práv na serveru",
 		"selfunverify help": "Použití remind:\n`{prefix}selfunverify *[datum] *[čas]\n[předměty a role k ponechání]`",
 		"selfunverify brief": "Použití remind:\n`{prefix}selfunverify *[datum] *[čas]\n[předměty a role k ponechání]`",
-		"unverified": "Byly ti dočasně odebrány práva na serveru {guild_name}",
+		"unverified": "Byla ti dočasně odebrána práva na serveru {guild_name}",
 		"reverify on": "Přístup ti bude navrácen",
+		"reverified": "Byla ti vrácena práva na serveru {guild_name}.",
 		"reason title": "Důvod",
 		"to keep": "K ponechání"
 	}

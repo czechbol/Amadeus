@@ -77,7 +77,10 @@ class Unverify(basecog.Basecog):
         guild = self.bot.get_guild(row.guild_id)
         member = guild.get_member(row.user_id)
         if member is None:
-            return
+            try:
+                member = await guild.fetch_member(row.user_id)
+            except discord.errors.NotFound:
+                return
 
         if time is not None:
             await asyncio.sleep(time)
@@ -114,7 +117,7 @@ class Unverify(basecog.Basecog):
             else:
                 return None
 
-        await member.send(f"Byly ti vráceny práva na serveru {guild.name}.")
+        await member.send(text.fill("unverify", "reverified", guild_name=guild.name))
         repository.set_finished(row.idx)
 
     async def unverify_user(
@@ -187,7 +190,6 @@ class Unverify(basecog.Basecog):
         removed_roles = [role.id for role in roles_to_remove]
         added_channels = [channel.id for channel in channels_to_keep]
 
-        lines = "\n".join(lines)
         if len(lines) > 1024:
             lines = lines[:1024]
             lines = lines[:-3] + "```" if lines.count("```") % 2 != 0 else lines
@@ -201,6 +203,7 @@ class Unverify(basecog.Basecog):
             channels_to_return=removed_channels,
             channels_to_remove=added_channels,
             reason=lines,
+            typ=func,
         )
         return result
 
@@ -326,6 +329,135 @@ class Unverify(basecog.Basecog):
             await self.log(
                 level="debug", message=f"Selfunverify failed: Member - {member.name} already unverified."
             )
+
+    @commands.check(check.is_mod)
+    @commands.group(pass_context=True)
+    async def unverifies(self, ctx):
+        if ctx.invoked_subcommand is None:
+            repo_all = repository.get_ordered()
+            repo_self = repository.get_selfunverify()
+            repo = repository.get_unverify()
+            embed = self.create_embed(author=ctx.message.author, title="Unverify count")
+            embed.add_field(name="Active Self unverify", value=str(len(repo_self)), inline=True)
+            embed.add_field(name="Active Unverify", value=str(len(repo)), inline=True)
+            embed.add_field(name="All in history", value=str(len(repo_all)), inline=True)
+            await ctx.send(embed=embed)
+
+    @unverifies.command(pass_context=True)
+    async def all(self, ctx):
+
+        repo = repository.get_ordered()
+
+        if repo != []:
+            embeds = await self.unverify_embeds(ctx, repo)
+            await self.unverify_pages(ctx, embeds)
+            return
+        await ctx.send("No unverifies found.")
+        return
+
+    @unverifies.command(pass_context=True)
+    async def waiting(self, ctx):
+
+        repo = repository.get_waiting()
+
+        if repo != []:
+            embeds = await self.unverify_embeds(ctx, repo)
+            await self.unverify_pages(ctx, embeds)
+            return
+        await ctx.send("No unverifies found.")
+        return
+
+    async def unverify_embeds(self, ctx, repo):
+        embed_list = []
+
+        for idx, row in enumerate(repo, start=1):
+            user = self.bot.get_user(row.user_id)
+            guild = self.bot.get_guild(row.guild_id)
+            if user is None:
+                try:
+                    user = await self.bot.fetch_user(row.user_id)
+                    user_name = discord.utils.escape_markdown(user.display_name)
+                except discord.errors.NotFound:
+                    user_name = "_(Unknown user)_"
+            else:
+                user_name = discord.utils.escape_markdown(user.display_name)
+
+            start_time = row.start_time.strftime("%d.%m.%Y %H:%M")
+            end_time = row.end_time.strftime("%d.%m.%Y %H:%M")
+
+            roles = []
+            for role_id in row.roles_to_return:
+                role = discord.utils.get(guild.roles, id=role_id)
+                roles.append(role)
+            channels = []
+            for channel_id in row.channels_to_return:
+                channel = discord.utils.get(guild.channels, id=channel_id)
+                channels.append(channel)
+
+            embed = self.create_embed(author=ctx.message.author, title="Unverify list")
+            embed.add_field(name="User", value=user_name, inline=False)
+            embed.add_field(name="Start time", value=str(start_time), inline=True)
+            embed.add_field(name="End time", value=str(end_time), inline=True)
+            embed.add_field(name="Unverify ID", value=row.idx, inline=True)
+            embed.add_field(name="Status", value=row.status, inline=True)
+            if roles != []:
+                embed.add_field(
+                    name="Roles to return", value=", ".join(role.name for role in roles), inline=True
+                )
+            if channels != []:
+                embed.add_field(
+                    name="Channels to return",
+                    value=", ".join(channel.name for channel in channels),
+                    inline=True,
+                )
+            if row.reason != "{}":
+                embed.add_field(name="Reason", value=row.reason, inline=False)
+            embed.add_field(name="Type", value=row.typ, inline=False)
+            embed.add_field(
+                name="Page",
+                value="{curr}/{total}".format(curr=idx, total=len(repo)),
+                inline=False,
+            )
+            embed_list.append(embed)
+        return embed_list
+
+    async def unverify_pages(self, ctx, embeds):
+        message = await ctx.send(embed=embeds[0])
+        pagenum = 0
+        await message.add_reaction("◀️")
+        await message.add_reaction("▶️")
+        while True:
+
+            def check(reaction, user):
+                return (
+                    reaction.message.id == message.id
+                    and (str(reaction.emoji) == "◀️" or str(reaction.emoji) == "▶️")
+                    and not user == self.bot.user
+                )
+
+            try:
+                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
+            except asyncio.TimeoutError:
+                break
+            else:
+                if str(reaction.emoji) == "◀️":
+                    pagenum -= 1
+                    if pagenum < 0:
+                        pagenum = len(embeds) - 1
+                    try:
+                        await message.remove_reaction("◀️", user)
+                    except discord.errors.Forbidden:
+                        pass
+                    await message.edit(embed=embeds[pagenum])
+                if str(reaction.emoji) == "▶️":
+                    pagenum += 1
+                    if pagenum >= len(embeds):
+                        pagenum = 0
+                    try:
+                        await message.remove_reaction("▶️", user)
+                    except discord.errors.Forbidden:
+                        pass
+                    await message.edit(embed=embeds[pagenum])
 
 
 # TODO add reverify command

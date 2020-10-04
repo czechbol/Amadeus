@@ -15,3 +15,4 @@ class Unverify(database.base):
     channels_to_remove = Column(ARRAY(BigInteger))
     reason = Column(String)
     status = Column(String, default="waiting")
+    typ = Column(String)
