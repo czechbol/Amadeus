@@ -75,10 +75,6 @@ class Base(basecog.Basecog):
             uhoh_ctr += 1
 
     @commands.Cog.listener()
-    async def on_command(self, ctx):
-        await self.roomCheck(ctx)
-
-    @commands.Cog.listener()
     async def on_member_update(self, before, after):
         booster_role = discord.utils.get(self.getGuild().roles, id=config.booster_role)
 
