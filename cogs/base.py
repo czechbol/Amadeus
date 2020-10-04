@@ -44,6 +44,24 @@ class Base(basecog.Basecog):
     async def pong(self, ctx):
         await ctx.send(text.get("base", "really"))
 
+    @commands.command(hidden=True)
+    async def guilds(self, ctx):
+        message = "```"
+        for guild in self.bot.guilds:
+            message += f"{guild.name} ({guild.id}) members: {guild.member_count}\n"
+        message += "```"
+        await ctx.send(message)
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def leave(self, ctx, id: int):
+        guild = discord.utils.get(self.bot.guilds, id=id)
+        if guild is not None:
+            await guild.leave()
+            await ctx.send("Stejně se mi tam nelíbilo :ok_hand:")
+        else:
+            await ctx.send("Takový server neznám")
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         global uhoh_ctr
