@@ -39,15 +39,6 @@ class Unverify(basecog.Basecog):
                     await self.reverify_user(row)
                 elif duration_in_s < 10:
                     await self.reverify_user(row, time=duration_in_s)
-        repo = repository.get_finished()
-        if repo != []:
-            for row in repo:
-                if row.end_time < (datetime.now() - timedelta(days=7)):
-                    await self.log(
-                        level="debug",
-                        message=f"Deleting unverify from db: ID: {row.idx}, time: {row.end_time}, status: {row.status}, \nmessage: {row.reason}",
-                    )
-                    repository.delete(row.idx)
 
     @unverify_loop.before_loop
     async def before_unverify_loop(self):
