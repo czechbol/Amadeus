@@ -18,6 +18,7 @@ class UnverifyRepository(BaseRepository):
         channels_to_return: list,
         channels_to_remove: list,
         reason: str,
+        typ: str,
     ):
         """Adds unverify to the database"""
         unverify = (
@@ -34,6 +35,7 @@ class UnverifyRepository(BaseRepository):
                 channels_to_return=channels_to_return,
                 channels_to_remove=channels_to_remove,
                 reason=reason,
+                typ=typ,
             )
             session.add(added)
             session.commit()
@@ -81,6 +83,16 @@ class UnverifyRepository(BaseRepository):
     def get_ordered(cls):
         """Retrieves the whole table."""
         return session.query(Unverify).order_by(Unverify.end_time.asc()).all()
+
+    @classmethod
+    def get_selfunverify(cls):
+        """Retrieves waiting unverifies."""
+        return session.query(Unverify).filter_by(typ="Self unverify").order_by(Unverify.end_time.asc()).all()
+
+    @classmethod
+    def get_unverify(cls):
+        """Retrieves waiting unverifies."""
+        return session.query(Unverify).filter_by(typ="Unverify").order_by(Unverify.end_time.asc()).all()
 
     @classmethod
     def get_user(cls, user_id: int):
