@@ -16,10 +16,14 @@ from repository.database.user_channels import UserChannel  # noqa F401
 from repository.database.unverify import Unverify  # noqa F401
 from repository.database.tempverify import Tempverify  # noqa F401
 
+intents = discord.Intents.default()
+intents.members = True
+
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(*config.prefixes),
     help_command=help.Help(),
     allowed_mentions=discord.AllowedMentions(roles=False, everyone=False, users=True),
+    intents=intents,
 )
 
 presence = presence.Presence(bot)
