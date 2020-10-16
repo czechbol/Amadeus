@@ -67,9 +67,9 @@ class Base(basecog.Basecog):
         global uhoh_ctr
 
         if message.content == "PR":
-            await message.channel.send("https://github.com/Czechbol/Amadeus/pulls")
+            await message.channel.send("<https://github.com/Czechbol/Amadeus/pulls>")
         elif message.content == "🔧":
-            await message.channel.send("https://github.com/Czechbol/Amadeus/issues")
+            await message.channel.send("<https://github.com/Czechbol/Amadeus/issues>")
         elif "uh oh" in message.content.lower() and not message.author.bot:
             await message.channel.send("uh oh")
             uhoh_ctr += 1
