@@ -94,7 +94,7 @@
 		"reminder message": "Zpráva",
 		"reminder link": "Link na zprávu",
 		"reminder confirmation": "Upomínka pro {name} vytvořena, čas: {date}",
-		"datetime not found": "Nepodařilo se mi přečíst kdy chceš připomenout.\nPoužíji výchozích 24h.",
+		"datetime not found": "Nepodařilo se mi přečíst kdy to chceš připomenout.\nPoužiji výchozích 24h.",
 		"no reminders for you": "Nemáš žádné upomínky.",
 		"no reminders": "Nenalezeny žádné upomínky.",
 		"wrong ID": "Špatné ID",
