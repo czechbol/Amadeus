@@ -239,11 +239,8 @@ class Unverify(basecog.Basecog):
         for prefix in config.prefixes:
             if lines[0] == prefix:
                 lines = lines.replace(f"{prefix}unverify ", "")
-        if member.name in lines:
-            lines = lines = lines.replace(member.name, "")
 
-        elif f"<@!{member.id}>" in lines:
-            lines = lines.replace(f"<@!{member.id}>", "")
+        lines = lines.replace(f"<@!{member.id}>", "")
 
         if len(lines) > 1024:
             lines = lines[:1024]

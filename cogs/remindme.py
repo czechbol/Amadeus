@@ -42,7 +42,7 @@ class Reminder(basecog.Basecog):
                     if row.new_date < (datetime.now() - timedelta(days=7)):
                         await self.log(
                             level="debug",
-                            message=f"Deleting reminder from db: ID: {row.idx}, time: {row.new_date}, status: {row.status}, \nmessage: {row.message}",
+                            message=f"Deleting reminder from db: ID: {row.idx}, time: {row.new_date}, status: {row.status}, \n    message: {row.message}",
                         )
                         repository.delete(row.idx)
 
@@ -78,7 +78,9 @@ class Reminder(basecog.Basecog):
         if x is None:
             date = date.replace(hour=9, minute=0, second=0)
 
-        return date
+        date_str = dates[0][0]
+
+        return date, date_str
 
     async def get_embed(self, row):
         user = self.bot.get_user(row.user_id)
@@ -125,10 +127,20 @@ class Reminder(basecog.Basecog):
     async def remindme(self, ctx):
         message = ctx.message
         lines = message.content.split("\n")
-        arg = lines.pop(0)
+        arg = lines[0]
         arg = arg.replace("weekend", "saturday")
-        date = await self.parse_datetime(arg)
+        date, date_str = await self.parse_datetime(arg)
+
         lines = "\n".join(lines)
+        for prefix in config.prefixes:
+            if lines[0] == prefix:
+                lines = lines.replace(f"{prefix}remindme ", "")
+
+        lines = lines.replace(date_str, "")
+        lines = re.split(" ", lines)
+        while "" in lines:
+            lines.remove("")
+        lines = " ".join(lines)
 
         if len(lines) > 1024:
             lines = lines[:1024]
@@ -165,10 +177,21 @@ class Reminder(basecog.Basecog):
     async def remind(self, ctx, member: discord.Member):
         message = ctx.message
         lines = message.content.split("\n")
-        arg = lines.pop(0)
+        arg = lines[0]
         arg = arg.replace("weekend", "saturday")
-        date = await self.parse_datetime(arg)
+        date, date_str = await self.parse_datetime(arg)
+
         lines = "\n".join(lines)
+        for prefix in config.prefixes:
+            if lines[0] == prefix:
+                lines = lines.replace(f"{prefix}remind ", "")
+        lines = lines.replace(f"<@!{member.id}>", "")
+
+        lines = lines.replace(date_str, "")
+        lines = re.split(" ", lines)
+        while "" in lines:
+            lines.remove("")
+        lines = " ".join(lines)
 
         if len(lines) == 0:
             await ctx.send(">>> " + text.fill("remindme", "remind help", prefix=config.prefix))
@@ -235,7 +258,7 @@ class Reminder(basecog.Basecog):
             if row.message == "":
                 msg_row = f"ID: {row.idx}, time: {date}, status: {row.status}\n"
             else:
-                msg_row = f"ID: {row.idx}, time: {date}, status: {row.status}, \nmessage: {row.message}\n"
+                msg_row = f"ID: {row.idx}, time: {date}, status: {row.status}, \n    message: {row.message}\n"
 
             if len(message + msg_row + "```") > 2000:
                 await ctx.send(str(message))
@@ -263,14 +286,17 @@ class Reminder(basecog.Basecog):
 
         message = ctx.message.content
         message = message.replace("weekend", "saturday").replace(str(idx), "")
-        date = await self.parse_datetime(message)
+        date, date_str = await self.parse_datetime(message)
+        print_date = date.strftime("%d.%m.%Y %H:%M")
 
         embed, user = await self.get_embed(row[0])
+        embed.add_field(name=text.get("remindme", "reminder edit new time"), value=print_date, inline=False)
         embed.add_field(
             name=text.get("remindme", "reminder edit confirmation"),
             value=text.get("remindme", "reminder edit text"),
             inline=False,
         )
+
         user_id = user.id
         message = await ctx.send(embed=embed)
         await message.add_reaction("✅")
@@ -294,7 +320,7 @@ class Reminder(basecog.Basecog):
                 if str(reaction.emoji) == "✅":
                     await self.log(
                         level="debug",
-                        message=f"Rescheduling reminder - ID: {row[0].idx}, time: {date}, status: {row[0].status}, \nmessage: {row[0].message}",
+                        message=f"Rescheduling reminder - ID: {row[0].idx}, time: {date}, status: {row[0].status}, \n    message: {row[0].message}",
                     )
                     repository.postpone(row[0].idx, date)
             try:
@@ -344,7 +370,7 @@ class Reminder(basecog.Basecog):
                 if str(reaction.emoji) == "✅":
                     await self.log(
                         level="debug",
-                        message=f"Deleting reminder from db - ID: {row[0].idx}, time: {row[0].new_date}, status: {row[0].status}, \nmessage: {row[0].message}",
+                        message=f"Deleting reminder from db - ID: {row[0].idx}, time: {row[0].new_date}, status: {row[0].status}, \n    message: {row[0].message}",
                     )
                     repository.delete(row[0].idx)
             try:
