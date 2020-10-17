@@ -103,7 +103,8 @@
 		"reminder edit confirmation": "Opravdu chceš změnit datum/čas upomínky?",
 		"reminder edit text": "✅ pro změnu\n❎ pro zachování",
 		"reminder delete confirmation": "Opravdu chceš upomínku smazat?",
-		"reminder delete text": "✅ pro smazání\n❎ pro zachování"
+		"reminder delete text": "✅ pro smazání\n❎ pro zachování",
+		"reminder edit new time": "Nový čas"
 	},
 	"unverify": {
 		"unverify desc": "Odebrání práv na serveru",
