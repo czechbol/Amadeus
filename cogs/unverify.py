@@ -375,11 +375,18 @@ class Unverify(basecog.Basecog):
 
             embed = self.create_embed(
                 author=ctx.message.author,
-                title=text.fill("unverify", "unverified", guild_name=guild.name),
+                title=text.get("unverify", "gm"),
             )
             embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
             if lines != "":
-                embed.add_field(name=text.get("unverify", "reason title"), value=lines, inline=False)
+                embed.add_field(
+                    name=text.get("unverify", "reason title"), value="Goodnight příkaz", inline=False
+                )
+            embed.add_field(
+                name=text.get("unverify", "gm return title"),
+                value=text.get("unverify", "gm return"),
+                inline=False,
+            )
             await member.send(embed=embed)
             await ctx.send(
                 f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"

@@ -120,6 +120,9 @@
 		"reverify on": "Přístup ti bude navrácen",
 		"reverified": "Byla ti vrácena práva na serveru {guild_name}.",
 		"reason title": "Důvod",
+		"gm": "Dobrou noc!",
+		"gm return title": "Dřívější navrácení",
+		"gm return": "Pokud se chceš vrátit dříve, použij příkaz {prefix}gm",
 		"to keep": "K ponechání"
 	}
 }
