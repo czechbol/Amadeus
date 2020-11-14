@@ -19,7 +19,7 @@ repository = unverify_repo.UnverifyRepository()
 
 
 class Unverify(basecog.Basecog):
-    """Voting based commands"""
+    """Unverification based commands"""
 
     def __init__(self, bot):
         super().__init__(bot)
@@ -346,6 +346,49 @@ class Unverify(basecog.Basecog):
             embed.add_field(name="All in history", value=str(len(repo_all)), inline=True)
             await ctx.send(embed=embed)
 
+    @commands.command(
+        brief=text.get("unverify", "gn desc"),
+        description=text.get("unverify", "gn desc"),
+        help=text.fill("unverify", "gn help", prefix=config.prefix),
+    )
+    async def gn(self, ctx):
+        member = ctx.message.author
+        date, date_str = await self.parse_datetime("06:00")
+        lines = "gn"
+        await self.log(level="info", message=f"Unverify: Member - {member.name}, Until - {date}")
+
+        if isinstance(ctx.channel, PrivateChannel):
+            guild = self.getGuild()
+            member = guild.get_member(member.id)
+        else:
+            guild = ctx.guild
+
+        if date is None:
+            await ctx.send("Could not do that because Czechbol is lazy and didn't create me properly.")
+            return
+        printdate = date.strftime("%d.%m.%Y %H:%M")
+
+        result = await self.unverify_user(ctx, member=member, lines=lines, date=date, func="Unverify")
+
+        if result is not None:
+            await self.log(level="debug", message=f"Unverify success: Member - {member.name}, Until - {date}")
+
+            embed = self.create_embed(
+                author=ctx.message.author,
+                title=text.fill("unverify", "unverified", guild_name=guild.name),
+            )
+            embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
+            if lines != "":
+                embed.add_field(name=text.get("unverify", "reason title"), value=lines, inline=False)
+            await member.send(embed=embed)
+            await ctx.send(
+                f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"
+            )
+        else:
+            await self.log(
+                level="debug", message=f"Unverify failed: Member - {member.name} already unverified."
+            )
+
     @unverifies.command(pass_context=True)
     async def all(self, ctx):
 
@@ -479,6 +522,30 @@ class Unverify(basecog.Basecog):
                 user_name = discord.utils.escape_markdown(user.display_name)
             await self.reverify_user(row)
             await ctx.send(f"Reverified {user_name}")
+        else:
+            await ctx.send("ID not found or already finished.")
+
+    @commands.command()
+    async def gm(self, ctx):
+        member = ctx.message.author
+        repo = repository.get_user(member.id)
+        for rep in repo:
+            if rep != [] and rep.status == "waiting":
+                if rep.reason == "gn":
+                    user = self.bot.get_user(rep.user_id)
+                    if user is None:
+                        try:
+                            user = await self.bot.fetch_user(rep.user_id)
+                            user_name = discord.utils.escape_markdown(user.display_name)
+                        except discord.errors.NotFound:
+                            user_name = "_(Unknown user)_"
+                    else:
+                        user_name = discord.utils.escape_markdown(user.display_name)
+                    await self.reverify_user(rep)
+                    await ctx.send(f"Reverified {user_name}")
+                else:
+                    await ctx.send("Forbidden")
+                break
         else:
             await ctx.send("ID not found or already finished.")
 
