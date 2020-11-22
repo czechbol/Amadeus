@@ -3,6 +3,7 @@ from datetime import datetime
 from repository.base_repository import BaseRepository
 from repository.database import session
 from repository.database.unverify import Unverify
+from sqlalchemy import or_
 
 
 class UnverifyRepository(BaseRepository):
@@ -55,6 +56,18 @@ class UnverifyRepository(BaseRepository):
             session.commit()
         return unverify
 
+    def set_left_server(self, idx: int):
+        """Set reminder as user left server"""
+        unverify = session.query(Unverify).filter_by(idx=idx).one_or_none()
+
+        if not unverify:
+            return None
+
+        else:
+            unverify.status = "user left server"
+            session.commit()
+        return unverify
+
     @classmethod
     def delete(self, idx: int):
         """Removes unverify from the database"""
@@ -73,6 +86,16 @@ class UnverifyRepository(BaseRepository):
     def get_waiting(cls):
         """Retrieves waiting unverifies."""
         return session.query(Unverify).filter_by(status="waiting").order_by(Unverify.end_time.asc()).all()
+
+    @classmethod
+    def get_unfinished(cls):
+        """Retrieves waiting unverifies."""
+        return (
+            session.query(Unverify)
+            .filter(or_(Unverify.status == "waiting", Unverify.status == "user left server"))
+            .order_by(Unverify.end_time.asc())
+            .all()
+        )
 
     @classmethod
     def get_finished(cls):

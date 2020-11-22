@@ -30,7 +30,7 @@ class Unverify(basecog.Basecog):
 
     @tasks.loop(seconds=10.0)
     async def unverify_loop(self):
-        repo = repository.get_waiting()
+        repo = repository.get_unfinished()
         if repo != []:
             for row in repo:
                 duration = row.end_time - datetime.now()
@@ -80,8 +80,12 @@ class Unverify(basecog.Basecog):
             try:
                 member = await guild.fetch_member(row.user_id)
             except discord.errors.NotFound:
-                return
-
+                if row.status == "user left server":
+                    return
+                else:
+                    await self.log(level="info", message=f"Couldn't find member with id: {row.user_id}")
+                    repository.set_left_server(row.idx)
+                    return
         if time is not None:
             await asyncio.sleep(time)
         await self.log(level="info", message=f"Reverifying {member.name}")
@@ -388,9 +392,7 @@ class Unverify(basecog.Basecog):
                 inline=False,
             )
             await member.send(embed=embed)
-            await ctx.send(
-                f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"
-            )
+            await ctx.send(f"Dobrou noc, {member.name}!")
         else:
             await self.log(
                 level="debug", message=f"Unverify failed: Member - {member.name} already unverified."
