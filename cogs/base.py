@@ -7,6 +7,12 @@ from core import basecog
 from core.text import text
 from core.config import config
 
+
+import requests
+import os
+import zipfile
+
+
 boottime = datetime.datetime.now().replace(microsecond=0)
 
 uhoh_ctr = 0
@@ -62,6 +68,47 @@ class Base(basecog.Basecog):
         else:
             await ctx.send("Takový server neznám")
 
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def emote_backup(self, ctx):
+        if not os.path.exists("emojis/"):
+            os.mkdir("emojis/")
+        for guild in self.bot.guilds:
+            if not os.path.exists(f"emojis/{guild.name}"):
+                os.mkdir(f"emojis/{guild.name}")
+            for emoji in guild.emojis:
+                url = str(emoji.url)
+                typ = str(emoji.url).rsplit(".", 1)[-1]
+                filename = emoji.name + "." + typ
+                r = requests.get(url)
+
+                with open(f"emojis/{guild.name}/{filename}", "wb") as outfile:
+                    outfile.write(r.content)
+
+        files = self.scan_dir("emojis/")
+        now = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")
+        filepath = f"emojis/emoji_backup_{now}.zip"
+
+        for entry in files:
+            if entry.is_file():
+                with zipfile.ZipFile(filepath, "a") as zipf:
+                    zipf.write(entry.path)
+                    os.remove(entry.path)
+        self.scan_dir("emojis/")
+        await ctx.send("All emotes backed up.")
+        try:
+            await ctx.send(file=discord.File(f"emojis/emoji_backup_{now}.zip"))
+        except (discord.HTTPException, discord.Forbidden, discord.InvalidArgument):
+            pass
+
+    @commands.command(hidden=True)
+    async def voice_count(self, ctx):
+        channels = ctx.guild.voice_channels
+        count = 0
+        for channel in channels:
+            count += int(len(channel.members))
+        await ctx.send(str(count))
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         global uhoh_ctr
@@ -109,6 +156,20 @@ class Base(basecog.Basecog):
         embed.set_footer(text=f"UserID: {after.id}")
         channel = discord.utils.get(self.getGuild().channels, id=config.boost_channel)
         await channel.send(embed=embed)
+
+    def scan_dir(self, dir):
+        files = []
+        with os.scandir(dir) as entries:
+            for entry in entries:
+                if entry.is_file() and ".zip" not in entry.name:
+                    files.append(entry)
+                if entry.is_dir():
+                    directory = os.listdir(entry.path)
+                    if len(directory) == 0:
+                        os.rmdir(entry.path)
+                    else:
+                        files.extend(self.scan_dir(entry.path))
+        return files
 
 
 def setup(bot):

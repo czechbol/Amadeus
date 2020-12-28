@@ -1,4 +1,5 @@
 backups/
+emojis/
 logs/
 config/config.json
 config/emotes.json
@@ -7,3 +8,4 @@ __pycache__
 .venv/
 .vscode/settings.json
 cogs/sync.py
+assets/graphviz
