@@ -121,7 +121,12 @@ class Unverify(basecog.Basecog):
             else:
                 return None
 
-        await member.send(text.fill("unverify", "reverified", guild_name=guild.name))
+        await self.log(level="info", message=f"Reverify success for member {member.name}")
+        try:
+            await member.send(text.fill("unverify", "reverified", guild_name=guild.name))
+        except discord.Forbidden:
+            await self.log(level="info", message=f"Couldn't send reverify info to {member.name}'s DM")
+
         repository.set_finished(row.idx)
 
     async def unverify_user(
@@ -260,7 +265,10 @@ class Unverify(basecog.Basecog):
         result = await self.unverify_user(ctx, member=member, lines=lines, date=date, func="Unverify")
 
         if result is not None:
-            await self.log(level="debug", message=f"Unverify success: Member - {member.name}, Until - {date}")
+            await self.log(
+                level="debug",
+                message=f"Unverify success: Member - {member.name}, Until - {date}, ID - {result.idx}",
+            )
 
             embed = self.create_embed(
                 author=ctx.message.author,
@@ -269,10 +277,16 @@ class Unverify(basecog.Basecog):
             embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
             if lines != "":
                 embed.add_field(name=text.get("unverify", "reason title"), value=lines, inline=False)
-            await member.send(embed=embed)
-            await ctx.send(
-                f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"
-            )
+            try:
+                await member.send(embed=embed)
+                await ctx.send(
+                    f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"
+                )
+            except discord.Forbidden:
+                await ctx.send(
+                    f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}\nNebylo možné odeslat uživateli informační zprávu."
+                )
+
         else:
             await self.log(
                 level="debug", message=f"Unverify failed: Member - {member.name} already unverified."
@@ -328,10 +342,16 @@ class Unverify(basecog.Basecog):
                 title=text.fill("unverify", "unverified", guild_name=guild.name),
             )
             embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
-            await member.send(embed=embed)
-            await ctx.send(
-                f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"
-            )
+            try:
+                await member.send(embed=embed)
+                await ctx.send(
+                    f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"
+                )
+            except discord.Forbidden:
+                await ctx.send(
+                    f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}\nNebylo možné odeslat uživateli informační zprávu."
+                )
+
         else:
             await self.log(
                 level="debug", message=f"Selfunverify failed: Member - {member.name} already unverified."
@@ -391,7 +411,16 @@ class Unverify(basecog.Basecog):
                 value=text.get("unverify", "gm return"),
                 inline=False,
             )
-            await member.send(embed=embed)
+            try:
+                await member.send(embed=embed)
+                await ctx.send(
+                    f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}"
+                )
+            except discord.Forbidden:
+                await ctx.send(
+                    f"Uživateli {member.name} byla dočasně odebrána práva na server.\nNavrácena budou: {printdate}\nNebylo možné odeslat uživateli informační zprávu."
+                )
+
             await ctx.send(f"Dobrou noc, {member.name}!")
         else:
             await self.log(
@@ -459,6 +488,7 @@ class Unverify(basecog.Basecog):
                 embed.add_field(
                     name="Roles to return", value=", ".join(role.name for role in roles), inline=True
                 )
+
             if channels != []:
                 embed.add_field(
                     name="Channels to return",
