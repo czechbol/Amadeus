@@ -101,13 +101,13 @@ class Unverify(basecog.Basecog):
             channel = discord.utils.get(guild.channels, id=channel_id)
             user_overw = channel.overwrites_for(member)
             user_overw.update(read_messages=True)
-            await channel.set_permissions(member, overwrite=user_overw, reason="Unverify")
+            await channel.set_permissions(member, overwrite=user_overw, reason="Reverify")
 
         for channel_id in row.channels_to_remove:
             channel = discord.utils.get(guild.channels, id=channel_id)
             user_overw = channel.overwrites_for(member)
-            user_overw.update(read_messages=False)
-            await channel.set_permissions(member, overwrite=user_overw, reason="Unverify")
+            user_overw.update(read_messages=None)
+            await channel.set_permissions(member, overwrite=user_overw, reason="Reverify")
 
         for id in config.roles_unverify:
             role = discord.utils.get(guild.roles, id=id)
