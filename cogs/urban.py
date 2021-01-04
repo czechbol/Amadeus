@@ -20,8 +20,7 @@ class Urban(basecog.Basecog):
     def __init__(self, bot):
         super().__init__(bot)
 
-    def urban_embeds(self, ctx, dic):
-        lis = dic["list"]
+    def urban_embeds(self, ctx, lis):
         embed_list = []
 
         for idx in range(len(lis)):
@@ -116,7 +115,12 @@ class Urban(basecog.Basecog):
                 await ctx.send(f"Error occurred: {err}")
             else:
                 # Request was successful
-                embeds = self.urban_embeds(ctx, dic)
+                lis = dic["list"]
+                if dic["list"] != []:
+                    embeds = self.urban_embeds(ctx, lis)
+                else:
+                    await ctx.send("No results found.")
+                    return
 
         await self.urban_pages(ctx, embeds)
 
