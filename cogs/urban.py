@@ -37,8 +37,11 @@ class Urban(basecog.Basecog):
                 title=lis[idx]["word"],
                 url=lis[idx]["permalink"],
             )
-            embed.add_field(name="Definition", value=definition, inline=False)
-            embed.add_field(name="Example", value=example, inline=False)
+            if definition != "":
+                embed.add_field(name="Definition", value=definition, inline=False)
+            if example != "":
+                embed.add_field(name="Example", value=example, inline=False)
+
             embed.add_field(
                 name="Page",
                 value="{curr}/{total}".format(curr=idx + 1, total=len(lis)),
