@@ -6,6 +6,7 @@ import aiohttp
 from typing import Optional
 
 import numpy
+import asyncio
 from scipy.special import gamma  # noqa F401
 import graphviz as gz
 from matplotlib import pyplot as plt
@@ -156,74 +157,42 @@ class Draw(basecog.Basecog):
         brief=text.get("draw", "digraph_desc"),
         description=text.get("draw", "digraph_desc"),
     )
-    async def digraph(self, ctx, *, equasion):
+    async def digraph(self, ctx):
         """
-        input equasion in dishraph format into graphviz
+        input equation in dishraph format into graphviz
         save the file into assets/graphviz.png
         send the file to channel
         """
-        src = gz.Source(equasion, format="png")
-        if not os.path.isdir("assets"):
-            os.mkdir("assets")
-        src.render("assets/graphviz", view=False)
 
-        await ctx.send(file=discord.File("assets/graphviz.png"))
-        os.remove("assets/graphviz")
-        os.remove("assets/graphviz.png")
-
-    @classmethod
-    def is_graphviz_message(self, body):
-        return body.startswith("```digraph") and body.endswith("```") and body.count("\n") >= 2
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        """
-        if message is disgraph compatible
-        add the execution (play) button
-        """
-        if not self.is_graphviz_message(message.content):
+        message = ctx.message
+        try:
+            equation = re.search("```([^`]*)```", message.content).group(1)
+        except AttributeError:
             return
 
-        if message.author.bot:
-            return
+        await message.add_reaction("▶️")
 
-        await message.add_reaction("▶")
+        def check(reaction, user):
+            return (
+                reaction.message.id == message.id
+                and (str(reaction.emoji) == "▶️")
+                and user.id == message.author.id
+            )
 
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        """
-        check if users clicked the play button on executable code
-        the bot has to be a reactor on the executable message
-        """
+        try:
+            reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
+        except asyncio.TimeoutError:
+            pass
+        else:
+            src = gz.Source(equation, format="png")
+            if not os.path.isdir("assets"):
+                os.mkdir("assets")
+            src.render("assets/graphviz", view=False)
 
-        message = reaction.message
-        if not self.is_graphviz_message(message.content):
-            return
-
-        if message.author.bot or user.bot or message.author != user:
-            return
-
-        if str(reaction.emoji) != "▶":
-            return
-
-        if self.bot.user not in await reaction.users().flatten():
-            return
-
-        ctx = commands.Context(
-            prefix=self.bot.command_prefix,
-            guild=message.guild,
-            channel=message.channel,
-            message=message,
-            author=user,
-        )
-        await self.digraph.callback(
-            self,
-            ctx,
-            equasion=message.content.strip("` ` `").replace("digraph\n", "", 1),
-        )
-
-        await ctx.message.remove_reaction("▶", ctx.author)
-        await ctx.message.remove_reaction("▶", self.bot.user)
+            await ctx.send(file=discord.File("assets/graphviz.png"))
+            os.remove("assets/graphviz")
+            os.remove("assets/graphviz.png")
+            await message.clear_reaction("▶")
 
 
 def setup(bot):
