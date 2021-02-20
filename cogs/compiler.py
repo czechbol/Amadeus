@@ -2,10 +2,10 @@ import re
 import json
 import aiohttp
 import asyncio
+import discord
 from discord.ext import tasks, commands
 
 from core import basecog
-from core.config import config
 
 
 class LanguageItem:
@@ -107,7 +107,7 @@ class Compiler(basecog.Basecog):
                     langs.append(lang)
                 else:
                     if compiler.name in lang.compilers:
-                        print(f"Collision: {compiler.name}")
+                        await self.log(level="info", message=f"Compiler - Load collision: {compiler.name}")
                     else:
                         lang.compilers.append(compiler)
             langs.sort(key=lambda x: x.name, reverse=False)
@@ -133,7 +133,6 @@ class Compiler(basecog.Basecog):
         return embed_list
 
     def compiler_embeds(self, ctx, title, lis):
-        print(len(lis))
         embed_list = []
         chunks = [lis[i : i + 21] for i in range(0, len(lis), 21)]
 
@@ -150,7 +149,6 @@ class Compiler(basecog.Basecog):
                 inline=False,
             )
             embed_list.append(embed)
-        print(len(embed_list))
         return embed_list
 
     async def _pages(self, ctx, embeds):
@@ -212,7 +210,7 @@ class Compiler(basecog.Basecog):
             if language.lower() in lang.name.lower():
                 break
         else:
-            print("not found")
+            await self.log(level="info", message=f"Compiler - compiler not found: {language}")
             return
         compilers = lang.compilers
         embeds = self.compiler_embeds(ctx, "Supported compilers", compilers)
@@ -232,7 +230,7 @@ class Compiler(basecog.Basecog):
                 if compiler is not None:
                     break
             else:
-                print("not found")
+                await self.log(level="info", message=f"Compiler - compiler not found: {compiler_name}")
                 return
 
         message = ctx.message
@@ -257,7 +255,6 @@ class Compiler(basecog.Basecog):
         else:
             await message.clear_reactions()
             await message.add_reaction("✅")
-            print(compiler.name)
             params = {
                 "compiler": compiler.name,
                 "code": code,
@@ -273,8 +270,6 @@ class Compiler(basecog.Basecog):
                 ) as response:
                     dic = await response.json()
                     response.raise_for_status()
-
-            print(dic)
 
             status = dic["status"]
             try:
@@ -303,7 +298,7 @@ class Compiler(basecog.Basecog):
                 if compiler is not None:
                     break
             else:
-                print("not found")
+                await self.log(level="info", message=f"Compiler - compiler not found: {compiler_name}")
                 return
 
         await ctx.message.add_reaction("✅")
