@@ -65,7 +65,7 @@ class Urban(basecog.Basecog):
                 )
 
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=30.0)
+                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
             except asyncio.TimeoutError:
                 await message.clear_reactions()
                 break

@@ -36,7 +36,7 @@
 		"plot_err": "Nebylo možné vykreslit tyto funkce:",
 		"latex_help": "`{prefix}latex [výraz]`\nPříklad:\n`{prefix}latex x^n + y^n = z^n`",
 		"plot_help": "`{prefix}plot od do rovnice1; rovnice2; rovnice3`; ...\nPříklad:\n`{prefix}plot -4 4 10*abs(x); x^2; x^3`",
-		"digraph_help": "Graphviz data musí být v code bloku.\nPro vykreslení je nutné kliknout na reakci kterou na zprávu bot přidá.\nZkus tento příklad:\n```digraph G {\n\t\"Welcome\" -> \"To\"\n\t\"To\" -> \"Web\"\n\t\"To\" -> \"GraphViz!\"\n}```"
+		"digraph_help": "Graphviz data musí být v code bloku.\nPro vykreslení je nutné kliknout na reakci kterou na zprávu bot přidá.\nZkus tento příklad:\n\n{prefix}digraph\n```digraph G {\n\t\"Welcome\" -> \"To\"\n\t\"To\" -> \"Web\"\n\t\"To\" -> \"GraphViz!\"\n}```"
 	},
 	"urban": {
 		"urban_desc": "Urban Dictionary v pohodlí tvého Discord serveru",
