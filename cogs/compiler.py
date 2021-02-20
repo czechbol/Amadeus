@@ -221,7 +221,7 @@ class Compiler(basecog.Basecog):
 
     @compiler.command(name="run")
     async def compiler_run(self, ctx, compiler_name: str):
-        lang = next((x for x in self.languages if compiler_name.lower() in x.name.lower()), None)
+        lang = next((x for x in self.languages if compiler_name.lower() == x.name.lower()), None)
         if lang is not None:
             compiler = lang.compilers[0]
         else:
@@ -271,12 +271,19 @@ class Compiler(basecog.Basecog):
                     dic = await response.json()
                     response.raise_for_status()
 
+            print(dic)
+
             status = dic["status"]
             try:
                 message = dic["program_message"]
             except KeyError:
-                message = dic["compiler_error"]
+                pass
+                try:
+                    message = dic["compiler_error"]
+                except KeyError:
+                    message = " "
             url = dic["url"]
+            message = discord.utils.escape_mentions(message)
 
             embed = self.create_embed(author=ctx.message.author, title="Compilation results")
             embed.add_field(name="Status", value=f"Finished with exit code: {status}", inline=False)
@@ -289,7 +296,7 @@ class Compiler(basecog.Basecog):
 
     @compiler.command(name="template")
     async def compiler_template(self, ctx, compiler_name: str):
-        lang = next((x for x in self.languages if compiler_name.lower() in x.name.lower()), None)
+        lang = next((x for x in self.languages if compiler_name.lower() == x.name.lower()), None)
         if lang is not None:
             compiler = lang.compilers[0]
         else:
