@@ -4,9 +4,9 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
-    make=4.2.1-1.2 automake=1:1.16.1-4 gcc=4:8.3.0-1 g++=4:8.3.0-1 subversion=1.10.4-1+deb10u1
+    make=4.2.1-1.2 automake=1:1.16.1-4 gcc=4:8.3.0-1 g++=4:8.3.0-1 subversion=1.10.4-1+deb10u2
 
-RUN apt-get -y --no-install-recommends install git=1:2.20.1-2+deb10u3 tzdata=2020d-0+deb10u1 graphviz=2.40.1-6
+RUN apt-get -y --no-install-recommends install git=1:2.20.1-2+deb10u3 tzdata=2021a-0+deb10u1 graphviz=2.40.1-6
 
 ENV TZ=Europe/Prague
 
