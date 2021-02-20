@@ -271,9 +271,11 @@ class Compiler(basecog.Basecog):
                     dic = await response.json()
                     response.raise_for_status()
 
-            print(dic)
+            try:
+                status = dic["status"]
+            except KeyError:
+                status = dic["signal"]
 
-            status = dic["status"]
             try:
                 message = dic["program_message"]
             except KeyError:
@@ -284,6 +286,10 @@ class Compiler(basecog.Basecog):
                     message = " "
             url = dic["url"]
             message = discord.utils.escape_mentions(message)
+
+            if len(message) > 1018:
+                message = message[:1018]
+                message = message[:-3] + "```" if message.count("```") % 2 != 0 else message
 
             embed = self.create_embed(author=ctx.message.author, title="Compilation results")
             embed.add_field(name="Status", value=f"Finished with exit code: {status}", inline=False)
