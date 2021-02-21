@@ -6,6 +6,7 @@ import discord
 from discord.ext import tasks, commands
 
 from core import basecog
+from core.config import config
 
 
 class LanguageItem:
@@ -259,22 +260,42 @@ class Compiler(basecog.Basecog):
                 "compiler": compiler.name,
                 "code": code,
                 "options": "",
+                "stdin": "",
                 "compiler-option-raw": "",
                 "runtime-option-raw": "",
                 "save": True,
             }  # TODO add additional functionality
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    "https://wandbox.org/api/compile.json", data=json.dumps(params)
-                ) as response:
-                    dic = await response.json()
-                    response.raise_for_status()
+            try:
+                async with aiohttp.ClientSession(raise_for_status=True) as session:
+                    async with session.post(
+                        "https://wandbox.org/api/compile.json", data=json.dumps(params)
+                    ) as response:
+                        dic = await response.json()
+            except aiohttp.ClientResponseError as e:
+                embed = self.create_embed(
+                    author=ctx.message.author, title="Critical error:", color=config.color_error
+                )
+                embed.add_field(
+                    name="API replied with:",
+                    value=f"`{e.status} {e.message}`"
+                    "\n*This could mean WandBox is experiencing an outage, a network connection error has occured, or you provided a wrong request.*",
+                    inline=False,
+                )
+
+                await ctx.send(embed=embed)
+                return
 
             try:
                 status = dic["status"]
+                embed = self.create_embed(
+                    author=ctx.message.author, title="Compilation results", color=config.color_success
+                )
             except KeyError:
                 status = dic["signal"]
+                embed = self.create_embed(
+                    author=ctx.message.author, title="Compilation results", color=config.color_notify
+                )
 
             try:
                 message = dic["program_message"]
@@ -291,7 +312,6 @@ class Compiler(basecog.Basecog):
                 message = message[:1018]
                 message = message[:-3] + "```" if message.count("```") % 2 != 0 else message
 
-            embed = self.create_embed(author=ctx.message.author, title="Compilation results")
             embed.add_field(name="Status", value=f"Finished with exit code: {status}", inline=False)
             embed.add_field(name="Program Output", value=f"```{str(message)}```", inline=False)
             embed.add_field(name="URL", value=f"{url}", inline=False)
