@@ -169,7 +169,10 @@ class Compiler(basecog.Basecog):
             try:
                 reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=30.0)
             except asyncio.TimeoutError:
-                await message.clear_reactions()
+                try:
+                    await message.clear_reactions()
+                except discord.errors.Forbidden:
+                    pass
                 break
             else:
                 if str(reaction.emoji) == "◀️":
@@ -252,9 +255,15 @@ class Compiler(basecog.Basecog):
         try:
             reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
         except asyncio.TimeoutError:
-            await message.clear_reactions()
+            try:
+                await message.clear_reactions()
+            except discord.errors.Forbidden:
+                pass
         else:
-            await message.clear_reactions()
+            try:
+                await message.clear_reactions()
+            except discord.errors.Forbidden:
+                pass
             await message.add_reaction("✅")
             params = {
                 "compiler": compiler.name,
