@@ -239,8 +239,15 @@ class Compiler(basecog.Basecog):
 
         message = ctx.message
         try:
-            code = re.search("```([^`]*)```", message.content).group(1)
+            code = re.search(r"```[^\s]+([^`]*)```", message.content).group(1)
         except AttributeError:
+            embed = self.create_embed(
+                author=ctx.message.author,
+                title="Critical error:",
+                color=config.color_error,
+                description="You must attach a code-block containing code to your message",
+            )
+            await ctx.send(embed=embed)
             return
 
         await message.add_reaction("▶️")
