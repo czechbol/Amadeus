@@ -1,50 +1,70 @@
 import re
-import discord
-import requests
+import aiohttp
 import asyncio
+import discord
+import dateutil.parser as dparser
+from datetime import datetime
 from urllib import parse as url_parse
 from discord.ext import commands
 
 from core import basecog
 from core.text import text
 from core.config import config
-from repository import vote_repo
 
 
-repository = vote_repo.VoteRepository()
+class UrbanItem:
+    __slots__ = ["word", "definition", "example", "permalink", "author", "written_on"]
+
+    def __init__(
+        self,
+        word: str = None,
+        definition: str = None,
+        example: str = None,
+        permalink: str = None,
+        author: str = None,
+        written_on: datetime = None,
+    ):
+        self.word = word
+        self.definition = definition
+        self.example = example
+        self.permalink = permalink
+        self.author = author
+        self.written_on = written_on
+
+    def __repr__(self):
+        return (
+            f'<UrbanItem word="{self.word}" definition="{self.definition}" '
+            f'example="{self.example}" permalink="{self.permalink}" '
+            f'author="{self.author}" written_on="{self.written_on}">'
+        )
 
 
 class Urban(basecog.Basecog):
-    """Weeb shit based commands"""
+    """Urbandictionary search"""
 
     def __init__(self, bot):
         super().__init__(bot)
 
-    def urban_embeds(self, ctx, lis):
+    def urban_embeds(self, ctx, urban_list):
         embed_list = []
 
-        for idx in range(len(lis)):
-            definition = re.sub(r"[!\[]|[!\]]", "", lis[idx]["definition"])
-            example = re.sub(r"[!\[]|[!\]]", "", lis[idx]["example"])
-
-            if len(definition) > 1024:
-                definition = definition[0:1021] + "`…`"
-            if len(example) > 1024:
-                example = example[0:1021] + "`…`"
+        for idx, item in enumerate(urban_list):
+            if len(item.definition) > 1024:
+                item.definition = item.definition[0:1021] + "`…`"
+            if len(item.example) > 1024:
+                item.example = item.example[0:1021] + "`…`"
 
             embed = self.create_embed(
-                author=ctx.message.author,
-                title=lis[idx]["word"],
-                url=lis[idx]["permalink"],
+                author=ctx.message.author, title=item.word, url=item.permalink, timestamp=item.written_on
             )
-            if definition != "":
-                embed.add_field(name="Definition", value=definition, inline=False)
-            if example != "":
-                embed.add_field(name="Example", value=example, inline=False)
+            if item.definition != "":
+                embed.add_field(name="Definition", value=item.definition, inline=False)
+            if item.example != "":
+                embed.add_field(name="Example", value=item.example, inline=False)
 
             embed.add_field(
                 name="Page",
-                value="{curr}/{total}".format(curr=idx + 1, total=len(lis)),
+                value="{curr}/{total}".format(curr=idx + 1, total=len(urban_list)),
                 inline=False,
             )
             embed_list.append(embed)
@@ -89,7 +109,6 @@ class Urban(basecog.Basecog):
                         pass
                     await message.edit(embed=embeds[pagenum])
 
-    @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
     @commands.command(
         brief=text.get("urban", "urban_desc"),
         description=text.get("urban", "urban_desc"),
@@ -105,23 +124,58 @@ class Urban(basecog.Basecog):
         args.pop(0)
         search = " ".join(args)
         term = url_parse.quote(search)
+
         async with ctx.typing():
             try:
-                response = requests.get(
-                    "http://api.urbandictionary.com/v0/define?term={term}".format(term=term)
-                )
-                dic = response.json()
-                response.raise_for_status()
+                async with aiohttp.ClientSession(raise_for_status=True) as session:
+                    async with session.get(
+                        f"http://api.urbandictionary.com/v0/define?term={term}"
+                    ) as response:
+                        json_response = await response.json()
+                        lis = json_response["list"]
 
-            except requests.HTTPError as http_err:
-                await ctx.send(f"HTTP error occurred: {http_err}")
-            except Exception as err:
-                await ctx.send(f"Error occurred: {err}")
+            except aiohttp.ClientResponseError as e:
+                embed = self.create_embed(
+                    author=ctx.message.author, title="Critical error:", color=config.color_error
+                )
+                embed.add_field(
+                    name="API replied with:",
+                    value=f"`{e.status} {e.message}`"
+                    "\n*This could mean UrbanDictionary is experiencing an outage, a network connection error has occured, or you provided a wrong request.*",
+                    inline=False,
+                )
+
+                await ctx.send(embed=embed)
+                return
             else:
                 # Request was successful
-                lis = dic["list"]
-                if dic["list"] != []:
-                    embeds = self.urban_embeds(ctx, lis)
+                urban_list = []
+                for item in lis:
+                    regex = re.compile(
+                        r"^(?:http|ftp)s?://"  # http:// or https://
+                        r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain...
+                        r"localhost|"  # localhost...
+                        r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
+                        r"(?::\d+)?"  # optional port
+                        r"(?:/?|[/?]\S+)$",
+                        re.IGNORECASE,
+                    )  # Checks for valid URL This exact regex is used by Django (https://github.com/django/django/blob/stable/1.3.x/django/core/validators.py#L45)
+                    match_result = re.match(regex, item["permalink"])
+                    permalink = match_result.group(0) if match_result is not None else None
+
+                    urban_item = UrbanItem(
+                        item["word"],
+                        re.sub(r"[!\[]|[!\]]", "**", item["definition"]),
+                        re.sub(r"[!\[]|[!\]]", "**", item["example"]),
+                        permalink,
+                        item["author"],
+                        dparser.parse(item["written_on"]),
+                    )
+                    urban_list.append(urban_item)
+
+                if urban_list != []:
+                    embeds = self.urban_embeds(ctx, urban_list)
+                    pass
                 else:
                     await ctx.send("No results found.")
                     return
