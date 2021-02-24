@@ -112,7 +112,7 @@ class Compiler(basecog.Basecog):
                     else:
                         lang.compilers.append(compiler)
             langs.sort(key=lambda x: x.name, reverse=False)
-            self.languages = langs
+        self.languages = langs
 
     def language_embeds(self, ctx, title, lis):
         embed_list = []
