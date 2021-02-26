@@ -148,12 +148,12 @@ class Boards(basecog.Basecog):
         if not isinstance(ctx.channel, PrivateChannel):
             user_counts = repository.get_user_counts(guild_id=ctx.guild.id, channel_id=channel.id)
             ranked_channel = repository.get_channel_ranked(guild_id=ctx.guild.id, channel_id=channel.id)
-            channel_sum = repository.get_channel_sum(guild_id=ctx.guild.id, channel_id=channel.id)
+            channel_sum = repository.get_channel_sum(guild_id=ctx.guild.id)
             result = repository.get_last(guild_id=ctx.guild.id, channel_id=channel.id)
         else:  # TODO Do we want i to work in DMs?
             user_counts = repository.get_user_counts(channel_id=channel.id)
             ranked_channel = repository.get_channel_ranked(channel_id=channel.id)
-            channel_sum = repository.get_channel_sum(channel_id=channel.id)
+            channel_sum = repository.get_channel_sum()
             result = repository.get_last(channel_id=channel.id)
 
         if user_counts is None:
@@ -200,12 +200,12 @@ class Boards(basecog.Basecog):
         if not isinstance(ctx.channel, PrivateChannel):
             channel_counts = repository.get_channel_counts(guild_id=ctx.guild.id, user_id=member.id)
             ranked_user = repository.get_user_ranked(guild_id=ctx.guild.id, user_id=member.id)
-            user_sum = repository.get_user_sum(guild_id=ctx.guild.id, user_id=member.id)
+            user_sum = repository.get_user_sum(guild_id=ctx.guild.id)
             result = repository.get_last(guild_id=ctx.guild.id, user_id=member.id)
         else:  # TODO Do we want i to work in DMs?
             channel_counts = repository.get_channel_counts(user_id=member.id)
             ranked_user = repository.get_user_ranked(user_id=member.id)
-            user_sum = repository.get_user_sum(user_id=member.id)
+            user_sum = repository.get_user_sum()
             result = repository.get_last(user_id=member.id)
 
         if not channel_counts:
