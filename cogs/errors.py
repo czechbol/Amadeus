@@ -48,6 +48,9 @@ class Errors(basecog.Basecog):
         elif isinstance(error, commands.BadArgument):
             await self.throwNotification(ctx, text.get("error", "argument"))
             return
+        elif isinstance(error, commands.UnexpectedQuoteError):
+            await self.throwNotification(ctx, text.get("error", "argument"))
+            return
         elif isinstance(error, commands.ExpectedClosingQuoteError):
             await self.throwNotification(ctx, text.get("error", "argument"))
             return
