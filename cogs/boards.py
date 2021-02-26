@@ -298,7 +298,7 @@ class Boards(basecog.Basecog):
                     name = discord.utils.escape_markdown(item.user_name)
 
                     if item.user_id == ctx.author.id:  # displays author in bold, saves author position
-                        author_position = item.rank
+                        author_position = item.rank - 1
                         name = "**" + name + "**"
 
                 if item.rank == offset:  # displays offset user/channel in bold, saves page number
