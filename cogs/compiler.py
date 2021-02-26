@@ -239,7 +239,7 @@ class Compiler(basecog.Basecog):
 
         message = ctx.message
         try:
-            code = re.search(r"```[^\s]+([^`]*)```", message.content).group(1)
+            code = re.search(r"```([^\s]+)?([^`]*)```", message.content).group(2)
         except AttributeError:
             embed = self.create_embed(
                 author=ctx.message.author,
