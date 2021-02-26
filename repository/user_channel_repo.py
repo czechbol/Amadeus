@@ -322,3 +322,14 @@ class UserChannelRepository(BaseRepository):
             if guild.guild_name != guild_name:
                 guild.guild_name = guild_name
         session.commit()
+
+    @classmethod
+    def delete_channel(cls, channel_id=None):
+        if channel_id is None:
+            return None
+        users = session.query(UserChannel).filter_by(channel_id=channel_id).all()
+
+        for item in users:
+            session.delete(item)
+
+        session.commit()

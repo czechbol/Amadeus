@@ -462,20 +462,14 @@ class Boards(basecog.Basecog):
             and not isinstance(message.channel, VoiceChannel)
             and not isinstance(message.channel, CategoryChannel)
         ):
-            channel_id = message.channel.id
-            user_id = message.author.id
-            guild_id = message.guild.id
-            last_msg_at = message.created_at
-            channel_name = message.channel.name
-            user_name = message.author.display_name
             repository.decrement(
-                guild_id=guild_id,
+                guild_id=message.guild.id,
                 guild_name=message.guild.name,
-                channel_id=channel_id,
-                channel_name=channel_name,
-                user_id=user_id,
-                user_name=user_name,
-                last_msg_at=last_msg_at,
+                channel_id=message.channel.id,
+                channel_name=message.channel.name,
+                user_id=message.author.id,
+                user_name=message.author.display_name,
+                last_msg_at=message.created_at,
             )
 
     @commands.Cog.listener()
@@ -523,16 +517,21 @@ class Boards(basecog.Basecog):
     async def boards_regenerate_names(self, ctx):
         a = datetime.datetime.now()
 
-        users = repository.get_user_counts(webhooks=True, include_filtered=True)
         for guild in self.bot.guilds:
             channels = repository.get_channel_counts(guild_id=guild.id, webhooks=True, include_filtered=True)
+            repository.update_guild(guild_id=guild.id, guild_name=guild.name)
 
             for chnl in channels:
-                channel = self.bot.get_channel(chnl.channel_id)
+                channel = guild.get_channel(chnl.channel_id)
                 if channel is None:
                     try:
                         channel = await self.bot.fetch_channel(chnl.channel_id)
                     except discord.errors.NotFound:
+                        await self.log(
+                            level="warning",
+                            message=f"Couldn't find channel for - guild_id:{chnl.guild_id} guild_name:{chnl.guild_name} channel_id:{chnl.channel_id}",
+                        )
+                        repository.delete_channel(channel_id=chnl.channel_id)
                         continue
                     except discord.errors.Forbidden:
                         await self.log(
@@ -545,7 +544,7 @@ class Boards(basecog.Basecog):
         b = datetime.datetime.now()
         c = b - a
         await ctx.send(f"Regenerated channels in {c}")
-
+        users = repository.get_user_counts(webhooks=True, include_filtered=True)
         for usr in users:
             user = self.bot.get_user(usr.user_id)
             if user is None:
@@ -564,6 +563,24 @@ class Boards(basecog.Basecog):
         e = datetime.datetime.now()
         c = e - a
         await ctx.send(f"Database updated in {c}")
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        if before.display_name != after.display_name:
+            repository.update_user(user_id=after.id, user_name=after.display_name)
+        return
+
+    @commands.Cog.listener()
+    async def on_guild_channel_update(self, before, after):
+        if before.name != after.name:
+            repository.update_channel(channel_id=after.id, channel_name=after.name)
+        return
+
+    @commands.Cog.listener()
+    async def on_guild_update(self, before, after):
+        if before.name != after.name:
+            repository.update_guild(guild_id=after.id, guild_name=after.name)
+        return
 
 
 def setup(bot):
