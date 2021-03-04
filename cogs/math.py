@@ -1,7 +1,7 @@
 import math
 import time
 import random
-from itertools import chain, count, islice
+from itertools import count, islice
 
 from discord.ext import commands
 
@@ -15,7 +15,7 @@ class Funcs:
     def is_prime(cls, num: int):
         if num < 2:
             return False
-        timeout = time.time() + 10
+        timeout = time.time() + 5
 
         for number in islice(count(2), int(math.sqrt(num) - 1)):
             if time.time() > timeout:
@@ -27,13 +27,18 @@ class Funcs:
     @classmethod
     def factorize(cls, num: int):
         factors = []
-        timeout = time.time() + 10
-        for number in chain([2], list(islice(count(3, 2), int((math.sqrt(num) / 2) - 1)))):
+        timeout = time.time() + 5
+
+        while (num % 2) == 0:
+            factors.append(2)  # supposing you want multiple factors repeated
+            num //= 2
+        for number in islice(count(3, 2), int((math.sqrt(num) / 2) - 1)):
             if time.time() > timeout:
                 raise TimeoutError
             while (num % number) == 0:
                 factors.append(number)  # supposing you want multiple factors repeated
                 num //= number
+
         if num > 1:
             factors.append(num)
         return factors
@@ -44,7 +49,7 @@ class Funcs:
             return num - 1
 
         result = 0
-        timeout = time.time() + 10
+        timeout = time.time() + 5
         for i in range(1, num):
             if time.time() > timeout:
                 raise TimeoutError
@@ -72,10 +77,12 @@ class Funcs:
         return result
 
     @classmethod
-    def euclid_gcd(cls, num_a: int, num_b: int):
+    def euclid_gcd(cls, num_a: int, num_b: int, timeout):
+        if time.time() > timeout:
+            raise TimeoutError
         if num_a == 0:
             return num_b
-        return cls.euclid_gcd(num_b % num_a, num_a)
+        return cls.euclid_gcd(num_b % num_a, num_a, timeout)
 
     @classmethod
     def crt(cls, dic):
@@ -104,7 +111,7 @@ class MultiplicativeGroup(object):
 
     def generate_elements(self, mod: int):
         elements = []
-        timeout = time.time() + 10
+        timeout = time.time() + 5
         for i in range(1, mod):
             if time.time() > timeout:
                 raise TimeoutError
@@ -183,7 +190,7 @@ class Math(basecog.Basecog):
             )
         elif generators == "":
             embed.add_field(
-                name="Generators", value="No generators found. Perhaps the group in not cyclic.", inline=False
+                name="Generators", value="No generators found. Perhaps the group is not cyclic.", inline=False
             )
         else:
             embed.add_field(name="Generators", value=f"```{str(generators)}```", inline=False)
@@ -334,7 +341,12 @@ class Math(basecog.Basecog):
             example:\n\
             `!math euclid 10 15`\n
             """
-        result = Funcs.euclid_gcd(num_a, num_b)
+        try:
+            timeout = time.time() + 5
+            result = Funcs.euclid_gcd(num_a, num_b, timeout)
+        except TimeoutError:
+            await ctx.reply("Took too long, terminating...")
+            return
 
         embed = self.create_embed(
             author=ctx.message.author,
@@ -371,7 +383,11 @@ class Math(basecog.Basecog):
             else:
                 ctx.reply("You didn't format it right, see help.")
                 return
-        result = Funcs.crt(crt_list)
+        try:
+            result = Funcs.crt(crt_list)
+        except TimeoutError:
+            await ctx.reply("Took too long, terminating...")
+            return
 
         embed = self.create_embed(
             author=ctx.message.author,
