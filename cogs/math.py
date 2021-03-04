@@ -98,6 +98,126 @@ class Funcs:
             temp += item["result"] * W
         return temp % M
 
+    @classmethod
+    def eea(cls, n: int, x: int):
+        # Blame Cauchy, I didn't program this :kek:
+
+        table = []
+
+        # get left side
+        table.append([n, 0])
+
+        left = x
+        while left > 0:
+            table.append([left, table[-1][0] // left])
+
+            left = table[-2][0] - (left * table[-1][1])
+        table.append([0, 0])
+
+        # get right side
+        for i, row in enumerate(table):
+            # do not include the lowest row
+            if i == 0:
+                table[-i - 1].append(0)
+            # add 0, 1 upwards
+            elif i == 1:
+                table[-i - 1].append(0)
+            elif i == 2:
+                table[-i - 1].append(1)
+            # compute
+            else:
+                a = table[-i][1]
+                b = table[-i][2]
+                try:
+                    c = table[-i + 1][2]
+                except IndexError:
+                    # top row
+                    c = 0
+                table[-i - 1].append(a * b + c)
+
+        result = []
+
+        for i in range(len(table)):
+            if i == 0:
+                # results row
+                result.append(
+                    [
+                        f"n = {table[i][0]}",
+                        "",
+                        f"{table[i][2]} = {table[i+1][1]}*{table[i+1][2]}+{table[i+2][2]}",
+                    ]
+                )
+                continue
+            if i == 1:
+                # seeked variable row
+                result.append(
+                    [
+                        f"x = {table[i][0]}",
+                        f"{table[i][1]} = ⌊{table[i-1][0]}/{table[i][0]}⌋",
+                        f"{table[i][2]} = {table[i+1][1]}*{table[i+1][2]}+{table[i+2][2]}",
+                    ]
+                )
+                continue
+            if i == len(table) - 3:
+                # row ends with "1"
+                result.append(
+                    [
+                        f"{table[i][0]} = {table[i-2][0]}-({table[i-1][0]}*{table[i-1][1]})",
+                        f"{table[i][1]} = ⌊{table[i-1][0]}/{table[i][0]}⌋",
+                        "1",
+                    ]
+                )
+                continue
+            if i == len(table) - 2:
+                # row ends with "0"
+                result.append(
+                    [
+                        f"{table[i][0]} = {table[i-2][0]}-({table[i-1][0]}*{table[i-1][1]})",
+                        f"{table[i][1]} = ⌊{table[i-1][0]}/{table[i][0]}⌋",
+                        "0",
+                    ]
+                )
+                continue
+            if i == len(table) - 1:
+                # left number is zero
+                result.append(
+                    [
+                        f"{table[i][0]} = {table[i-2][0]}-({table[i-1][0]}*{table[i-1][1]})",
+                        "",
+                        "",
+                    ]
+                )
+                continue
+            # normal row
+            result.append(
+                [
+                    f"{table[i][0]} = {table[i-2][0]}-({table[i-1][0]}*{table[i-1][1]})",
+                    f"{table[i][1]} = ⌊{table[i-1][0]}/{table[i][0]}⌋",
+                    f"{table[i][2]} = {table[i+1][1]}*{table[i+1][2]}+{table[i+2][2]}",
+                ]
+            )
+        res = table[0][2]
+        flip = False
+        if (res * x) % n != 1:
+            res = -res % n
+            flip = True
+
+        if flip:
+            eq = f"-{res} mod {n} = {-res % n}"
+        else:
+            eq = str(res)
+
+        width = []
+        for i in range(3):
+            width.append(max(len(s[i]) for s in result))
+        lines = ""
+        for row in result:
+            line = "  ".join(row[i].ljust(width[i]) for i in range(3))
+            lines += f"\n{line}"
+        lines += "\n"
+        lines += f"\nThe result is {eq}."
+        return lines
+
 
 class MultiplicativeGroup(object):
     def __init__(self, mod=None):
@@ -335,7 +455,7 @@ class Math(basecog.Basecog):
         await ctx.send(embed=embed)
 
     @math.command(name="euclid")
-    async def euclid(self, ctx, num_a: int, num_b: int = None):
+    async def euclid(self, ctx, num_a: int, num_b: int):
         """Euclid's greatest common divisor\n\
             finds GCD of two numbers\n\n\
             example:\n\
@@ -398,6 +518,20 @@ class Math(basecog.Basecog):
             name="Result:",
             value=f"{result}",
             inline=False,
+        )
+        await ctx.send(embed=embed)
+
+    @math.command(name="eea")
+    async def eea(self, ctx, modulus: int, number: int):
+        """Get multiplicative using Extended Euclidean Algorithm\n\
+            example:
+            `!math eea 12 5`"""
+        result = Funcs.eea(modulus, number)
+
+        embed = self.create_embed(
+            author=ctx.message.author,
+            title="Extended Euclidean Algorithm",
+            description=f"```{result}```",
         )
         await ctx.send(embed=embed)
 
