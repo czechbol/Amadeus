@@ -1,4 +1,5 @@
 import math
+import time
 import random
 from itertools import chain, count, islice
 
@@ -94,7 +95,10 @@ class MultiplicativeGroup(object):
 
     def generate_elements(self, mod: int):
         elements = []
+        timeout = time.time() + 10
         for i in range(1, mod):
+            if time.time() > timeout:
+                raise TimeoutError
             if math.gcd(i, mod) == 1:
                 elements.append(i)
         return elements
@@ -144,7 +148,15 @@ class Math(basecog.Basecog):
             example:\n\
             `!group info 13`\n
             """
-        group = MultiplicativeGroup(group_modulus)
+        if group_modulus <= 1:
+            await ctx.reply("Modulus must be greater than 1!")
+            return
+        try:
+            group = MultiplicativeGroup(group_modulus)
+        except TimeoutError:
+            await ctx.reply("Took too long, terminating...")
+            return
+
         elements = ", ".join(str(x) for x in group.elements)
         generators = ", ".join(str(x) for x in group.generators)
 
@@ -175,6 +187,15 @@ class Math(basecog.Basecog):
             example:\n\
             `!group inverse 13 7`\n
             """
+
+        if not group_modulus > 1:
+            await ctx.reply("Modulus must be greater than 1!")
+            return
+        try:
+            group = MultiplicativeGroup(group_modulus)
+        except TimeoutError:
+            await ctx.reply("Took too long, terminating...")
+            return
 
         group = MultiplicativeGroup(group_modulus)
         try:
@@ -214,6 +235,9 @@ class Math(basecog.Basecog):
             example:\n\
             `!math factorize 362880`\n
             """
+        if not num > 1:
+            await ctx.reply("Are you trying to factorize a number smaller than 2?")
+            return
         result = Funcs.factorize(num)
         factors = ", ".join(str(x) for x in result)
 
@@ -255,9 +279,17 @@ class Math(basecog.Basecog):
 
         embed = self.create_embed(author=ctx.message.author, title=f"Fermat's primality test of {num}:")
         if is_prime and test_number is None:
-            embed.add_field(name="Result:", value=f"{num} is probably prime!\n{result_string}", inline=False)
+            embed.add_field(
+                name="Result:",
+                value=f"{num} is probably prime!\nTried rounds:\n{result_string}",
+                inline=False,
+            )
         elif test_number is None:
-            embed.add_field(name="Result:", value=f"{num} is not prime!\n{result_string}", inline=False)
+            embed.add_field(
+                name="Result:",
+                value=f"{num} is not prime! Result must be 1 for all tries.\n{result_string}",
+                inline=False,
+            )
         elif is_prime:
             embed.add_field(
                 name="Result:",
@@ -267,7 +299,7 @@ class Math(basecog.Basecog):
         else:
             embed.add_field(
                 name="Result:",
-                value=f"{num} is not prime!\n{result_string}",
+                value=f"{num} is not prime! Result must be 1 for all tries.\n{result_string}",
                 inline=False,
             )
         await ctx.send(embed=embed)
@@ -304,17 +336,31 @@ class Math(basecog.Basecog):
         try:
             lists = [list(map(int, s.replace(")", "").split(","))) for s in strs]
         except ValueError:
-            await ctx.send("You didn't format it right, see help.")
+            await ctx.reply("You didn't format it right, see help.")
+            return
         crt_list = []
+        desc = ""
         for item in lists:
             if len(item) == 2:
                 crt_list.append({"result": item[0], "modulus": item[1]})
+                desc += f"\nX ≡ {item[0]} (mod {item[1]})"
+
             else:
-                ctx.send("You didn't format it right, see help.")
+                ctx.reply("You didn't format it right, see help.")
                 return
-        print(crt_list)
         result = Funcs.crt(crt_list)
-        print(result)
+
+        embed = self.create_embed(
+            author=ctx.message.author,
+            title="Chinese remainder theorem",
+            description=f"Set by:\n{desc}",
+        )
+        embed.add_field(
+            name="Result:",
+            value=f"{result}",
+            inline=False,
+        )
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
