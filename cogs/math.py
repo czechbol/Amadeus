@@ -15,8 +15,11 @@ class Funcs:
     def is_prime(cls, num: int):
         if num < 2:
             return False
+        timeout = time.time() + 10
 
         for number in islice(count(2), int(math.sqrt(num) - 1)):
+            if time.time() > timeout:
+                raise TimeoutError
             if num % number == 0:
                 return False
         return True
@@ -24,7 +27,10 @@ class Funcs:
     @classmethod
     def factorize(cls, num: int):
         factors = []
+        timeout = time.time() + 10
         for number in chain([2], list(islice(count(3, 2), int((math.sqrt(num) / 2) - 1)))):
+            if time.time() > timeout:
+                raise TimeoutError
             while (num % number) == 0:
                 factors.append(number)  # supposing you want multiple factors repeated
                 num //= number
@@ -38,7 +44,10 @@ class Funcs:
             return num - 1
 
         result = 0
+        timeout = time.time() + 10
         for i in range(1, num):
+            if time.time() > timeout:
+                raise TimeoutError
             if math.gcd(i, num) == 1:
                 result += 1
         return result
@@ -222,7 +231,12 @@ class Math(basecog.Basecog):
             example:\n\
             `!math is-prime 125863`\n
             """
-        result = Funcs.is_prime(num)
+
+        try:
+            result = Funcs.is_prime(num)
+        except TimeoutError:
+            await ctx.reply("Took too long, terminating...")
+            return
 
         embed = self.create_embed(
             author=ctx.message.author, title=f"Is {num} prime?", description=str(result)
@@ -238,7 +252,12 @@ class Math(basecog.Basecog):
         if not num > 1:
             await ctx.reply("Are you trying to factorize a number smaller than 2?")
             return
-        result = Funcs.factorize(num)
+        try:
+            result = Funcs.factorize(num)
+        except TimeoutError:
+            await ctx.reply("Took too long, terminating...")
+            return
+
         factors = ", ".join(str(x) for x in result)
 
         embed = self.create_embed(author=ctx.message.author, title=f"Factors of {num}:", description=factors)
@@ -250,7 +269,11 @@ class Math(basecog.Basecog):
             example:\n\
             `!math phi 12`\n
             """
-        result = Funcs.phi(num)
+        try:
+            result = Funcs.phi(num)
+        except TimeoutError:
+            await ctx.reply("Took too long, terminating...")
+            return
 
         embed = self.create_embed(
             author=ctx.message.author, title=f"Euler's Totient function of {num}:", description=result
