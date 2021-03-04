@@ -66,10 +66,10 @@ class Funcs:
                 rounds = 5
 
                 result = []
-                for x in range(rounds):
-                    tester = random.randint(2, num - 2)  # nosec
-                    res = pow(tester, num - 1, num)
-                    result.append({"testvalue": tester, "result": res})
+        for x in range(rounds):
+            tester = random.randint(2, num - 2)  # nosec
+            res = pow(tester, num - 1, num)
+            result.append({"testvalue": tester, "result": res})
 
         else:
             res = pow(tester, num - 1, num)
