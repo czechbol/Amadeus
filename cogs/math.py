@@ -89,8 +89,19 @@ class Funcs:
         M = 1
         temp = 0
 
+        moduli = []
         for item in dic:
-            M *= item["modulus"]
+            if moduli == []:
+                moduli.append(item["modulus"])
+                M *= item["modulus"]
+
+            for num in moduli:
+                if math.gcd(num, item["modulus"]) != 1:
+                    break
+            else:
+                moduli.append(item["modulus"])
+                M *= item["modulus"]
+
         for item in dic:
             N = int(M / item["modulus"])
             L = pow(N, Funcs.phi(item["modulus"]) - 1, item["modulus"])
@@ -483,7 +494,7 @@ class Math(basecog.Basecog):
                 `x = 8 mod 9`\n\
                 `x = 3 mod 5`\n\
             format it like this:\n\
-            `!math crt \"(8,9), (3, 5)`\"\n
+            `!math crt \"(8,9), (3, 5)\"`\n
             """
         string = string.replace(" ", "")
         strs = string.replace("(", "").split("),")
