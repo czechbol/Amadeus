@@ -67,10 +67,10 @@ class Funcs:
                 rounds = 5
 
                 result = []
-        for x in range(rounds):
-            tester = random.randint(2, num - 2)  # nosec
-            res = pow(tester, num - 1, num)
-            result.append({"testvalue": tester, "result": res})
+            for x in range(rounds):
+                tester = random.randint(2, num - 2)  # nosec
+                res = pow(tester, num - 1, num)
+                result.append({"testvalue": tester, "result": res})
 
         else:
             res = pow(tester, num - 1, num)
@@ -604,9 +604,9 @@ class Math(basecog.Basecog):
 
     @crypto.command(name="compute-dh")
     async def compute_dh(self, ctx, prime: int, generator: int):
-        """Get multiplicative using Extended Euclidean Algorithm\n\
-            example:
-            `!crypto compute-dh prime generator` where generator is random number from 1 to (prime - 1)
+        """Calculate the Diffie Hellman protocol\n\
+            example:\n\
+            `!crypto compute-dh prime generator` where generator is random number from 1 to (prime - 1)\n\
             `!crypto compute-dh 1723 1589`"""
         try:
             prime_is_prime = Funcs.is_prime(prime)
@@ -650,6 +650,9 @@ class Math(basecog.Basecog):
 
     @crypto.command(name="crack-dh")
     async def crack_dh(self, ctx, prime: int, generator: int, alice_sends: int, bob_sends: int):
+        """Crack the Diffie Hellman protocol\n\
+            example:\n\
+            `!crypto compute-dh 1723 1589 1360 955`"""
         try:
             result = Crypto.crack_dh(prime, generator, alice_sends, bob_sends)
         except MemoryError:
