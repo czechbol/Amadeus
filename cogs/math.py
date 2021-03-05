@@ -1,5 +1,6 @@
 import math
 import time
+import psutil
 import random
 from itertools import count, islice
 
@@ -277,6 +278,55 @@ class MultiplicativeGroup(object):
         return generators
 
 
+class Crypto:
+    @classmethod
+    def calculate_dh(cls, prime, generator):
+        alice_secret: int = random.randint(1, prime)  # nosec # only Alice knows this
+        bob_secret: int = random.randint(1, prime)  # nosec # only Bob knows this
+        alice_sends = pow(generator, alice_secret, prime)
+        bob_sends = pow(generator, bob_secret, prime)
+        alices_key = pow(bob_sends, alice_secret, prime)
+        bobs_key = pow(alice_sends, bob_secret, prime)
+        return {
+            "prime": prime,
+            "generator": generator,
+            "alice_secret": alice_secret,
+            "bob_secret": bob_secret,
+            "alice_sends": alice_sends,
+            "bob_sends": bob_sends,
+            "alices_key": alices_key,
+            "bobs_key": bobs_key,
+        }
+
+    @classmethod
+    def crack_dh(cls, prime, generator, alice_sends, bob_sends):
+        N = 1 + int(math.sqrt(prime))
+
+        baby_steps_tabulka = {}
+        baby_step = 1
+        for i in range(N + 1):
+            if psutil.virtual_memory().available * 100 / psutil.virtual_memory().total < 10:
+                raise MemoryError
+            baby_steps_tabulka[baby_step] = i
+            baby_step = baby_step * generator % prime
+
+        inverzni_k_N = pow(generator, (prime - 2) * N, prime)
+        giant_step = random.choice([alice_sends, bob_sends])  # nosec
+        for j in range(N + 1):
+            if giant_step in baby_steps_tabulka:
+                temp = j * N + baby_steps_tabulka[giant_step]
+                log = pow(generator, temp, prime)
+                if log == alice_sends:
+                    cracked_key = pow(bob_sends, temp, prime)
+                if log == bob_sends:
+                    cracked_key = pow(alice_sends, temp, prime)
+
+                return cracked_key
+            else:
+                giant_step = giant_step * inverzni_k_N % prime
+        return "No Match"
+
+
 class Math(basecog.Basecog):
     """Some math stuff"""
 
@@ -491,8 +541,8 @@ class Math(basecog.Basecog):
         """Chinese Remainder Theorem calculation\n\
             finds x that works for all congruences\n\n\
             if you have:\n\
-                `x = 8 mod 9`\n\
-                `x = 3 mod 5`\n\
+                `x ≡ 8 mod 9`\n\
+                `x ≡ 3 mod 5`\n\
             format it like this:\n\
             `!math crt \"(8,9), (3, 5)\"`\n
             """
@@ -543,6 +593,82 @@ class Math(basecog.Basecog):
             author=ctx.message.author,
             title="Extended Euclidean Algorithm",
             description=f"```{result}```",
+        )
+        await ctx.send(embed=embed)
+
+    @commands.group(pass_context=True, name="crypto")
+    async def crypto(self, ctx):
+        """Crypto protocols implementation"""
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(ctx.command.qualified_name)
+
+    @crypto.command(name="compute-dh")
+    async def compute_dh(self, ctx, prime: int, generator: int):
+        """Get multiplicative using Extended Euclidean Algorithm\n\
+            example:
+            `!crypto compute-dh prime generator` where generator is random number from 1 to (prime - 1)
+            `!crypto compute-dh 1723 1589`"""
+        try:
+            prime_is_prime = Funcs.is_prime(prime)
+        except TimeoutError:
+            await ctx.reply("Took too long, terminating...")
+            return
+        if not prime_is_prime:
+            await ctx.reply("First number needs to be prime!")
+            return
+
+        result = Crypto.calculate_dh(prime, generator)
+
+        alice_secret = result["alice_secret"]
+        bob_secret = result["bob_secret"]
+        alice_sends = result["alice_sends"]
+        bob_sends = result["bob_sends"]
+        alices_key = result["alices_key"]
+        bobs_key = result["bobs_key"]
+
+        embed = self.create_embed(
+            author=ctx.message.author,
+            title="Diffie-Hellman Protocol",
+            description=f"Set by:\nprime: {prime}\ngenerator: {generator}",
+        )
+        embed.add_field(
+            name="Secrets:",
+            value=f"alice_secret: {alice_secret}\nbob_secret: {bob_secret}",
+            inline=True,
+        )
+        embed.add_field(
+            name="Sent through unencrypted:",
+            value=f"alice_sends: {alice_sends}\nbob_sends: {bob_sends}",
+            inline=True,
+        )
+        embed.add_field(
+            name="Calculated keys:",
+            value=f"alices_key: {alices_key}\nbobs_key: {bobs_key}",
+            inline=True,
+        )
+        await ctx.send(embed=embed)
+
+    @crypto.command(name="crack-dh")
+    async def crack_dh(self, ctx, prime: int, generator: int, alice_sends: int, bob_sends: int):
+        try:
+            result = Crypto.crack_dh(prime, generator, alice_sends, bob_sends)
+        except MemoryError:
+            await ctx.reply("Ate too much memory, terminating...")
+            return
+        embed = self.create_embed(
+            author=ctx.message.author,
+            title="Diffie-Hellman Protocol",
+            description=f"Set by:\nprime: {prime}\ngenerator: {generator}",
+        )
+        embed.add_field(
+            name="Sent through unencrypted:",
+            value=f"alice_sends: {alice_sends}\nbob_sends: {bob_sends}",
+            inline=True,
+        )
+        embed.add_field(
+            name="Cracked key:",
+            value=f"{result}",
+            inline=False,
         )
         await ctx.send(embed=embed)
 
