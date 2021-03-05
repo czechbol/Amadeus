@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from discord.ext import commands
 
 
@@ -5,7 +7,7 @@ class Paginator(commands.Paginator):
     def __init__(self):
         super().__init__()
 
-    def add_line(self, line="", *, empty=False):
+    def add_line(self, line: str = "", empty: bool = False):
         super().add_line(line="> " + line, empty=empty)
 
 
@@ -15,72 +17,100 @@ class Help(commands.MinimalHelpCommand):
 
         super().__init__(no_category="Nezařazeno", commands_heading="commands")
 
-    @classmethod
-    def command_not_found(cls, string):
+    # Override
+    def command_not_found(self, string: str) -> str:
+        """Command does not exist.
+        This override changes the language from english to i18d version.
+        """
         return f"Žádný příkaz jako `{string}` neexistuje."
 
-    @classmethod
-    def subcommand_not_found(cls, command, string):
+    # Override
+    def subcommand_not_found(self, command: commands.Command, string: str) -> str:
+        """Command does not have requested subcommand.
+        This override changes the language from english to i18d version.
+        """
         if isinstance(command, commands.Group) and len(command.all_commands) > 0:
             return f"Příkaz `{command.qualified_name}` nemá podpříkaz `{string}`."
         return f"Příkaz `{command.qualified_name}` nemá žádný podpříkaz."
 
-    @classmethod
-    def get_command_signature(cls, command, quote=True):
-        return f"**{command.qualified_name} {command.signature}**"
+    # Override
+    def get_command_signature(self, command: commands.Command) -> str:
+        """Retrieves the signature portion of the help page.
+        This Override removes command aliases the library function has.
+        """
+        return f"***{command.qualified_name} {command.signature}***"
 
-    @classmethod
-    def get_opening_note(cls):
+    # Override
+    def get_opening_note(self) -> str:
+        """Get help information.
+        This override disables the help information.
+        """
         return
 
-    @classmethod
-    def get_ending_note(cls):
+    # Override
+    def get_ending_note(self) -> str:
+        """Get ending note.
+        This override returns the space character instead of `None`.
+        """
         return " "
 
-    def add_bot_commands_formatting(self, commands, heading):
+    # Override
+    def add_bot_commands_formatting(self, commands: Sequence[commands.Command], heading: str) -> None:
+        """Get list of modules and their commands
+        This override changes the presentation.
+        """
+        # TODO Should we show command groups by appending `*` or something?
+        #
         if commands:
-            joined = ", ".join(c.name for c in commands)
-            self.paginator.add_line("> " + f"**{heading}**")
-            self.paginator.add_line("> " + joined)
+            command_list = ", ".join(command.name for command in commands)
+            self.paginator.add_line("**" + heading + "**")
+            self.paginator.add_line(command_list)
 
-    @classmethod
-    def add_aliases_formatting(cls, aliases):
+    # Override
+    def add_aliases_formatting(self, aliases):
+        """Set formatting for aliases.
+        This override disables aliases.
+        """
         return
 
-    def add_command_formatting(self, command):
-        signature = self.get_command_signature(command)
+    # Override
+    def add_command_formatting(self, command: commands.Command):
+        """Add command.
+        This override changes the way the command is presented.
+        """
+        if command.description:
+            self.paginator.add_line(command.description)
 
+        signature = self.get_command_signature(command)
         if command.aliases:
-            self.paginator.add_line("> " + str(signature))
+            self.paginator.add_line(signature)
             self.add_aliases_formatting(command.aliases)
         else:
-            self.paginator.add_line("> " + str(signature))
-
-        if command.description:
-            self.paginator.add_line("> " + command.description, empty=True)
+            self.paginator.add_line(signature, empty=True)
 
         if command.help:
             try:
-                self.paginator.add_line(">>> " + command.help)
+                self.paginator.add_line(command.help, empty=True)
             except RuntimeError:
                 for line in command.help.splitlines():
-                    self.paginator.add_line("> " + line)
-                self.paginator.add_line("> ")
+                    self.paginator.add_line(line)
+                self.paginator.add_line()
 
-    def add_subcommand_formatting(self, command):
+    # Override
+    def add_subcommand_formatting(self, command: commands.Command):
+        """Add subcommand.
+        This override changes the presentation of the line.
+        """
         fmt = f"\N{EN DASH} **{command.qualified_name}**"
         if command.short_doc:
             fmt += ": " + command.short_doc
-        self.paginator.add_line("> " + fmt)
+        self.paginator.add_line(fmt)
 
-    async def send_bot_help(self, mapping):
-        await super().send_bot_help(mapping)
-
-    async def send_command_help(self, command):
-        await super().send_command_help(command)
-
-    async def send_group_help(self, group):
-        await super().send_group_help(group)
-
-    async def send_cog_help(self, cog):
-        await super().send_cog_help(cog)
+    # Override
+    async def send_pages(self):
+        """Send the help.
+        This override makes sure the content is sent as a quote.
+        """
+        destination = self.get_destination()
+        for page in self.paginator.pages:
+            await destination.send(">>> " + page)
