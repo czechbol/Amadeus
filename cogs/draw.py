@@ -19,6 +19,8 @@ from core import basecog
 from core.text import text
 from core.config import config
 
+PNG_HEADER = b"\x89PNG\r\n\x1a\n"
+
 
 class Draw(basecog.Basecog):
     """LaTeX and Graph drawing commands"""
@@ -93,15 +95,21 @@ class Draw(basecog.Basecog):
     async def latex(self, ctx, *, equation):
         channel = ctx.channel
         async with ctx.typing():
-            imgURL = (
-                "http://www.sciweavers.org/tex2img.php?eq={}&bc=Black&fc=White&im=png&fs=18&ff=arev&edit=0"
-            ).format(urllib.parse.quote(equation))
+            eq = urllib.parse.quote(equation)
+            imgURL = f"http://www.sciweavers.org/tex2img.php?eq={eq}&fc=White&im=png&fs=25&edit=0"
+
             async with aiohttp.ClientSession() as session:
                 async with session.get(imgURL) as resp:
+
                     if resp.status != 200:
                         return await ctx.send("Could not get image.")
-                    data = io.BytesIO(await resp.read())
-                    await channel.send(file=discord.File(data, "latex.png"))
+
+                    data = await resp.read()
+                    if not data.startswith(PNG_HEADER):
+                        return await ctx.send("Could not get image.")
+
+                    datastream = io.BytesIO(data)
+                    await channel.send(file=discord.File(datastream, "latex.png"))
 
     @commands.command(
         help=text.fill("draw", "plot_help", prefix=config.prefix),
