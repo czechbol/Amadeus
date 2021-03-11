@@ -75,6 +75,8 @@ class Unverify(basecog.Basecog):
 
     async def reverify_user(self, row, time=None):
         guild = self.bot.get_guild(row.guild_id)
+        if guild is None:
+            return
         member = guild.get_member(row.user_id)
         if member is None:
             try:
