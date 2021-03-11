@@ -50,14 +50,10 @@
 	},
 	"__comment": "Special channels",
 	"channels": {
-		"jail": 0,
-		"jail-info": 0,
 		"mods": 0,
 		"boost": 0,
 		"botdev": 0,
-		"botlog": 0,
 		"guildlog": 0,
-		"vote": 0,
 		"botspam": 0,
 		"__comment": "Where NOT to print '👉 #bot-room' message",
 		"bot allowed": [

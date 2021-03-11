@@ -42,16 +42,11 @@ class Config:
         self.extensions = self.get("bot", "extensions")
 
         # CHANNELS
-        self.channel_jail = self.get("channels", "jail")
-        self.channel_jailinfo = self.get("channels", "jail-info")
         self.channel_mods = self.get("channels", "mods")
-        self.boost_channel = self.get("channels", "boost")
+        self.channel_boost = self.get("channels", "boost")
         self.channel_botdev = self.get("channels", "botdev")
-        self.channel_botlog = self.get("channels", "botlog")
         self.channel_guildlog = self.get("channels", "guildlog")
-        self.channel_vote = self.get("channels", "vote")
         self.channel_botspam = self.get("channels", "botspam")
-
         self.bot_allowed = self.get("channels", "bot allowed")
 
         # COLOR

@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 
 from core.config import config
@@ -47,14 +46,6 @@ def is_in_modroom(ctx: commands.Context):
 
 def is_in_botroom(ctx: commands.Context):
     return ctx.channel.id in config.bot_allowed
-
-
-def is_in_jail(ctx: commands.Context):
-    return ctx.channel.id == config.channel_jail
-
-
-def is_in_jail_or_dm(ctx: commands.Context):
-    return ctx.channel.id == config.channel_jail or isinstance(ctx.message.channel, discord.DMChannel)
 
 
 def is_in_voice(ctx: commands.Context):

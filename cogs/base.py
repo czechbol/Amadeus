@@ -154,7 +154,7 @@ class Base(basecog.Basecog):
         embed.set_thumbnail(url=after.avatar_url)
         embed.add_field(name="User", value=f"{after.name}#{after.discriminator}")
         embed.set_footer(text=f"UserID: {after.id}")
-        channel = discord.utils.get(self.getGuild().channels, id=config.boost_channel)
+        channel = discord.utils.get(self.getGuild().channels, id=config.channel_boost)
         await channel.send(embed=embed)
 
     def scan_dir(self, dir):
