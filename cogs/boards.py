@@ -403,14 +403,8 @@ class Boards(basecog.Basecog):
                     "reaction_add", check=chk, timeout=config.delay_embed
                 )
             except asyncio.TimeoutError:
-                if msg.channel != self.bot.get_channel(config.channel_mods) or pagenum != 0:
-                    try:
-                        await msg.delete()
-                    except discord.errors.Forbidden:
-                        pass
-                else:
-                    await msg.clear_reaction("◀️")
-                    await msg.clear_reaction("▶️")
+                await msg.clear_reaction("◀️")
+                await msg.clear_reaction("▶️")
                 break
             else:
                 if str(reaction.emoji) == "◀️":
