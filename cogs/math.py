@@ -235,11 +235,11 @@ class MultiplicativeGroup(object):
     def __init__(self, mod=None):
         self.mod = mod
         self.elements = self.generate_elements(mod)
-        self.order = self.get_order()
+        self.order = len(self.elements)
         self.generators = self.get_generators()
 
     def __repr__(self):
-        return f'<MultiplicativeGroup mod="{self.mod}" order="{self.order}" elements="{self.elements}">'
+        return f'<MultiplicativeGroup mod="{self.mod}" order="{self.order}" elements="{self.elements}" generators="{self.generators}">'
 
     def generate_elements(self, mod: int):
         elements = []
@@ -250,9 +250,6 @@ class MultiplicativeGroup(object):
             if math.gcd(i, mod) == 1:
                 elements.append(i)
         return elements
-
-    def get_order(self):
-        return len(self.elements)
 
     def get_element_order(self, element):
         if element not in self.elements:
