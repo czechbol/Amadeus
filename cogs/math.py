@@ -254,6 +254,14 @@ class MultiplicativeGroup(object):
     def get_order(self):
         return len(self.elements)
 
+    def get_element_order(self, element):
+        if element not in self.elements:
+            raise ValueError
+        s = set()
+        for exp in range(len(self.elements)):
+            s.add(element ** exp % self.mod)
+        return len(s)
+
     def get_inverse(self, element: int):
         if element not in self.elements:
             raise ValueError
@@ -404,6 +412,34 @@ class Math(basecog.Basecog):
         embed.add_field(name="Group Modulo", value=str(group.mod), inline=True)
         embed.add_field(name="Group Order", value=str(group.order), inline=True)
         embed.add_field(name=f"Inverse element to {inverse_to}", value=inverse, inline=False)
+        await ctx.send(embed=embed)
+
+    @group.command(name="element-order")
+    async def element_order(self, ctx, group_modulus: int, element: int):
+        """Finds the order of element in group\n\
+            example:\n\
+            `!group element-order 13 7`\n
+            """
+
+        if not group_modulus > 1:
+            await ctx.reply("Modulus must be greater than 1!")
+            return
+        try:
+            group = MultiplicativeGroup(group_modulus)
+        except TimeoutError:
+            await ctx.reply("Took too long, terminating...")
+            return
+
+        group = MultiplicativeGroup(group_modulus)
+        try:
+            order = str(group.get_element_order(element))
+        except ValueError:
+            order = "Element does not belong to the group!"
+
+        embed = self.create_embed(author=ctx.message.author, title="Order of Element")
+        embed.add_field(name="Group Modulo", value=str(group.mod), inline=True)
+        embed.add_field(name="Group Order", value=str(group.order), inline=True)
+        embed.add_field(name=f"Order of {element}", value=order, inline=False)
         await ctx.send(embed=embed)
 
     @commands.group(pass_context=True, name="math")
