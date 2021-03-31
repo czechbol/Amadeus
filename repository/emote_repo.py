@@ -38,3 +38,8 @@ class EmoteRepository(BaseRepository):
     def get_all(cls):
         """Return all emotes"""
         return session.query(Emote).all()
+
+    @classmethod
+    def get_id(cls, emote_id):
+        """Return all emotes"""
+        return session.query(Emote).filter(Emote.emote_id == emote_id).one_or_none()
