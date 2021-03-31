@@ -71,12 +71,6 @@ class Compiler(basecog.Basecog):
         await self.create_list()
         await self.log(level="info", message="Compiler update finished")
 
-    @update_loop.before_loop
-    async def before_update_loop(self):
-        if not self.bot.is_ready():
-            await self.log(level="info", message="Compiler update loop - waiting until ready()")
-            await self.bot.wait_until_ready()
-
     async def create_list(self):
         async with aiohttp.ClientSession() as session:
             async with session.get("https://wandbox.org/api/list.json") as response:
