@@ -1,335 +1,10 @@
-import math
-import time
-import psutil
-import random
-from itertools import count, islice
+from func_timeout import func_timeout, FunctionTimedOut
 
+import gmpy2
+from mathcrypto import MathFunctions, MultiplicativeGroup, DHCryptosystem, DHCracker
 from discord.ext import commands
 
 from core import basecog
-
-
-class Funcs:
-    primes = []
-
-    @classmethod
-    def is_prime(cls, num: int):
-        if num < 2:
-            return False
-        timeout = time.time() + 5
-
-        for number in islice(count(2), int(math.sqrt(num) - 1)):
-            if time.time() > timeout:
-                raise TimeoutError
-            if num % number == 0:
-                return False
-        return True
-
-    @classmethod
-    def factorize(cls, num: int):
-        factors = []
-        timeout = time.time() + 5
-
-        while (num % 2) == 0:
-            factors.append(2)  # supposing you want multiple factors repeated
-            num //= 2
-        for number in islice(count(3, 2), int((math.sqrt(num) / 2) - 1)):
-            if time.time() > timeout:
-                raise TimeoutError
-            while (num % number) == 0:
-                factors.append(number)  # supposing you want multiple factors repeated
-                num //= number
-
-        if num > 1:
-            factors.append(num)
-        return factors
-
-    @classmethod
-    def phi(cls, num: int):
-        if cls.is_prime(num):
-            return num - 1
-
-        result = 0
-        timeout = time.time() + 5
-        for i in range(1, num):
-            if time.time() > timeout:
-                raise TimeoutError
-            if math.gcd(i, num) == 1:
-                result += 1
-        return result
-
-    @classmethod
-    def fermat_prime_test(cls, num: int, tester: int = None):
-        if tester is None:
-            if num - 1 < 5:
-                rounds = num - 1
-            else:
-                rounds = 5
-
-                result = []
-            for x in range(rounds):
-                tester = random.randint(2, num - 2)  # nosec
-                res = pow(tester, num - 1, num)
-                result.append({"testvalue": tester, "result": res})
-
-        else:
-            res = pow(tester, num - 1, num)
-            result = [{"testvalue": tester, "result": res}]
-        return result
-
-    @classmethod
-    def euclid_gcd(cls, num_a: int, num_b: int, timeout):
-        if time.time() > timeout:
-            raise TimeoutError
-        if num_a == 0:
-            return num_b
-        return cls.euclid_gcd(num_b % num_a, num_a, timeout)
-
-    @classmethod
-    def crt(cls, dic):
-        M = 1
-        temp = 0
-
-        moduli = []
-        for item in dic:
-            if moduli == []:
-                moduli.append(item["modulus"])
-                M *= item["modulus"]
-
-            for num in moduli:
-                if math.gcd(num, item["modulus"]) != 1:
-                    break
-            else:
-                moduli.append(item["modulus"])
-                M *= item["modulus"]
-
-        for item in dic:
-            N = int(M / item["modulus"])
-            L = pow(N, Funcs.phi(item["modulus"]) - 1, item["modulus"])
-            W = (L * N) % M
-            temp += item["result"] * W
-        return temp % M
-
-    @classmethod
-    def eea(cls, n: int, x: int):
-        # Blame Cauchy, I didn't program this :kek:
-
-        table = []
-
-        # get left side
-        table.append([n, 0])
-
-        left = x
-        while left > 0:
-            table.append([left, table[-1][0] // left])
-
-            left = table[-2][0] - (left * table[-1][1])
-        table.append([0, 0])
-
-        # get right side
-        for i, row in enumerate(table):
-            # do not include the lowest row
-            if i == 0:
-                table[-i - 1].append(0)
-            # add 0, 1 upwards
-            elif i == 1:
-                table[-i - 1].append(0)
-            elif i == 2:
-                table[-i - 1].append(1)
-            # compute
-            else:
-                a = table[-i][1]
-                b = table[-i][2]
-                try:
-                    c = table[-i + 1][2]
-                except IndexError:
-                    # top row
-                    c = 0
-                table[-i - 1].append(a * b + c)
-
-        result = []
-
-        for i in range(len(table)):
-            if i == 0:
-                # results row
-                result.append(
-                    [
-                        f"n = {table[i][0]}",
-                        "",
-                        f"{table[i][2]} = {table[i+1][1]}*{table[i+1][2]}+{table[i+2][2]}",
-                    ]
-                )
-                continue
-            if i == 1:
-                # seeked variable row
-                result.append(
-                    [
-                        f"x = {table[i][0]}",
-                        f"{table[i][1]} = ⌊{table[i-1][0]}/{table[i][0]}⌋",
-                        f"{table[i][2]} = {table[i+1][1]}*{table[i+1][2]}+{table[i+2][2]}",
-                    ]
-                )
-                continue
-            if i == len(table) - 3:
-                # row ends with "1"
-                result.append(
-                    [
-                        f"{table[i][0]} = {table[i-2][0]}-({table[i-1][0]}*{table[i-1][1]})",
-                        f"{table[i][1]} = ⌊{table[i-1][0]}/{table[i][0]}⌋",
-                        "1",
-                    ]
-                )
-                continue
-            if i == len(table) - 2:
-                # row ends with "0"
-                result.append(
-                    [
-                        f"{table[i][0]} = {table[i-2][0]}-({table[i-1][0]}*{table[i-1][1]})",
-                        f"{table[i][1]} = ⌊{table[i-1][0]}/{table[i][0]}⌋",
-                        "0",
-                    ]
-                )
-                continue
-            if i == len(table) - 1:
-                # left number is zero
-                result.append(
-                    [
-                        f"{table[i][0]} = {table[i-2][0]}-({table[i-1][0]}*{table[i-1][1]})",
-                        "",
-                        "",
-                    ]
-                )
-                continue
-            # normal row
-            result.append(
-                [
-                    f"{table[i][0]} = {table[i-2][0]}-({table[i-1][0]}*{table[i-1][1]})",
-                    f"{table[i][1]} = ⌊{table[i-1][0]}/{table[i][0]}⌋",
-                    f"{table[i][2]} = {table[i+1][1]}*{table[i+1][2]}+{table[i+2][2]}",
-                ]
-            )
-        res = table[0][2]
-        flip = False
-        if (res * x) % n != 1:
-            res = -res % n
-            flip = True
-
-        if flip:
-            eq = f"-{res} mod {n} = {-res % n}"
-        else:
-            eq = str(res)
-
-        width = []
-        for i in range(3):
-            width.append(max(len(s[i]) for s in result))
-        lines = ""
-        for row in result:
-            line = "  ".join(row[i].ljust(width[i]) for i in range(3))
-            lines += f"\n{line}"
-        lines += "\n"
-        lines += f"\nThe result is {eq}."
-        return lines
-
-
-class MultiplicativeGroup(object):
-    def __init__(self, mod=None):
-        self.mod = mod
-        self.elements = self.generate_elements(mod)
-        self.order = len(self.elements)
-        self.generators = self.get_generators()
-
-    def __repr__(self):
-        return f'<MultiplicativeGroup mod="{self.mod}" order="{self.order}" elements="{self.elements}" generators="{self.generators}">'
-
-    def generate_elements(self, mod: int):
-        elements = []
-        timeout = time.time() + 5
-        for i in range(1, mod):
-            if time.time() > timeout:
-                raise TimeoutError
-            if math.gcd(i, mod) == 1:
-                elements.append(i)
-        return elements
-
-    def get_element_order(self, element):
-        if element not in self.elements:
-            raise ValueError
-        s = set()
-        for exp in range(len(self.elements)):
-            s.add(element ** exp % self.mod)
-        return len(s)
-
-    def get_inverse(self, element: int):
-        if element not in self.elements:
-            raise ValueError
-        inverse = pow(element, Funcs.phi(self.mod) - 1, self.mod)
-        return inverse
-
-    def get_generators(self):
-        phi = Funcs.phi(self.mod)
-        phi_factors = Funcs.factorize(phi)
-        cleaned_factors = []
-        for i in phi_factors:
-            if i not in cleaned_factors:
-                cleaned_factors.append(i)
-
-        generators = []
-        for element in self.elements:
-            for factor in cleaned_factors:
-                if pow(element, int(phi / factor), self.mod) == 1:
-                    break
-            else:
-                generators.append(element)
-        return generators
-
-
-class Crypto:
-    @classmethod
-    def calculate_dh(cls, prime, generator):
-        alice_secret: int = random.randint(1, prime)  # nosec # only Alice knows this
-        bob_secret: int = random.randint(1, prime)  # nosec # only Bob knows this
-        alice_sends = pow(generator, alice_secret, prime)
-        bob_sends = pow(generator, bob_secret, prime)
-        alices_key = pow(bob_sends, alice_secret, prime)
-        bobs_key = pow(alice_sends, bob_secret, prime)
-        return {
-            "prime": prime,
-            "generator": generator,
-            "alice_secret": alice_secret,
-            "bob_secret": bob_secret,
-            "alice_sends": alice_sends,
-            "bob_sends": bob_sends,
-            "alices_key": alices_key,
-            "bobs_key": bobs_key,
-        }
-
-    @classmethod
-    def crack_dh(cls, prime, generator, alice_sends, bob_sends):
-        N = 1 + int(math.sqrt(prime))
-
-        baby_steps_tabulka = {}
-        baby_step = 1
-        for i in range(N + 1):
-            if psutil.virtual_memory().available * 100 / psutil.virtual_memory().total < 10:
-                raise MemoryError
-            baby_steps_tabulka[baby_step] = i
-            baby_step = baby_step * generator % prime
-
-        inverzni_k_N = pow(generator, (prime - 2) * N, prime)
-        giant_step = random.choice([alice_sends, bob_sends])  # nosec
-        for j in range(N + 1):
-            if giant_step in baby_steps_tabulka:
-                temp = j * N + baby_steps_tabulka[giant_step]
-                log = pow(generator, temp, prime)
-                if log == alice_sends:
-                    cracked_key = pow(bob_sends, temp, prime)
-                if log == bob_sends:
-                    cracked_key = pow(alice_sends, temp, prime)
-
-                return cracked_key
-            else:
-                giant_step = giant_step * inverzni_k_N % prime
-        return "No Match"
 
 
 class Math(basecog.Basecog):
@@ -353,9 +28,10 @@ class Math(basecog.Basecog):
         if group_modulus <= 1:
             await ctx.reply("Modulus must be greater than 1!")
             return
+
         try:
-            group = MultiplicativeGroup(group_modulus)
-        except TimeoutError:
+            group = func_timeout(5, MultiplicativeGroup, args=([group_modulus]))
+        except FunctionTimedOut:
             await ctx.reply("Took too long, terminating...")
             return
 
@@ -394,14 +70,13 @@ class Math(basecog.Basecog):
             await ctx.reply("Modulus must be greater than 1!")
             return
         try:
-            group = MultiplicativeGroup(group_modulus)
-        except TimeoutError:
+            group = func_timeout(5, MultiplicativeGroup, args=([group_modulus]))
+        except FunctionTimedOut:
             await ctx.reply("Took too long, terminating...")
             return
 
-        group = MultiplicativeGroup(group_modulus)
         try:
-            inverse = str(group.get_inverse(inverse_to))
+            inverse = str(group.get_inverse_element(inverse_to))
         except ValueError:
             inverse = "Element does not belong to the group!"
 
@@ -421,17 +96,21 @@ class Math(basecog.Basecog):
         if not group_modulus > 1:
             await ctx.reply("Modulus must be greater than 1!")
             return
+
         try:
-            group = MultiplicativeGroup(group_modulus)
-        except TimeoutError:
+            group = func_timeout(5, MultiplicativeGroup, args=([group_modulus]))
+        except FunctionTimedOut:
             await ctx.reply("Took too long, terminating...")
             return
 
-        group = MultiplicativeGroup(group_modulus)
         try:
-            order = str(group.get_element_order(element))
-        except ValueError:
-            order = "Element does not belong to the group!"
+            try:
+                order = str(func_timeout(5, group.get_element_order, args=([element])))
+            except ValueError:
+                order = "Element does not belong to the group!"
+        except FunctionTimedOut:
+            await ctx.reply("Took too long, terminating...")
+            return
 
         embed = self.create_embed(author=ctx.message.author, title="Order of Element")
         embed.add_field(name="Group Modulo", value=str(group.mod), inline=True)
@@ -447,22 +126,25 @@ class Math(basecog.Basecog):
 
     @math.command(name="is-prime")
     async def is_prime(self, ctx, num: int):
-        """Checks if number is prime\n\
-            similar to `math fermat` but will result in 100% correct result, slower tho
-            example:\n\
-            `!math is-prime 125863`\n
-            """
+        """Checks if number is prime
+        Uses 25 rounds of Miller-Rabin primality test.
+        `!math is-prime 125863`\n
+        """
 
         try:
-            result = Funcs.is_prime(num)
-        except TimeoutError:
+            result = func_timeout(5, gmpy2.is_prime, args=([num]))
+        except FunctionTimedOut:
             await ctx.reply("Took too long, terminating...")
             return
 
         embed = self.create_embed(
             author=ctx.message.author, title=f"Is {num} prime?", description=str(result)
         )
-        await ctx.send(embed=embed)
+        if len(str(num)) > 256:
+            embed.title = "Is this number prime?"
+            await ctx.reply(embed=embed)
+        else:
+            await ctx.send(embed=embed)
 
     @math.command(name="factorize")
     async def factorize(self, ctx, num: int):
@@ -474,15 +156,21 @@ class Math(basecog.Basecog):
             await ctx.reply("Are you trying to factorize a number smaller than 2?")
             return
         try:
-            result = Funcs.factorize(num)
-        except TimeoutError:
+            result = func_timeout(5, MathFunctions.factorize, args=([num]))
+        except FunctionTimedOut:
             await ctx.reply("Took too long, terminating...")
             return
 
         factors = ", ".join(str(x) for x in result)
 
         embed = self.create_embed(author=ctx.message.author, title=f"Factors of {num}:", description=factors)
-        await ctx.send(embed=embed)
+        if len(factors) > 2048:
+            embed.description = "String too long for Discord"
+        if len(str(num)) > 256:
+            embed.title = "Factors of this number."
+            await ctx.reply(embed=embed)
+        else:
+            await ctx.send(embed=embed)
 
     @math.command(name="phi")
     async def phi(self, ctx, num: int):
@@ -491,15 +179,21 @@ class Math(basecog.Basecog):
             `!math phi 12`\n
             """
         try:
-            result = Funcs.phi(num)
-        except TimeoutError:
+            result = func_timeout(5, MathFunctions.phi, args=([num]))
+        except FunctionTimedOut:
             await ctx.reply("Took too long, terminating...")
             return
 
         embed = self.create_embed(
             author=ctx.message.author, title=f"Euler's Totient function of {num}:", description=result
         )
-        await ctx.send(embed=embed)
+        if len(str(result)) > 2048:
+            embed.description = "String too long for Discord"
+        if len(f"Euler's Totient function of {num}:") > 256:
+            embed.title = "Factors of this number."
+            await ctx.reply(embed=embed)
+        else:
+            await ctx.send(embed=embed)
 
     @math.command(name="fermat")
     async def fermat(self, ctx, num: int, test_number: int = None):
@@ -509,17 +203,13 @@ class Math(basecog.Basecog):
             `!math fermat 10` for automated test (tests 5 rounds of FPT)\n\
             `!math fermat 10 3` for manual test (tests with testing number 3)\n
             """
-        result = Funcs.fermat_prime_test(num, test_number)
+        if test_number is not None:
+            is_prime, result = MathFunctions.fermat_prime_test_manual(num, test_number, verbose=True)
+        else:
+            is_prime, result = MathFunctions.fermat_prime_test_auto(num, verbose=True)
         result_string = ""
-        is_prime = None
         for item in result:
-            testvalue = item["testvalue"]
-            result = item["result"]
-            result_string += f"\n    tested with: {testvalue}, result = {result}"
-            if item["result"] != 1:
-                is_prime = False
-        if is_prime is None:
-            is_prime = True
+            result_string += f"\n    tested with: {item[0]}, result = {item[1]}"
 
         embed = self.create_embed(author=ctx.message.author, title=f"Fermat's primality test of {num}:")
         if is_prime and test_number is None:
@@ -555,10 +245,10 @@ class Math(basecog.Basecog):
             example:\n\
             `!math euclid 10 15`\n
             """
+
         try:
-            timeout = time.time() + 5
-            result = Funcs.euclid_gcd(num_a, num_b, timeout)
-        except TimeoutError:
+            result = func_timeout(5, MathFunctions.euclid_gcd, args=([num_a, num_b]))
+        except FunctionTimedOut:
             await ctx.reply("Took too long, terminating...")
             return
 
@@ -591,15 +281,15 @@ class Math(basecog.Basecog):
         desc = ""
         for item in lists:
             if len(item) == 2:
-                crt_list.append({"result": item[0], "modulus": item[1]})
+                crt_list.append([item[0], item[1]])
                 desc += f"\nX ≡ {item[0]} (mod {item[1]})"
-
             else:
                 ctx.reply("You didn't format it right, see help.")
                 return
+
         try:
-            result = Funcs.crt(crt_list)
-        except TimeoutError:
+            result = func_timeout(5, MathFunctions.crt, args=([crt_list]))
+        except FunctionTimedOut:
             await ctx.reply("Took too long, terminating...")
             return
 
@@ -620,7 +310,7 @@ class Math(basecog.Basecog):
         """Get multiplicative using Extended Euclidean Algorithm\n\
             example:
             `!math eea 12 5`"""
-        result = Funcs.eea(modulus, number)
+        result = MathFunctions.eea(modulus, number)
 
         embed = self.create_embed(
             author=ctx.message.author,
@@ -642,15 +332,15 @@ class Math(basecog.Basecog):
             `!crypto compute-dh prime generator` where generator is random number from 1 to (prime - 1)\n\
             `!crypto compute-dh 1723 1589`"""
         try:
-            prime_is_prime = Funcs.is_prime(prime)
-        except TimeoutError:
+            prime_is_prime = gmpy2.is_prime(prime)
+        except FunctionTimedOut:
             await ctx.reply("Took too long, terminating...")
             return
         if not prime_is_prime:
             await ctx.reply("First number needs to be prime!")
             return
 
-        result = Crypto.calculate_dh(prime, generator)
+        result = DHCryptosystem.generate_from(prime, generator)
 
         alice_secret = result["alice_secret"]
         bob_secret = result["bob_secret"]
@@ -686,8 +376,9 @@ class Math(basecog.Basecog):
         """Crack the Diffie Hellman protocol\n\
             example:\n\
             `!crypto compute-dh 1723 1589 1360 955`"""
+        crack_me = DHCryptosystem(prime, generator, alice_sends, bob_sends)
         try:
-            result = Crypto.crack_dh(prime, generator, alice_sends, bob_sends)
+            result = DHCracker.baby_step(crack_me)
         except MemoryError:
             await ctx.reply("Ate too much memory, terminating...")
             return
