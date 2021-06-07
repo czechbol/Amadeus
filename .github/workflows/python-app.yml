@@ -28,7 +28,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        apt install libmpc-dev
+        sudo apt install libmpc-dev
         python -m pip install --upgrade pip
         pip install flake8 black
         pip install -r requirements.txt
