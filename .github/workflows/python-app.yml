@@ -41,7 +41,7 @@ jobs:
     - name: Check the code for errors
       run: |
         # stop the build if there are Python syntax errors or undefined names. Ignores errors linked to black and our codestyle preferences
-        flake8 . --count --select=C,E,F,W,B,B950 --extend-ignore=E203,E501 --max-complexity=25 --max-line-length=88 --show-source --statistics
+        flake8 . --count --select=C,E,F,W,B,B950 --extend-ignore=E203,E501,B306 --max-complexity=25 --max-line-length=88 --show-source --statistics
     - uses: psf/black@stable
       with:
         options: "--check --diff"
