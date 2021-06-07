@@ -38,24 +38,38 @@ class Math(basecog.Basecog):
         elements = ", ".join(str(x) for x in group.elements)
         generators = ", ".join(str(x) for x in group.generators)
 
-        embed = self.create_embed(author=ctx.message.author, title="Multiplicative Group")
+        embed = self.create_embed(
+            author=ctx.message.author, title="Multiplicative Group"
+        )
         embed.add_field(name="Modulo", value=str(group.mod), inline=True)
         embed.add_field(name="Order", value=str(group.order), inline=True)
         if len(elements) > 1018:
-            embed.add_field(name="Elements", value="Too many elements to send through Discord", inline=False)
+            embed.add_field(
+                name="Elements",
+                value="Too many elements to send through Discord",
+                inline=False,
+            )
         else:
-            embed.add_field(name="Elements", value=f"```{str(elements)}```", inline=False)
+            embed.add_field(
+                name="Elements", value=f"```{str(elements)}```", inline=False
+            )
 
         if len(generators) > 1018:
             embed.add_field(
-                name="Generators", value="Too many generators to send through Discord", inline=False
+                name="Generators",
+                value="Too many generators to send through Discord",
+                inline=False,
             )
         elif generators == "":
             embed.add_field(
-                name="Generators", value="No generators found. Perhaps the group is not cyclic.", inline=False
+                name="Generators",
+                value="No generators found. Perhaps the group is not cyclic.",
+                inline=False,
             )
         else:
-            embed.add_field(name="Generators", value=f"```{str(generators)}```", inline=False)
+            embed.add_field(
+                name="Generators", value=f"```{str(generators)}```", inline=False
+            )
 
         await ctx.send(embed=embed)
 
@@ -83,7 +97,9 @@ class Math(basecog.Basecog):
         embed = self.create_embed(author=ctx.message.author, title="Inverse Element")
         embed.add_field(name="Group Modulo", value=str(group.mod), inline=True)
         embed.add_field(name="Group Order", value=str(group.order), inline=True)
-        embed.add_field(name=f"Inverse element to {inverse_to}", value=inverse, inline=False)
+        embed.add_field(
+            name=f"Inverse element to {inverse_to}", value=inverse, inline=False
+        )
         await ctx.send(embed=embed)
 
     @group.command(name="element-order")
@@ -163,7 +179,9 @@ class Math(basecog.Basecog):
 
         factors = ", ".join(str(x) for x in result)
 
-        embed = self.create_embed(author=ctx.message.author, title=f"Factors of {num}:", description=factors)
+        embed = self.create_embed(
+            author=ctx.message.author, title=f"Factors of {num}:", description=factors
+        )
         if len(factors) > 2048:
             embed.description = "String too long for Discord"
         if len(str(num)) > 256:
@@ -185,7 +203,9 @@ class Math(basecog.Basecog):
             return
 
         embed = self.create_embed(
-            author=ctx.message.author, title=f"Euler's Totient function of {num}:", description=result
+            author=ctx.message.author,
+            title=f"Euler's Totient function of {num}:",
+            description=result,
         )
         if len(str(result)) > 2048:
             embed.description = "String too long for Discord"
@@ -204,14 +224,18 @@ class Math(basecog.Basecog):
             `!math fermat 10 3` for manual test (tests with testing number 3)\n
             """
         if test_number is not None:
-            is_prime, result = MathFunctions.fermat_prime_test_manual(num, test_number, verbose=True)
+            is_prime, result = MathFunctions.fermat_prime_test_manual(
+                num, test_number, verbose=True
+            )
         else:
             is_prime, result = MathFunctions.fermat_prime_test_auto(num, verbose=True)
         result_string = ""
         for item in result:
             result_string += f"\n    tested with: {item[0]}, result = {item[1]}"
 
-        embed = self.create_embed(author=ctx.message.author, title=f"Fermat's primality test of {num}:")
+        embed = self.create_embed(
+            author=ctx.message.author, title=f"Fermat's primality test of {num}:"
+        )
         if is_prime and test_number is None:
             embed.add_field(
                 name="Result:",
@@ -372,7 +396,9 @@ class Math(basecog.Basecog):
         await ctx.send(embed=embed)
 
     @crypto.command(name="crack-dh")
-    async def crack_dh(self, ctx, prime: int, generator: int, alice_sends: int, bob_sends: int):
+    async def crack_dh(
+        self, ctx, prime: int, generator: int, alice_sends: int, bob_sends: int
+    ):
         """Crack the Diffie Hellman protocol\n\
             example:\n\
             `!crypto compute-dh 1723 1589 1360 955`"""

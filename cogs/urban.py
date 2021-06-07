@@ -55,7 +55,10 @@ class Urban(basecog.Basecog):
                 item.example = item.example[0:1021] + "`…`"
 
             embed = self.create_embed(
-                author=ctx.message.author, title=item.word, url=item.permalink, timestamp=item.written_on
+                author=ctx.message.author,
+                title=item.word,
+                url=item.permalink,
+                timestamp=item.written_on,
             )
             if item.definition != "":
                 embed.add_field(name="Definition", value=item.definition, inline=False)
@@ -85,7 +88,9 @@ class Urban(basecog.Basecog):
                 )
 
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add", check=check, timeout=300.0
+                )
             except asyncio.TimeoutError:
                 await message.clear_reactions()
                 break
@@ -119,7 +124,9 @@ class Urban(basecog.Basecog):
         message = ctx.message
         args = message.content.split(" ")
         if len(args) == 1:
-            await ctx.send(">>> " + text.fill("urban", "urban_help", prefix=config.prefix))
+            await ctx.send(
+                ">>> " + text.fill("urban", "urban_help", prefix=config.prefix)
+            )
             return
         args.pop(0)
         search = " ".join(args)
@@ -136,7 +143,9 @@ class Urban(basecog.Basecog):
 
             except aiohttp.ClientResponseError as e:
                 embed = self.create_embed(
-                    author=ctx.message.author, title="Critical error:", color=config.color_error
+                    author=ctx.message.author,
+                    title="Critical error:",
+                    color=config.color_error,
                 )
                 embed.add_field(
                     name="API replied with:",
@@ -161,7 +170,9 @@ class Urban(basecog.Basecog):
                         re.IGNORECASE,
                     )  # Checks for valid URL This exact regex is used by Django (https://github.com/django/django/blob/stable/1.3.x/django/core/validators.py#L45)
                     match_result = re.match(regex, item["permalink"])
-                    permalink = match_result.group(0) if match_result is not None else None
+                    permalink = (
+                        match_result.group(0) if match_result is not None else None
+                    )
 
                     urban_item = UrbanItem(
                         item["word"],

@@ -102,7 +102,10 @@ class Compiler(basecog.Basecog):
                     langs.append(lang)
                 else:
                     if compiler.name in lang.compilers:
-                        await self.log(level="info", message=f"Compiler - Load collision: {compiler.name}")
+                        await self.log(
+                            level="info",
+                            message=f"Compiler - Load collision: {compiler.name}",
+                        )
                     else:
                         lang.compilers.append(compiler)
             langs.sort(key=lambda x: x.name, reverse=False)
@@ -116,7 +119,9 @@ class Compiler(basecog.Basecog):
             embed = self.create_embed(author=ctx.message.author, title=title)
             for count, lang in enumerate(chunk):
                 embed.add_field(
-                    name=f"{count + 1}) {lang.name}", value=f"{len(lang.compilers)} compilers", inline=True
+                    name=f"{count + 1}) {lang.name}",
+                    value=f"{len(lang.compilers)} compilers",
+                    inline=True,
                 )
 
             embed.add_field(
@@ -135,7 +140,9 @@ class Compiler(basecog.Basecog):
             embed = self.create_embed(author=ctx.message.author, title=title)
             for count, compiler in enumerate(chunk):
                 embed.add_field(
-                    name=f"{count + 1}) {compiler.name}", value=f"Version: {compiler.version}", inline=True
+                    name=f"{count + 1}) {compiler.name}",
+                    value=f"Version: {compiler.version}",
+                    inline=True,
                 )
 
             embed.add_field(
@@ -161,7 +168,9 @@ class Compiler(basecog.Basecog):
                 )
 
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=30.0)
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add", check=check, timeout=30.0
+                )
             except asyncio.TimeoutError:
                 try:
                     await message.clear_reactions()
@@ -208,7 +217,9 @@ class Compiler(basecog.Basecog):
             if language.lower() in lang.name.lower():
                 break
         else:
-            await self.log(level="info", message=f"Compiler - compiler not found: {language}")
+            await self.log(
+                level="info", message=f"Compiler - compiler not found: {language}"
+            )
             return
         compilers = lang.compilers
         embeds = self.compiler_embeds(ctx, "Supported compilers", compilers)
@@ -219,16 +230,28 @@ class Compiler(basecog.Basecog):
 
     @compiler.command(name="run")
     async def compiler_run(self, ctx, compiler_name: str):
-        lang = next((x for x in self.languages if compiler_name.lower() == x.name.lower()), None)
+        lang = next(
+            (x for x in self.languages if compiler_name.lower() == x.name.lower()), None
+        )
         if lang is not None:
             compiler = lang.compilers[0]
         else:
             for lang in self.languages:
-                compiler = next((x for x in lang.compilers if compiler_name.lower() == x.name.lower()), None)
+                compiler = next(
+                    (
+                        x
+                        for x in lang.compilers
+                        if compiler_name.lower() == x.name.lower()
+                    ),
+                    None,
+                )
                 if compiler is not None:
                     break
             else:
-                await self.log(level="info", message=f"Compiler - compiler not found: {compiler_name}")
+                await self.log(
+                    level="info",
+                    message=f"Compiler - compiler not found: {compiler_name}",
+                )
                 return
 
         message = ctx.message
@@ -254,7 +277,9 @@ class Compiler(basecog.Basecog):
             )
 
         try:
-            reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
+            reaction, user = await self.bot.wait_for(
+                "reaction_add", check=check, timeout=300.0
+            )
         except asyncio.TimeoutError:
             try:
                 await message.clear_reactions()
@@ -284,7 +309,9 @@ class Compiler(basecog.Basecog):
                         dic = await response.json()
             except aiohttp.ClientResponseError as e:
                 embed = self.create_embed(
-                    author=ctx.message.author, title="Critical error:", color=config.color_error
+                    author=ctx.message.author,
+                    title="Critical error:",
+                    color=config.color_error,
                 )
                 embed.add_field(
                     name="API replied with:",
@@ -299,12 +326,16 @@ class Compiler(basecog.Basecog):
             try:
                 status = dic["status"]
                 embed = self.create_embed(
-                    author=ctx.message.author, title="Compilation results", color=config.color_success
+                    author=ctx.message.author,
+                    title="Compilation results",
+                    color=config.color_success,
                 )
             except KeyError:
                 status = dic["signal"]
                 embed = self.create_embed(
-                    author=ctx.message.author, title="Compilation results", color=config.color_notify
+                    author=ctx.message.author,
+                    title="Compilation results",
+                    color=config.color_notify,
                 )
 
             try:
@@ -320,10 +351,16 @@ class Compiler(basecog.Basecog):
 
             if len(message) > 1018:
                 message = message[:1018]
-                message = message[:-3] + "```" if message.count("```") % 2 != 0 else message
+                message = (
+                    message[:-3] + "```" if message.count("```") % 2 != 0 else message
+                )
 
-            embed.add_field(name="Status", value=f"Finished with exit code: {status}", inline=False)
-            embed.add_field(name="Program Output", value=f"```{str(message)}```", inline=False)
+            embed.add_field(
+                name="Status", value=f"Finished with exit code: {status}", inline=False
+            )
+            embed.add_field(
+                name="Program Output", value=f"```{str(message)}```", inline=False
+            )
             embed.add_field(name="URL", value=f"{url}", inline=False)
 
             await ctx.send(embed=embed)
@@ -332,22 +369,36 @@ class Compiler(basecog.Basecog):
 
     @compiler.command(name="template")
     async def compiler_template(self, ctx, compiler_name: str):
-        lang = next((x for x in self.languages if compiler_name.lower() == x.name.lower()), None)
+        lang = next(
+            (x for x in self.languages if compiler_name.lower() == x.name.lower()), None
+        )
         if lang is not None:
             compiler = lang.compilers[0]
         else:
             for lang in self.languages:
-                compiler = next((x for x in lang.compilers if compiler_name.lower() == x.name.lower()), None)
+                compiler = next(
+                    (
+                        x
+                        for x in lang.compilers
+                        if compiler_name.lower() == x.name.lower()
+                    ),
+                    None,
+                )
                 if compiler is not None:
                     break
             else:
-                await self.log(level="info", message=f"Compiler - compiler not found: {compiler_name}")
+                await self.log(
+                    level="info",
+                    message=f"Compiler - compiler not found: {compiler_name}",
+                )
                 return
 
         await ctx.message.add_reaction("✅")
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://wandbox.org/api/template/{compiler.templates[0]}") as response:
+            async with session.get(
+                f"https://wandbox.org/api/template/{compiler.templates[0]}"
+            ) as response:
                 dic = await response.json()
                 response.raise_for_status()
 

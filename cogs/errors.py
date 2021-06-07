@@ -21,7 +21,11 @@ class Errors(basecog.Basecog):
 
         printed = False
         if config.debug == 2:
-            print("".join(traceback.format_exception(type(error), error, error.__traceback__)))
+            print(
+                "".join(
+                    traceback.format_exception(type(error), error, error.__traceback__)
+                )
+            )
             printed = True
 
         # fmt: off
@@ -73,10 +77,14 @@ class Errors(basecog.Basecog):
             return
         # display error message
         await self.throwError(ctx, error)
-        await self.guildlog(ctx, "on_command_error", quote=True, msg=str(error), log_level="error")
+        await self.guildlog(
+            ctx, "on_command_error", quote=True, msg=str(error), log_level="error"
+        )
 
         output = "Ignoring exception in command {}: \n\n".format(ctx.command)
-        output += "".join(traceback.format_exception(type(error), error, error.__traceback__))
+        output += "".join(
+            traceback.format_exception(type(error), error, error.__traceback__)
+        )
         # print traceback to stdout
         if not printed:
             print(output)

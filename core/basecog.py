@@ -50,7 +50,9 @@ class Basecog(commands.Cog):
 
     def getElevatedRoles(self):
         if self.roles_elevated is None:
-            self.roles_elevated = [self.getGuild().get_role(x) for x in config.roles_elevated]
+            self.roles_elevated = [
+                self.getGuild().get_role(x) for x in config.roles_elevated
+            ]
         return self.roles_elevated
 
     # Helper functions
@@ -90,17 +92,30 @@ class Basecog(commands.Cog):
         if not os.path.exists(f"logs/{year}/{month}"):
             os.mkdir(f"logs/{year}/{month}")
         if not os.path.isfile(f"logs/{year}/{month}/{today}.json"):
-            with open(f"logs/{year}/{month}/{today}.json", mode="w", encoding="utf-8") as f:
+            with open(
+                f"logs/{year}/{month}/{today}.json", mode="w", encoding="utf-8"
+            ) as f:
                 json.dump([], f)
                 await self.log_archive()
 
-        with open(f"logs/{year}/{month}/{today}.json", mode="r", encoding="utf-8") as feedsjson:
+        with open(
+            f"logs/{year}/{month}/{today}.json", mode="r", encoding="utf-8"
+        ) as feedsjson:
             feeds = json.load(feedsjson)
-        with open(f"logs/{year}/{month}/{today}.json", mode="w", encoding="utf-8") as writejson:
+        with open(
+            f"logs/{year}/{month}/{today}.json", mode="w", encoding="utf-8"
+        ) as writejson:
             if command is None:
                 feeds.append({"level": level, "message": message, "time": now})
             else:
-                feeds.append({"level": level, "message": message, "command": command, "time": now})
+                feeds.append(
+                    {
+                        "level": level,
+                        "message": message,
+                        "command": command,
+                        "time": now,
+                    }
+                )
 
             json.dump(feeds, writejson, indent=2)
         if level != "user error" or level != "error":
@@ -111,7 +126,9 @@ class Basecog(commands.Cog):
         files = self.scan_log_dir("logs/")
         for entry in files:
             if entry.is_file() and ".json" in entry.name:
-                entry_date = datetime.strptime(entry.name.replace(".json", ""), "%Y-%m-%d")
+                entry_date = datetime.strptime(
+                    entry.name.replace(".json", ""), "%Y-%m-%d"
+                )
                 if entry_date < today - timedelta(days=7):
                     filepath = "logs/archive.zip"
                     with zipfile.ZipFile(filepath, "a") as zipf:
@@ -132,7 +149,9 @@ class Basecog(commands.Cog):
                         files.extend(self.scan_log_dir(entry.path))
         return files
 
-    async def guildlog(self, ctx, action: str, log_level: str, quote: bool = True, msg=None):
+    async def guildlog(
+        self, ctx, action: str, log_level: str, quote: bool = True, msg=None
+    ):
         """Log event"""
         channel = self.getGuild().get_channel(config.channel_guildlog)
         author = self.getGuild().get_member(ctx.author.id)
@@ -166,7 +185,11 @@ class Basecog(commands.Cog):
             return
         botspam = self.getGuild().get_channel(config.channel_botspam)
         if ctx.channel.id not in config.bot_allowed:
-            await ctx.send(text.fill("basecog", "botroom redirect", user=ctx.author, channel=botspam))
+            await ctx.send(
+                text.fill(
+                    "basecog", "botroom redirect", user=ctx.author, channel=botspam
+                )
+            )
 
     async def deleteCommand(self, message, now: bool = True):
         """Try to delete the context message.
@@ -188,7 +211,9 @@ class Basecog(commands.Cog):
 
         err = getattr(err, "original", err)
         err_type = type(err).__name__
-        err_trace = "".join(traceback.format_exception(type(err), err, err.__traceback__))
+        err_trace = "".join(
+            traceback.format_exception(type(err), err, err.__traceback__)
+        )
         err_title = "{}: {}".format(ctx.author, ctx.message.content)
 
         # Do the debug
@@ -196,7 +221,9 @@ class Basecog(commands.Cog):
             print("ERROR OCCURED: " + err_title)
             print("ERROR TRACE: " + err_trace)
         if config.debug >= 2:
-            await self.sendLong(ctx, "[debug=2] Error: " + err_title + "\n" + err_trace, code=True)
+            await self.sendLong(
+                ctx, "[debug=2] Error: " + err_title + "\n" + err_trace, code=True
+            )
         # Clean the input
         content = ctx.message.content
         content = content if len(content) < 600 else content[:600]
@@ -206,7 +233,10 @@ class Basecog(commands.Cog):
 
         # Construct the error embed
         embed = self.create_embed(
-            author=ctx.message.author, error=True, title=err_type, color=config.color_error
+            author=ctx.message.author,
+            error=True,
+            title=err_type,
+            color=config.color_error,
         )
         embed.add_field(name="Command", value=content, inline=True)
         embed.add_field(name="Error trace", value=f"```{err_trace}```", inline=False)
@@ -214,7 +244,9 @@ class Basecog(commands.Cog):
         await ctx.send(embed=embed)
         await self.deleteCommand(ctx, now=True)
 
-    async def throwNotification(self, ctx: commands.Context, msg: str, pin: bool = False):
+    async def throwNotification(
+        self, ctx: commands.Context, msg: str, pin: bool = False
+    ):
         """Show an embed with a message."""
         msg = str(msg)
         # Do the debug
@@ -223,7 +255,9 @@ class Basecog(commands.Cog):
             print("NOTIFICATION: " + title)
             print("NOTIFY TRACE: " + msg)
         if config.debug >= 2:
-            await self.sendLong(ctx, "[debug=2] Notification: " + title + "\n" + msg, code=True)
+            await self.sendLong(
+                ctx, "[debug=2] Notification: " + title + "\n" + msg, code=True
+            )
 
         # Clean the input
         content = ctx.message.content

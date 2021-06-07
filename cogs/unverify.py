@@ -43,19 +43,33 @@ class Unverify(basecog.Basecog):
     @unverify_loop.before_loop
     async def before_unverify_loop(self):
         if not self.bot.is_ready():
-            await self.log(level="info", message="Unverify loop - waiting until ready()")
+            await self.log(
+                level="info", message="Unverify loop - waiting until ready()"
+            )
             await self.bot.wait_until_ready()
 
     async def parse_datetime(self, arg):
         dates = search_dates(
             arg.replace(".", "-"),
             languages=["en"],
-            settings={"PREFER_DATES_FROM": "future", "PREFER_DAY_OF_MONTH": "first", "DATE_ORDER": "DMY"},
+            settings={
+                "PREFER_DATES_FROM": "future",
+                "PREFER_DAY_OF_MONTH": "first",
+                "DATE_ORDER": "DMY",
+            },
         )
         if dates is None:
             return None, ""
 
-        weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        weekdays = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
 
         for day in weekdays:
             if str("next " + day) in arg.lower() and day in dates[0][0].lower():
@@ -85,7 +99,10 @@ class Unverify(basecog.Basecog):
                 if row.status == "user left server":
                     return
                 else:
-                    await self.log(level="info", message=f"Couldn't find member with id: {row.user_id}")
+                    await self.log(
+                        level="info",
+                        message=f"Couldn't find member with id: {row.user_id}",
+                    )
                     repository.set_left_server(row.idx)
                     return
         if time is not None:
@@ -103,31 +120,44 @@ class Unverify(basecog.Basecog):
             channel = discord.utils.get(guild.channels, id=channel_id)
             user_overw = channel.overwrites_for(member)
             user_overw.update(read_messages=True)
-            await channel.set_permissions(member, overwrite=user_overw, reason="Reverify")
+            await channel.set_permissions(
+                member, overwrite=user_overw, reason="Reverify"
+            )
 
         for channel_id in row.channels_to_remove:
             channel = discord.utils.get(guild.channels, id=channel_id)
             user_overw = channel.overwrites_for(member)
             user_overw.update(read_messages=None)
-            await channel.set_permissions(member, overwrite=user_overw, reason="Reverify")
+            await channel.set_permissions(
+                member, overwrite=user_overw, reason="Reverify"
+            )
 
         for id in config.roles_unverify:
             role = discord.utils.get(guild.roles, id=id)
             if role is not None:
                 unverify_role = role
                 try:
-                    await member.remove_roles(unverify_role, reason="Reverify", atomic=True)
+                    await member.remove_roles(
+                        unverify_role, reason="Reverify", atomic=True
+                    )
                 except discord.errors.Forbidden:
                     pass
                 break
             else:
                 return None
 
-        await self.log(level="info", message=f"Reverify success for member {member.name}")
+        await self.log(
+            level="info", message=f"Reverify success for member {member.name}"
+        )
         try:
-            await member.send(text.fill("unverify", "reverified", guild_name=guild.name))
+            await member.send(
+                text.fill("unverify", "reverified", guild_name=guild.name)
+            )
         except discord.Forbidden:
-            await self.log(level="info", message=f"Couldn't send reverify info to {member.name}'s DM")
+            await self.log(
+                level="info",
+                message=f"Couldn't send reverify info to {member.name}'s DM",
+            )
 
         repository.set_finished(row.idx)
 
@@ -188,14 +218,18 @@ class Unverify(basecog.Basecog):
                 if channel in channels_to_keep:
                     if not perms.read_messages:
                         user_overw.update(read_messages=True)
-                        await channel.set_permissions(member, overwrite=user_overw, reason=func)
+                        await channel.set_permissions(
+                            member, overwrite=user_overw, reason=func
+                        )
                 elif perms.read_messages and not user_overw.read_messages:
                     pass
                 elif not perms.read_messages:
                     pass
                 else:
                     user_overw.update(read_messages=False)
-                    await channel.set_permissions(member, overwrite=user_overw, reason=func)
+                    await channel.set_permissions(
+                        member, overwrite=user_overw, reason=func
+                    )
                     removed_channels.append(channel.id)
 
         removed_roles = [role.id for role in roles_to_remove]
@@ -230,7 +264,9 @@ class Unverify(basecog.Basecog):
         arg = lines[0]
         arg = arg.replace("weekend", "saturday")
         date, date_str = await self.parse_datetime(arg)
-        await self.log(level="info", message=f"Unverify: Member - {member.name}, Until - {date}")
+        await self.log(
+            level="info", message=f"Unverify: Member - {member.name}, Until - {date}"
+        )
 
         if isinstance(ctx.channel, PrivateChannel):
             guild = self.getGuild()
@@ -240,7 +276,10 @@ class Unverify(basecog.Basecog):
 
         if date is None:
             if len(lines) == 0:
-                await ctx.send(">>> " + text.fill("unverify", "unverify help", prefix=config.prefix))
+                await ctx.send(
+                    ">>> "
+                    + text.fill("unverify", "unverify help", prefix=config.prefix)
+                )
                 return
             await ctx.send(text.get("unverify", "datetime not found"))
             date = datetime.now() + timedelta(days=1)
@@ -264,7 +303,9 @@ class Unverify(basecog.Basecog):
             lines.remove("")
         lines = " ".join(lines)
 
-        result = await self.unverify_user(ctx, member=member, lines=lines, date=date, func="Unverify")
+        result = await self.unverify_user(
+            ctx, member=member, lines=lines, date=date, func="Unverify"
+        )
 
         if result is not None:
             await self.log(
@@ -276,9 +317,13 @@ class Unverify(basecog.Basecog):
                 author=ctx.message.author,
                 title=text.fill("unverify", "unverified", guild_name=guild.name),
             )
-            embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
+            embed.add_field(
+                name=text.get("unverify", "reverify on"), value=printdate, inline=False
+            )
             if lines != "":
-                embed.add_field(name=text.get("unverify", "reason title"), value=lines, inline=False)
+                embed.add_field(
+                    name=text.get("unverify", "reason title"), value=lines, inline=False
+                )
             try:
                 await member.send(embed=embed)
                 await ctx.send(
@@ -291,7 +336,8 @@ class Unverify(basecog.Basecog):
 
         else:
             await self.log(
-                level="debug", message=f"Unverify failed: Member - {member.name} already unverified."
+                level="debug",
+                message=f"Unverify failed: Member - {member.name} already unverified.",
             )
 
     @commands.cooldown(rate=1, per=3600.0, type=commands.BucketType.user)
@@ -307,7 +353,10 @@ class Unverify(basecog.Basecog):
         arg = arg.replace("weekend", "saturday")
         date, date_str = await self.parse_datetime(arg)
         member = ctx.message.author
-        await self.log(level="info", message=f"Selfunverify: Member - {member.name}, Until - {date}")
+        await self.log(
+            level="info",
+            message=f"Selfunverify: Member - {member.name}, Until - {date}",
+        )
         if isinstance(ctx.channel, PrivateChannel):
             guild = self.getGuild()
             member = guild.get_member(member.id)
@@ -316,7 +365,10 @@ class Unverify(basecog.Basecog):
 
         if date is None:
             if len(lines) == 0:
-                await ctx.send(">>> " + text.fill("unverify", "selfunverify help", prefix=config.prefix))
+                await ctx.send(
+                    ">>> "
+                    + text.fill("unverify", "selfunverify help", prefix=config.prefix)
+                )
                 return
             await ctx.send(text.get("unverify", "datetime not found"))
             date = datetime.now() + timedelta(days=1)
@@ -337,13 +389,16 @@ class Unverify(basecog.Basecog):
 
         if result is not None:
             await self.log(
-                level="debug", message=f"Selfunverify success: Member - {member.name}, Until - {date}"
+                level="debug",
+                message=f"Selfunverify success: Member - {member.name}, Until - {date}",
             )
             embed = self.create_embed(
                 author=ctx.message.author,
                 title=text.fill("unverify", "unverified", guild_name=guild.name),
             )
-            embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
+            embed.add_field(
+                name=text.get("unverify", "reverify on"), value=printdate, inline=False
+            )
             try:
                 await member.send(embed=embed)
                 await ctx.send(
@@ -356,7 +411,8 @@ class Unverify(basecog.Basecog):
 
         else:
             await self.log(
-                level="debug", message=f"Selfunverify failed: Member - {member.name} already unverified."
+                level="debug",
+                message=f"Selfunverify failed: Member - {member.name} already unverified.",
             )
 
     @commands.check(check.is_elevated)
@@ -367,9 +423,13 @@ class Unverify(basecog.Basecog):
             repo_self = repository.get_selfunverify()
             repo = repository.get_unverify()
             embed = self.create_embed(author=ctx.message.author, title="Unverify count")
-            embed.add_field(name="Active Self unverify", value=str(len(repo_self)), inline=True)
+            embed.add_field(
+                name="Active Self unverify", value=str(len(repo_self)), inline=True
+            )
             embed.add_field(name="Active Unverify", value=str(len(repo)), inline=True)
-            embed.add_field(name="All in history", value=str(len(repo_all)), inline=True)
+            embed.add_field(
+                name="All in history", value=str(len(repo_all)), inline=True
+            )
             await ctx.send(embed=embed)
 
     @commands.command(
@@ -381,7 +441,9 @@ class Unverify(basecog.Basecog):
         member = ctx.message.author
         date, date_str = await self.parse_datetime("06:00")
         lines = "gn"
-        await self.log(level="info", message=f"Unverify: Member - {member.name}, Until - {date}")
+        await self.log(
+            level="info", message=f"Unverify: Member - {member.name}, Until - {date}"
+        )
 
         if isinstance(ctx.channel, PrivateChannel):
             guild = self.getGuild()
@@ -390,23 +452,34 @@ class Unverify(basecog.Basecog):
             guild = ctx.guild
 
         if date is None:
-            await ctx.send("Could not do that because Czechbol is lazy and didn't create me properly.")
+            await ctx.send(
+                "Could not do that because Czechbol is lazy and didn't create me properly."
+            )
             return
         printdate = date.strftime("%d.%m.%Y %H:%M")
 
-        result = await self.unverify_user(ctx, member=member, lines=lines, date=date, func="Unverify")
+        result = await self.unverify_user(
+            ctx, member=member, lines=lines, date=date, func="Unverify"
+        )
 
         if result is not None:
-            await self.log(level="debug", message=f"Unverify success: Member - {member.name}, Until - {date}")
+            await self.log(
+                level="debug",
+                message=f"Unverify success: Member - {member.name}, Until - {date}",
+            )
 
             embed = self.create_embed(
                 author=ctx.message.author,
                 title=text.get("unverify", "gm"),
             )
-            embed.add_field(name=text.get("unverify", "reverify on"), value=printdate, inline=False)
+            embed.add_field(
+                name=text.get("unverify", "reverify on"), value=printdate, inline=False
+            )
             if lines != "":
                 embed.add_field(
-                    name=text.get("unverify", "reason title"), value="Goodnight příkaz", inline=False
+                    name=text.get("unverify", "reason title"),
+                    value="Goodnight příkaz",
+                    inline=False,
                 )
             embed.add_field(
                 name=text.get("unverify", "gm return title"),
@@ -426,7 +499,8 @@ class Unverify(basecog.Basecog):
             await ctx.send(f"Dobrou noc, {member.name}!")
         else:
             await self.log(
-                level="debug", message=f"Unverify failed: Member - {member.name} already unverified."
+                level="debug",
+                message=f"Unverify failed: Member - {member.name} already unverified.",
             )
 
     @unverifies.command(pass_context=True)
@@ -488,7 +562,9 @@ class Unverify(basecog.Basecog):
             embed.add_field(name="Status", value=row.status, inline=True)
             if roles != []:
                 embed.add_field(
-                    name="Roles to return", value=", ".join(role.name for role in roles), inline=True
+                    name="Roles to return",
+                    value=", ".join(role.name for role in roles),
+                    inline=True,
                 )
 
             if channels != []:
@@ -523,7 +599,9 @@ class Unverify(basecog.Basecog):
                 )
 
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add", check=check, timeout=300.0
+                )
             except asyncio.TimeoutError:
                 break
             else:

@@ -20,7 +20,15 @@ class Weeb(basecog.Basecog):
 
     @classmethod
     def sauce_tags(cls, dic):
-        characters, parodies, tags, artists, groups, languages, categories = ([], [], [], [], [], [], [])
+        characters, parodies, tags, artists, groups, languages, categories = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         tags = []
         for tag in dic["tags"]:
             if tag["type"] == "character":
@@ -62,15 +70,22 @@ class Weeb(basecog.Basecog):
 
         url = "https://nhentai.net/g/{BOOK_ID}/".format(BOOK_ID=BOOK_ID)
         if dic["images"]["pages"][0]["t"] == "j":
-            cover_url = "https://i.nhentai.net/galleries/{MEDIA_ID}/1.jpg".format(MEDIA_ID=dic["media_id"])
+            cover_url = "https://i.nhentai.net/galleries/{MEDIA_ID}/1.jpg".format(
+                MEDIA_ID=dic["media_id"]
+            )
         elif dic["images"]["pages"][0]["t"] == "p":
-            cover_url = "https://i.nhentai.net/galleries/{MEDIA_ID}/1.png".format(MEDIA_ID=dic["media_id"])
+            cover_url = "https://i.nhentai.net/galleries/{MEDIA_ID}/1.png".format(
+                MEDIA_ID=dic["media_id"]
+            )
 
         title = dic["title"]["pretty"]
         num_pages = dic["num_pages"]
 
         embed = self.create_embed(
-            author=ctx.message.author, title=title, url=url, color=discord.Colour.from_rgb(227, 47, 86)
+            author=ctx.message.author,
+            title=title,
+            url=url,
+            color=discord.Colour.from_rgb(227, 47, 86),
         )
         embed.set_image(url=cover_url)
         embed.add_field(name="Number of pages", value=num_pages, inline=True)
@@ -105,13 +120,17 @@ class Weeb(basecog.Basecog):
             raise commands.MissingPermissions
         else:
             if len(args) != 2:
-                await ctx.send(">>> " + text.fill("weeb", "sauce_help", prefix=config.prefix))
+                await ctx.send(
+                    ">>> " + text.fill("weeb", "sauce_help", prefix=config.prefix)
+                )
                 return
             BOOK_ID = args[1]
             async with ctx.typing():
                 try:
                     response = requests.get(
-                        "https://nhentai.net/api/gallery/{BOOK_ID}".format(BOOK_ID=BOOK_ID)
+                        "https://nhentai.net/api/gallery/{BOOK_ID}".format(
+                            BOOK_ID=BOOK_ID
+                        )
                     )
                     dic = response.json()
                     response.raise_for_status()

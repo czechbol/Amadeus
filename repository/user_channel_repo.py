@@ -117,10 +117,22 @@ class UserChannelRepository(BaseRepository):
         return session.query(UserChannel).filter_by(user_id=user_id).all()
 
     @classmethod
-    def get_last(cls, guild_id=None, user_id=None, channel_id=None, webhooks=False, include_filtered=False):
+    def get_last(
+        cls,
+        guild_id=None,
+        user_id=None,
+        channel_id=None,
+        webhooks=False,
+        include_filtered=False,
+    ):
         last_msg_at = func.max(UserChannel.last_msg_at).label("last_msg_at")
 
-        query = session.query(UserChannel.guild_id, UserChannel.channel_id, UserChannel.user_id, last_msg_at)
+        query = session.query(
+            UserChannel.guild_id,
+            UserChannel.channel_id,
+            UserChannel.user_id,
+            last_msg_at,
+        )
 
         query = cls._filter(
             query=query,
@@ -132,7 +144,9 @@ class UserChannelRepository(BaseRepository):
         )
 
         result = (
-            query.group_by(UserChannel.guild_id, UserChannel.channel_id, UserChannel.user_id)
+            query.group_by(
+                UserChannel.guild_id, UserChannel.channel_id, UserChannel.user_id
+            )
             .order_by(desc("last_msg_at"))
             .first()
         )
@@ -141,7 +155,12 @@ class UserChannelRepository(BaseRepository):
 
     @classmethod
     def get_user_counts(
-        cls, guild_id=None, channel_id=None, user_id=None, webhooks=False, include_filtered=False
+        cls,
+        guild_id=None,
+        channel_id=None,
+        user_id=None,
+        webhooks=False,
+        include_filtered=False,
     ):
         query = cls._get_user_query(
             guild_id=guild_id,
@@ -154,7 +173,12 @@ class UserChannelRepository(BaseRepository):
 
     @classmethod
     def get_channel_counts(
-        cls, guild_id=None, channel_id=None, user_id=None, webhooks=False, include_filtered=False
+        cls,
+        guild_id=None,
+        channel_id=None,
+        user_id=None,
+        webhooks=False,
+        include_filtered=False,
     ):
         query = cls._get_channel_query(
             guild_id=guild_id,
@@ -166,7 +190,9 @@ class UserChannelRepository(BaseRepository):
         return query.all()
 
     @classmethod
-    def get_user_ranked(cls, guild_id=None, user_id=None, webhooks=False, include_filtered=False):
+    def get_user_ranked(
+        cls, guild_id=None, user_id=None, webhooks=False, include_filtered=False
+    ):
         """Retrieves table, filtered by user id"""
         subquery = cls._get_user_query(
             guild_id=guild_id, webhooks=webhooks, include_filtered=include_filtered
@@ -176,7 +202,9 @@ class UserChannelRepository(BaseRepository):
         return result
 
     @classmethod
-    def get_channel_ranked(cls, guild_id=None, channel_id=None, webhooks=False, include_filtered=False):
+    def get_channel_ranked(
+        cls, guild_id=None, channel_id=None, webhooks=False, include_filtered=False
+    ):
         """Retrieves table, filtered by user id"""
         subquery = cls._get_channel_query(
             guild_id=guild_id, webhooks=webhooks, include_filtered=include_filtered
@@ -186,31 +214,50 @@ class UserChannelRepository(BaseRepository):
         return result
 
     @classmethod
-    def get_user_sum(cls, guild_id=None, user_id=None, webhooks=False, include_filtered=False):
+    def get_user_sum(
+        cls, guild_id=None, user_id=None, webhooks=False, include_filtered=False
+    ):
         """Retrieves table, filtered by user id"""
         query = cls._get_user_query(
-            guild_id=guild_id, user_id=user_id, webhooks=webhooks, include_filtered=include_filtered
+            guild_id=guild_id,
+            user_id=user_id,
+            webhooks=webhooks,
+            include_filtered=include_filtered,
         )
         result = query.count()
         return result
 
     @classmethod
-    def get_channel_sum(cls, guild_id=None, channel_id=None, webhooks=False, include_filtered=False):
+    def get_channel_sum(
+        cls, guild_id=None, channel_id=None, webhooks=False, include_filtered=False
+    ):
         """Retrieves table, filtered by user id"""
         query = cls._get_channel_query(
-            guild_id=guild_id, channel_id=channel_id, webhooks=webhooks, include_filtered=include_filtered
+            guild_id=guild_id,
+            channel_id=channel_id,
+            webhooks=webhooks,
+            include_filtered=include_filtered,
         )
         result = query.count()
         return result
 
     @classmethod
     def _get_channel_query(
-        cls, guild_id=None, channel_id=None, user_id=None, webhooks=False, include_filtered=False
+        cls,
+        guild_id=None,
+        channel_id=None,
+        user_id=None,
+        webhooks=False,
+        include_filtered=False,
     ):
         """Retrieves table, filtered by user id"""
         last_msg_at = func.max(UserChannel.last_msg_at).label("last_msg_at")
         total = func.sum(UserChannel.count).label("total")
-        rank = func.dense_rank().over(order_by=[desc(total), asc(last_msg_at)]).label("rank")
+        rank = (
+            func.dense_rank()
+            .over(order_by=[desc(total), asc(last_msg_at)])
+            .label("rank")
+        )
         query = session.query(
             UserChannel.guild_id,
             UserChannel.guild_name,
@@ -230,19 +277,31 @@ class UserChannelRepository(BaseRepository):
             include_filtered=include_filtered,
         )
         query = query.group_by(
-            UserChannel.guild_id, UserChannel.guild_name, UserChannel.channel_id, UserChannel.channel_name
+            UserChannel.guild_id,
+            UserChannel.guild_name,
+            UserChannel.channel_id,
+            UserChannel.channel_name,
         ).order_by("rank")
 
         return query
 
     @classmethod
     def _get_user_query(
-        cls, guild_id=None, channel_id=None, user_id=None, webhooks=False, include_filtered=False
+        cls,
+        guild_id=None,
+        channel_id=None,
+        user_id=None,
+        webhooks=False,
+        include_filtered=False,
     ):
         """Retrieves table, filtered by user id"""
         last_msg_at = func.max(UserChannel.last_msg_at).label("last_msg_at")
         total = func.sum(UserChannel.count).label("total")
-        rank = func.dense_rank().over(order_by=[desc(total), asc(last_msg_at)]).label("rank")
+        rank = (
+            func.dense_rank()
+            .over(order_by=[desc(total), asc(last_msg_at)])
+            .label("rank")
+        )
 
         query = session.query(
             UserChannel.guild_id,
@@ -262,14 +321,23 @@ class UserChannelRepository(BaseRepository):
             include_filtered=include_filtered,
         )
         query = query.group_by(
-            UserChannel.guild_id, UserChannel.guild_name, UserChannel.user_id, UserChannel.user_name
+            UserChannel.guild_id,
+            UserChannel.guild_name,
+            UserChannel.user_id,
+            UserChannel.user_name,
         ).order_by("rank")
 
         return query
 
     @classmethod
     def _filter(
-        cls, query=None, guild_id=None, channel_id=None, user_id=None, webhooks=False, include_filtered=False
+        cls,
+        query=None,
+        guild_id=None,
+        channel_id=None,
+        user_id=None,
+        webhooks=False,
+        include_filtered=False,
     ):
         if query is None:
             return None
@@ -287,9 +355,9 @@ class UserChannelRepository(BaseRepository):
             query = query.filter_by(user_id=user_id)
 
         if not include_filtered:
-            query = query.filter(UserChannel.user_id.notin_(config.board_ignored_users)).filter(
-                UserChannel.channel_id.notin_(config.board_ignored_channels)
-            )
+            query = query.filter(
+                UserChannel.user_id.notin_(config.board_ignored_users)
+            ).filter(UserChannel.channel_id.notin_(config.board_ignored_channels))
 
         return query
 

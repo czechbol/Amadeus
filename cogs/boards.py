@@ -28,7 +28,9 @@ class Boards(basecog.Basecog):
         if after is None:
             messages = await channel.history(limit=None, oldest_first=True).flatten()
         else:
-            messages = await channel.history(limit=None, after=after, oldest_first=True).flatten()
+            messages = await channel.history(
+                limit=None, after=after, oldest_first=True
+            ).flatten()
         return messages
 
     async def msg_iter(self, messages):
@@ -84,7 +86,9 @@ class Boards(basecog.Basecog):
         if not isinstance(ctx.channel, PrivateChannel):
             channel_counts = repository.get_channel_counts(guild_id=ctx.guild.id)
         else:
-            channel_counts = repository.get_channel_counts()  # TODO Do we want i to work in DMs?
+            channel_counts = (
+                repository.get_channel_counts()
+            )  # TODO Do we want i to work in DMs?
 
         if not channel_counts:
             return ctx.send(text.get("boards", "not found"))
@@ -107,7 +111,9 @@ class Boards(basecog.Basecog):
         if not isinstance(ctx.channel, PrivateChannel):
             user_counts = repository.get_user_counts(guild_id=ctx.guild.id)
         else:
-            user_counts = repository.get_user_counts()  # TODO Do we want i to work in DMs?
+            user_counts = (
+                repository.get_user_counts()
+            )  # TODO Do we want i to work in DMs?
 
         if not user_counts:
             return ctx.send(text.get("boards", "not found"))
@@ -115,7 +121,9 @@ class Boards(basecog.Basecog):
         if offset > len(user_counts):
             return await ctx.send(text.get("boards", "offset too big"))
 
-        boards, pagenum = await self.boards_generator(ctx=ctx, counts=user_counts, offset=offset, typ="user")
+        boards, pagenum = await self.boards_generator(
+            ctx=ctx, counts=user_counts, offset=offset, typ="user"
+        )
 
         await self.board_pages(ctx, boards, pagenum)
 
@@ -126,9 +134,13 @@ class Boards(basecog.Basecog):
         await asyncio.sleep(0.1)
         if not isinstance(ctx.channel, PrivateChannel):
             user_counts = repository.get_user_counts(guild_id=ctx.guild.id)
-            ranked_user = repository.get_user_ranked(guild_id=ctx.guild.id, user_id=member.id)
+            ranked_user = repository.get_user_ranked(
+                guild_id=ctx.guild.id, user_id=member.id
+            )
         else:
-            user_counts = repository.get_user_counts()  # TODO Do we want i to work in DMs?
+            user_counts = (
+                repository.get_user_counts()
+            )  # TODO Do we want i to work in DMs?
             ranked_user = repository.get_user_ranked(user_id=member.id)
 
         if user_counts == [] or ranked_user is None:
@@ -146,8 +158,12 @@ class Boards(basecog.Basecog):
     async def channelinfo(self, ctx, channel: discord.TextChannel):
         await asyncio.sleep(0.1)
         if not isinstance(ctx.channel, PrivateChannel):
-            user_counts = repository.get_user_counts(guild_id=ctx.guild.id, channel_id=channel.id)
-            ranked_channel = repository.get_channel_ranked(guild_id=ctx.guild.id, channel_id=channel.id)
+            user_counts = repository.get_user_counts(
+                guild_id=ctx.guild.id, channel_id=channel.id
+            )
+            ranked_channel = repository.get_channel_ranked(
+                guild_id=ctx.guild.id, channel_id=channel.id
+            )
             channel_sum = repository.get_channel_sum(guild_id=ctx.guild.id)
             result = repository.get_last(guild_id=ctx.guild.id, channel_id=channel.id)
         else:  # TODO Do we want i to work in DMs?
@@ -164,31 +180,51 @@ class Boards(basecog.Basecog):
             if user is None:
                 try:
                     user = await self.bot.fetch_user(result.user_id)
-                    user_name = discord.utils.escape_markdown(f"{user.display_name}#{user.discriminator}")
+                    user_name = discord.utils.escape_markdown(
+                        f"{user.display_name}#{user.discriminator}"
+                    )
                 except discord.errors.NotFound:
                     user_name = "_(Unknown user)_"
             else:
-                user_name = discord.utils.escape_markdown(f"{user.display_name}#{user.discriminator}")
+                user_name = discord.utils.escape_markdown(
+                    f"{user.display_name}#{user.discriminator}"
+                )
         else:
             user_name = "_(Unknown user)_"
 
-        last_msg_at = result.last_msg_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        last_msg_at = result.last_msg_at.replace(tzinfo=timezone.utc).astimezone(
+            tz=None
+        )
         last_msg_at = last_msg_at.strftime("%d.%m.%Y %H:%M:%S")
 
-        embed = self.create_embed(author=ctx.message.author, title=text.get("boards", "channel info title"))
+        embed = self.create_embed(
+            author=ctx.message.author, title=text.get("boards", "channel info title")
+        )
         embed.add_field(name="Jméno", value=str(channel.name), inline=True)
         embed.add_field(name="ID", value=str(channel.id), inline=True)
         embed.add_field(name="Server", value=str(channel.guild.name), inline=True)
         try:
-            embed.add_field(name="Kategorie", value=str(channel.category.name), inline=True)
+            embed.add_field(
+                name="Kategorie", value=str(channel.category.name), inline=True
+            )
         except AttributeError:
             pass
-        embed.add_field(name="Poslední zpráva", value=f"{user_name}\n{last_msg_at}", inline=True)
-        embed.add_field(name="Celkový počet zpráv", value=str(ranked_channel.total), inline=True)
-        embed.add_field(name="Pozice mezi kanály", value=f"{ranked_channel.rank}/{channel_sum}", inline=True)
+        embed.add_field(
+            name="Poslední zpráva", value=f"{user_name}\n{last_msg_at}", inline=True
+        )
+        embed.add_field(
+            name="Celkový počet zpráv", value=str(ranked_channel.total), inline=True
+        )
+        embed.add_field(
+            name="Pozice mezi kanály",
+            value=f"{ranked_channel.rank}/{channel_sum}",
+            inline=True,
+        )
         embeds = []
         embeds.append(embed)
-        boards, pagenum = await self.boards_generator(ctx=ctx, counts=user_counts, typ="channel info")
+        boards, pagenum = await self.boards_generator(
+            ctx=ctx, counts=user_counts, typ="channel info"
+        )
         embeds += boards
 
         await self.board_pages(ctx, embeds, pagenum)
@@ -198,8 +234,12 @@ class Boards(basecog.Basecog):
     async def userinfo(self, ctx, member: discord.Member):
         await asyncio.sleep(0.1)
         if not isinstance(ctx.channel, PrivateChannel):
-            channel_counts = repository.get_channel_counts(guild_id=ctx.guild.id, user_id=member.id)
-            ranked_user = repository.get_user_ranked(guild_id=ctx.guild.id, user_id=member.id)
+            channel_counts = repository.get_channel_counts(
+                guild_id=ctx.guild.id, user_id=member.id
+            )
+            ranked_user = repository.get_user_ranked(
+                guild_id=ctx.guild.id, user_id=member.id
+            )
             user_sum = repository.get_user_sum(guild_id=ctx.guild.id)
             result = repository.get_last(guild_id=ctx.guild.id, user_id=member.id)
         else:  # TODO Do we want i to work in DMs?
@@ -219,7 +259,9 @@ class Boards(basecog.Basecog):
                 role_list.append(role.name)
         role_list.reverse()
 
-        last_msg_at = result.last_msg_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        last_msg_at = result.last_msg_at.replace(tzinfo=timezone.utc).astimezone(
+            tz=None
+        )
         last_msg_at = last_msg_at.strftime("%d.%m.%Y %H:%M:%S")
 
         joined_at = member.joined_at.replace(tzinfo=timezone.utc).astimezone(tz=None)
@@ -230,12 +272,20 @@ class Boards(basecog.Basecog):
 
         if member.colour != discord.Colour.default():
             embed = self.create_embed(
-                author=ctx.message.author, title=text.get("boards", "user info title"), colour=member.colour
+                author=ctx.message.author,
+                title=text.get("boards", "user info title"),
+                colour=member.colour,
             )
         else:
-            embed = self.create_embed(author=ctx.message.author, title=text.get("boards", "user info title"))
+            embed = self.create_embed(
+                author=ctx.message.author, title=text.get("boards", "user info title")
+            )
 
-        status = "Do not diturb" if str(member.status) == "dnd" else str(member.status).title()
+        status = (
+            "Do not diturb"
+            if str(member.status) == "dnd"
+            else str(member.status).title()
+        )
 
         embed.set_thumbnail(url=member.avatar_url)
         embed.add_field(
@@ -248,13 +298,23 @@ class Boards(basecog.Basecog):
         embed.add_field(name="Účet založen", value=str(joined_dc), inline=True)
         embed.add_field(name="Připojen", value=str(joined_at), inline=True)
         embed.add_field(name="Počet zpráv", value=str(ranked_user.total), inline=True)
-        embed.add_field(name="Pozice mezi uživateli", value=f"{ranked_user.rank}/{user_sum}", inline=True)
-        embed.add_field(name="Poslední zpráva", value=f"{channel_name}\n{last_msg_at}", inline=True)
-        embed.add_field(name="Role", value=", ".join(str(r) for r in role_list), inline=False)
+        embed.add_field(
+            name="Pozice mezi uživateli",
+            value=f"{ranked_user.rank}/{user_sum}",
+            inline=True,
+        )
+        embed.add_field(
+            name="Poslední zpráva", value=f"{channel_name}\n{last_msg_at}", inline=True
+        )
+        embed.add_field(
+            name="Role", value=", ".join(str(r) for r in role_list), inline=False
+        )
 
         embeds = []
         embeds.append(embed)
-        boards, pagenum = await self.boards_generator(ctx=ctx, counts=channel_counts, typ="user info")
+        boards, pagenum = await self.boards_generator(
+            ctx=ctx, counts=channel_counts, typ="user info"
+        )
         embeds += boards
         await self.board_pages(ctx, embeds, pagenum)
 
@@ -268,7 +328,10 @@ class Boards(basecog.Basecog):
         elif typ is None:
             return None
         # splits results into config.board_top sized chunks (chunks = list of lists)
-        chunks = [counts[i : i + config.board_top] for i in range(0, len(counts), config.board_top)]
+        chunks = [
+            counts[i : i + config.board_top]
+            for i in range(0, len(counts), config.board_top)
+        ]
 
         boards = []
         author_position = -1
@@ -294,15 +357,20 @@ class Boards(basecog.Basecog):
                 else:
                     name = discord.utils.escape_markdown(item.user_name)
 
-                    if item.user_id == ctx.author.id:  # displays author in bold, saves author position
+                    if (
+                        item.user_id == ctx.author.id
+                    ):  # displays author in bold, saves author position
                         author_position = item.rank - 1
                         name = "**" + name + "**"
 
-                if item.rank == offset:  # displays offset user/channel in bold, saves page number
+                if (
+                    item.rank == offset
+                ):  # displays offset user/channel in bold, saves page number
                     pagenum = idx
                     name = "**" + name + "**"
                 if typ == "channel" and (
-                    isinstance(ctx.channel, PrivateChannel) or item.guild_id != ctx.guild.id
+                    isinstance(ctx.channel, PrivateChannel)
+                    or item.guild_id != ctx.guild.id
                 ):
                     # only shows channel guild if message didn't come from guild or message guild is different than board channel's guild
                     guild = discord.utils.escape_markdown(item.guild_name)
@@ -330,7 +398,12 @@ class Boards(basecog.Basecog):
             title = "top number" if idx == 0 else "top offset"
 
             embed.add_field(
-                name=text.fill("boards", title, top=config.board_top, offset=(idx * config.board_top) + 1),
+                name=text.fill(
+                    "boards",
+                    title,
+                    top=config.board_top,
+                    offset=(idx * config.board_top) + 1,
+                ),
                 value="\n".join(lines),
                 inline=False,
             )
@@ -341,7 +414,11 @@ class Boards(basecog.Basecog):
             chunk_position = idx * config.board_top
             # adds the YOUR POSITION field for userboard
             if (typ == "user" or typ == "channel info") and (
-                not (chunk_position <= author_position <= chunk_position + config.board_top)
+                not (
+                    chunk_position
+                    <= author_position
+                    <= chunk_position + config.board_top
+                )
                 and author_position != -1
             ):
                 lines = []
@@ -465,7 +542,9 @@ class Boards(basecog.Basecog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        channel_counts = repository.get_channel_counts(webhooks=True, include_filtered=True)
+        channel_counts = repository.get_channel_counts(
+            webhooks=True, include_filtered=True
+        )
         admin = self.bot.get_user(config.admin_id)
         messages = []
 
@@ -481,7 +560,14 @@ class Boards(basecog.Basecog):
                         if channel_counts is None:
                             msgs = await self.get_history(channel, None)
                         else:
-                            count = next((x for x in channel_counts if channel.id == x.channel_id), False)
+                            count = next(
+                                (
+                                    x
+                                    for x in channel_counts
+                                    if channel.id == x.channel_id
+                                ),
+                                False,
+                            )
                             if count:
                                 after = count.last_msg_at
                                 msgs = await self.get_history(channel, after)
@@ -509,7 +595,9 @@ class Boards(basecog.Basecog):
         a = datetime.datetime.now()
 
         for guild in self.bot.guilds:
-            channels = repository.get_channel_counts(guild_id=guild.id, webhooks=True, include_filtered=True)
+            channels = repository.get_channel_counts(
+                guild_id=guild.id, webhooks=True, include_filtered=True
+            )
             repository.update_guild(guild_id=guild.id, guild_name=guild.name)
 
             for chnl in channels:
@@ -530,7 +618,9 @@ class Boards(basecog.Basecog):
                             message=f"Couldn't find channel name for - guild_id:{chnl.guild_id} guild_name:{chnl.guild_name} channel_id:{chnl.channel_id}",
                         )
                         continue
-                repository.update_channel(channel_id=chnl.channel_id, channel_name=channel.name)
+                repository.update_channel(
+                    channel_id=chnl.channel_id, channel_name=channel.name
+                )
 
         b = datetime.datetime.now()
         c = b - a
@@ -544,7 +634,8 @@ class Boards(basecog.Basecog):
                     user_name = user.display_name
                 except discord.errors.NotFound:
                     await self.log(
-                        level="warning", message=f"Couldn't find username for user_id:{usr.user_id}"
+                        level="warning",
+                        message=f"Couldn't find username for user_id:{usr.user_id}",
                     )
                     user_name = "_(Unknown user)_"
             else:

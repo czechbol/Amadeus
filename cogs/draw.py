@@ -72,12 +72,16 @@ class Draw(basecog.Basecog):
 
         # string = unidecode.unidecode(string)
         if not string.isascii():
-            raise ValueError("Non ASCII characters are forbidden to use in math expression")
+            raise ValueError(
+                "Non ASCII characters are forbidden to use in math expression"
+            )
 
         # find all words and check if all are allowed:
         for word in re.findall("[a-zA-Z_]+", string):
             if word not in self.rep_exp.keys():
-                raise ValueError('"{}" is forbidden to use in math expression'.format(word))
+                raise ValueError(
+                    '"{}" is forbidden to use in math expression'.format(word)
+                )
 
         for old, new in self.rep_exp.items():
             string = re.sub(rf"\b{old}\b", new, string)
@@ -116,7 +120,9 @@ class Draw(basecog.Basecog):
         brief=text.get("draw", "plot_desc"),
         description=text.get("draw", "plot_desc"),
     )
-    async def plot(self, ctx, xmin: Optional[float] = -10, xmax: Optional[float] = 10, *, inp: str):
+    async def plot(
+        self, ctx, xmin: Optional[float] = -10, xmax: Optional[float] = 10, *, inp: str
+    ):
 
         equations = escape_mentions(escape_markdown(inp)).split(";")
 
@@ -188,7 +194,9 @@ class Draw(basecog.Basecog):
             )
 
         try:
-            reaction, user = await self.bot.wait_for("reaction_add", check=check, timeout=300.0)
+            reaction, user = await self.bot.wait_for(
+                "reaction_add", check=check, timeout=300.0
+            )
         except asyncio.TimeoutError:
             pass
         else:

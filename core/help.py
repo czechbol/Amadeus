@@ -55,7 +55,9 @@ class Help(commands.MinimalHelpCommand):
         return " "
 
     # Override
-    def add_bot_commands_formatting(self, commands: Sequence[commands.Command], heading: str) -> None:
+    def add_bot_commands_formatting(
+        self, commands: Sequence[commands.Command], heading: str
+    ) -> None:
         """Get list of modules and their commands
         This override changes the presentation.
         """

@@ -9,7 +9,11 @@ class VoteRepository(BaseRepository):
     @classmethod
     def add_vote(cls, channel_id: int, message_id: int, edit_id: int, date: str):
         """Add new vote"""
-        session.add(Vote(channel_id=channel_id, message_id=message_id, edit_id=edit_id, date=date))
+        session.add(
+            Vote(
+                channel_id=channel_id, message_id=message_id, edit_id=edit_id, date=date
+            )
+        )
         session.commit()
 
     @classmethod

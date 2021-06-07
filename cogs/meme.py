@@ -57,7 +57,9 @@ class Meme(basecog.Basecog):
         if message is None:
             text = "O.o"
         else:
-            text = "".join(choice((str.upper, str.lower))(c) for c in message[:2000])  # nosec B311
+            text = "".join(
+                choice((str.upper, str.lower))(c) for c in message[:2000]  # nosec B311
+            )
             text = discord.utils.escape_markdown(text)
             text = text.replace("@", "@\u200b")
         text = f"**{author_name}**\n>>> {text}"[:2000]

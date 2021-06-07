@@ -55,12 +55,24 @@ class Reminder(basecog.Basecog):
         dates = search_dates(
             arg.replace(".", "-"),
             languages=["en"],
-            settings={"PREFER_DATES_FROM": "future", "PREFER_DAY_OF_MONTH": "first", "DATE_ORDER": "DMY"},
+            settings={
+                "PREFER_DATES_FROM": "future",
+                "PREFER_DAY_OF_MONTH": "first",
+                "DATE_ORDER": "DMY",
+            },
         )
         if dates is None:
             return None
 
-        weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        weekdays = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
 
         for day in weekdays:
             if str("next " + day) in arg.lower() and day in dates[0][0].lower():
@@ -94,18 +106,34 @@ class Reminder(basecog.Basecog):
         if reminder_user is None:
             try:
                 reminder_user = await self.bot.fetch_user(row.reminder_user_id)
-                reminder_user_name = discord.utils.escape_markdown(reminder_user.display_name)
+                reminder_user_name = discord.utils.escape_markdown(
+                    reminder_user.display_name
+                )
             except discord.errors.NotFound:
                 reminder_user_name = "_(Unknown user)_"
         else:
-            reminder_user_name = discord.utils.escape_markdown(reminder_user.display_name)
+            reminder_user_name = discord.utils.escape_markdown(
+                reminder_user.display_name
+            )
 
-        embed = self.create_embed(author=reminder_user, title=text.get("remindme", "reminder"))
+        embed = self.create_embed(
+            author=reminder_user, title=text.get("remindme", "reminder")
+        )
         if row.user_id != row.reminder_user_id:
-            embed.add_field(name=text.get("remindme", "reminder by"), value=reminder_user_name, inline=True)
+            embed.add_field(
+                name=text.get("remindme", "reminder by"),
+                value=reminder_user_name,
+                inline=True,
+            )
         if row.message != "":
-            embed.add_field(name=text.get("remindme", "reminder message"), value=row.message, inline=False)
-        embed.add_field(name=text.get("remindme", "reminder link"), value=row.permalink, inline=True)
+            embed.add_field(
+                name=text.get("remindme", "reminder message"),
+                value=row.message,
+                inline=False,
+            )
+        embed.add_field(
+            name=text.get("remindme", "reminder link"), value=row.permalink, inline=True
+        )
 
         return embed, user
 
@@ -148,7 +176,10 @@ class Reminder(basecog.Basecog):
 
         if date is None:
             if len(lines) == 0:
-                await ctx.send(">>> " + text.fill("remindme", "remindme help", prefix=config.prefix))
+                await ctx.send(
+                    ">>> "
+                    + text.fill("remindme", "remindme help", prefix=config.prefix)
+                )
                 return
             await ctx.send(text.get("remindme", "datetime not found"))
             date = datetime.now() + timedelta(days=1)
@@ -165,7 +196,9 @@ class Reminder(basecog.Basecog):
         await self.log(level="debug", message=f"Reminder created for {ctx.author.name}")
 
         await ctx.message.add_reaction("✅")
-        await ctx.message.author.send(text.fill("remindme", "reminder confirmation", name="tebe", date=date))
+        await ctx.message.author.send(
+            text.fill("remindme", "reminder confirmation", name="tebe", date=date)
+        )
         return
 
     @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
@@ -194,7 +227,9 @@ class Reminder(basecog.Basecog):
         lines = " ".join(lines)
 
         if len(lines) == 0:
-            await ctx.send(">>> " + text.fill("remindme", "remind help", prefix=config.prefix))
+            await ctx.send(
+                ">>> " + text.fill("remindme", "remind help", prefix=config.prefix)
+            )
             return
         elif len(lines) > 1024:
             lines = lines[:1024]
@@ -216,7 +251,9 @@ class Reminder(basecog.Basecog):
 
         await ctx.message.add_reaction("✅")
         await ctx.message.author.send(
-            text.fill("remindme", "reminder confirmation", name=member.display_name, date=date)
+            text.fill(
+                "remindme", "reminder confirmation", name=member.display_name, date=date
+            )
         )
         return
 
@@ -290,7 +327,11 @@ class Reminder(basecog.Basecog):
         print_date = date.strftime("%d.%m.%Y %H:%M")
 
         embed, user = await self.get_embed(row[0])
-        embed.add_field(name=text.get("remindme", "reminder edit new time"), value=print_date, inline=False)
+        embed.add_field(
+            name=text.get("remindme", "reminder edit new time"),
+            value=print_date,
+            inline=False,
+        )
         embed.add_field(
             name=text.get("remindme", "reminder edit confirmation"),
             value=text.get("remindme", "reminder edit text"),

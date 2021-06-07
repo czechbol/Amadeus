@@ -23,7 +23,10 @@ class UnverifyRepository(BaseRepository):
     ):
         """Adds unverify to the database"""
         unverify = (
-            session.query(Unverify).filter_by(user_id=user_id).filter_by(status="waiting").one_or_none()
+            session.query(Unverify)
+            .filter_by(user_id=user_id)
+            .filter_by(status="waiting")
+            .one_or_none()
         )
 
         if not unverify:
@@ -85,14 +88,21 @@ class UnverifyRepository(BaseRepository):
     @classmethod
     def get_waiting(cls):
         """Retrieves waiting unverifies."""
-        return session.query(Unverify).filter_by(status="waiting").order_by(Unverify.end_time.asc()).all()
+        return (
+            session.query(Unverify)
+            .filter_by(status="waiting")
+            .order_by(Unverify.end_time.asc())
+            .all()
+        )
 
     @classmethod
     def get_unfinished(cls):
         """Retrieves waiting unverifies."""
         return (
             session.query(Unverify)
-            .filter(or_(Unverify.status == "waiting", Unverify.status == "user left server"))
+            .filter(
+                or_(Unverify.status == "waiting", Unverify.status == "user left server")
+            )
             .order_by(Unverify.end_time.asc())
             .all()
         )
@@ -100,7 +110,12 @@ class UnverifyRepository(BaseRepository):
     @classmethod
     def get_finished(cls):
         """Retrieves waiting unverifies."""
-        return session.query(Unverify).filter_by(status="finished").order_by(Unverify.end_time.asc()).all()
+        return (
+            session.query(Unverify)
+            .filter_by(status="finished")
+            .order_by(Unverify.end_time.asc())
+            .all()
+        )
 
     @classmethod
     def get_ordered(cls):
@@ -110,12 +125,22 @@ class UnverifyRepository(BaseRepository):
     @classmethod
     def get_selfunverify(cls):
         """Retrieves waiting unverifies."""
-        return session.query(Unverify).filter_by(typ="Self unverify").order_by(Unverify.end_time.asc()).all()
+        return (
+            session.query(Unverify)
+            .filter_by(typ="Self unverify")
+            .order_by(Unverify.end_time.asc())
+            .all()
+        )
 
     @classmethod
     def get_unverify(cls):
         """Retrieves waiting unverifies."""
-        return session.query(Unverify).filter_by(typ="Unverify").order_by(Unverify.end_time.asc()).all()
+        return (
+            session.query(Unverify)
+            .filter_by(typ="Unverify")
+            .order_by(Unverify.end_time.asc())
+            .all()
+        )
 
     @classmethod
     def get_user(cls, user_id: int):
@@ -125,4 +150,9 @@ class UnverifyRepository(BaseRepository):
     @classmethod
     def get_idx(cls, idx: int):
         """Retrieves table, filtered by idx."""
-        return session.query(Unverify).filter_by(idx=idx).order_by(Unverify.end_time.asc()).all()
+        return (
+            session.query(Unverify)
+            .filter_by(idx=idx)
+            .order_by(Unverify.end_time.asc())
+            .all()
+        )

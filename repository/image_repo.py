@@ -7,7 +7,9 @@ from repository.database.image import Image
 
 class ImageRepository(BaseRepository):
     @classmethod
-    def add_image(cls, channel_id: int, message_id: int, attachment_id: int, dhash: str):
+    def add_image(
+        cls, channel_id: int, message_id: int, attachment_id: int, dhash: str
+    ):
         """Add new image hash"""
         session.add(
             Image(

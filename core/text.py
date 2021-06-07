@@ -19,7 +19,11 @@ class Text:
 
     def get(self, group: str, key: str):
         # load string
-        if self.custom is not None and group in self.custom and key in self.custom.get(group):
+        if (
+            self.custom is not None
+            and group in self.custom
+            and key in self.custom.get(group)
+        ):
             string = self.custom.get(group).get(key)
         elif group in self.default and key in self.default.get(group):
             string = self.default.get(group).get(key)
@@ -75,7 +79,9 @@ class Text:
 
     @classmethod
     def _mention_channel(cls, channel):
-        if isinstance(channel, discord.TextChannel) or isinstance(channel, discord.VoiceChannel):
+        if isinstance(channel, discord.TextChannel) or isinstance(
+            channel, discord.VoiceChannel
+        ):
             return channel.mention
         if isinstance(channel, int):
             return f"<#{channel}>"

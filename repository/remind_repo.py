@@ -32,7 +32,11 @@ class RemindRepository(BaseRepository):
             session.add(added)
 
         else:
-            if reminder.user_id == user_id and reminder.message == message and reminder.new_date == new_date:
+            if (
+                reminder.user_id == user_id
+                and reminder.message == message
+                and reminder.new_date == new_date
+            ):
                 added = None
             else:
                 added = Reminder(
@@ -96,14 +100,29 @@ class RemindRepository(BaseRepository):
     @classmethod
     def get_user(cls, user_id: int):
         """Retrieves table, filtered by user id."""
-        return session.query(Reminder).filter_by(user_id=user_id).order_by(Reminder.new_date.asc()).all()
+        return (
+            session.query(Reminder)
+            .filter_by(user_id=user_id)
+            .order_by(Reminder.new_date.asc())
+            .all()
+        )
 
     @classmethod
     def get_finished(cls):
         """Retrieves table, only finished."""
-        return session.query(Reminder).filter_by(status="finished").order_by(Reminder.new_date.asc()).all()
+        return (
+            session.query(Reminder)
+            .filter_by(status="finished")
+            .order_by(Reminder.new_date.asc())
+            .all()
+        )
 
     @classmethod
     def get_idx(cls, idx: int):
         """Retrieves table, filtered by idx."""
-        return session.query(Reminder).filter_by(idx=idx).order_by(Reminder.new_date.asc()).all()
+        return (
+            session.query(Reminder)
+            .filter_by(idx=idx)
+            .order_by(Reminder.new_date.asc())
+            .all()
+        )
