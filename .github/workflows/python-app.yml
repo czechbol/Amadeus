@@ -1,4 +1,4 @@
-name: Amadeus
+name: Amadeus build
 
 on:
   push:
@@ -8,34 +8,40 @@ on:
     - "**/*.json"
     - "**/*.yml"
   pull_request:
-    branches: [ master ]
-    paths:
-    - "**/*.py"
-    - "**/*.json"
-    - "**/*.yml"
+    types: [ opened, reopened, synchronize ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
+
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: ${{ matrix.python-version }}
+
+    - name: Restore cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements*') }}
 
     - name: Install dependencies
       run: |
         sudo apt install libmpc-dev
-        python -m pip install --upgrade pip
-        pip install flake8 black
-        pip install -r requirements.txt
-    - name: Lint with flake8
+        python3 -m pip install --upgrade pip wheel
+        python3 -m pip install --upgrade --upgrade-strategy eager -r requirements-dev.txt
+        python3 -m pip install --upgrade --upgrade-strategy eager -r requirements.txt
+    - name: Check the code for errors
       run: |
         # stop the build if there are Python syntax errors or undefined names. Ignores errors linked to black and our codestyle preferences
-        flake8 . --count --select=C,E,F,W,B --ignore=E128,E203,E501,W503,C901 --exclude=config/* --max-complexity=10 --max-line-length=110 --show-source --statistics
-
-        # Check the code with black
-        black . --check --line-length=110
+        flake8 . --count --select=C,E,F,W,B,B950 --extend-ignore = E203, E501 --max-complexity=25 --max-line-length=88 --show-source --statistics
+    - uses: psf/black@stable
+      with:
+        options: "--check --diff"
