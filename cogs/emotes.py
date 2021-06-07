@@ -1,6 +1,6 @@
 from discord.ext import commands
 
-from core import basecog
+from core import basecog, check
 from repository import emote_repo
 
 
@@ -12,7 +12,7 @@ class Emotes(basecog.Basecog):
         super().__init__(bot)
 
     @commands.command(hidden=True)
-    @commands.is_owner()
+    @commands.check(check.is_bot_owner)
     async def emote_setup(self, ctx):
         guild = ctx.guild
         emojis = guild.emojis

@@ -3,7 +3,7 @@ import datetime
 import discord
 from discord.ext import commands
 
-from core import basecog
+from core import basecog, check
 from core.text import text
 from core.config import config
 
@@ -15,20 +15,12 @@ import zipfile
 
 boottime = datetime.datetime.now().replace(microsecond=0)
 
-uhoh_ctr = 0
-
 
 class Base(basecog.Basecog):
     """Basic bot commands."""
 
     def __init__(self, bot: commands.Bot):
         super().__init__(bot)
-
-    @commands.command(description=text.get("base", "uhoh_desc"))
-    async def uhoh(self, ctx):
-        global uhoh_ctr
-
-        await ctx.send(text.fill("base", "uh oh", cnt=uhoh_ctr))
 
     @commands.cooldown(rate=2, per=20.0, type=commands.BucketType.user)
     @commands.command(description=text.get("base", "uptime_desc"))
@@ -46,11 +38,6 @@ class Base(basecog.Basecog):
     async def ping(self, ctx):
         await ctx.send("pong: **{:.2f} s**".format(self.bot.latency))
 
-    @commands.command(hidden=True, description=text.get("base", "pong_desc"))
-    async def pong(self, ctx):
-        await ctx.send(text.get("base", "really"))
-
-    @commands.command(hidden=True)
     async def guilds(self, ctx):
         message = "```"
         for guild in self.bot.guilds:
@@ -58,8 +45,7 @@ class Base(basecog.Basecog):
         message += "```"
         await ctx.send(message)
 
-    @commands.command(hidden=True)
-    @commands.is_owner()
+    @commands.check(check.is_bot_owner)
     async def leave(self, ctx, id: int):
         guild = discord.utils.get(self.bot.guilds, id=id)
         if guild is not None:
@@ -68,9 +54,8 @@ class Base(basecog.Basecog):
         else:
             await ctx.send("Takový server neznám")
 
-    @commands.command(hidden=True)
-    @commands.is_owner()
-    async def emote_backup(self, ctx):
+    @commands.check(check.is_elevated)
+    async def backup(self, ctx):
         if not os.path.exists("emojis/"):
             os.mkdir("emojis/")
         for guild in self.bot.guilds:
@@ -100,26 +85,6 @@ class Base(basecog.Basecog):
             await ctx.send(file=discord.File(f"emojis/emoji_backup_{now}.zip"))
         except (discord.HTTPException, discord.Forbidden, discord.InvalidArgument):
             pass
-
-    @commands.command(hidden=True)
-    async def voice_count(self, ctx):
-        channels = ctx.guild.voice_channels
-        count = 0
-        for channel in channels:
-            count += int(len(channel.members))
-        await ctx.send(str(count))
-
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        global uhoh_ctr
-
-        if message.content == "PR":
-            await message.channel.send("<https://github.com/Czechbol/Amadeus/pulls>")
-        elif message.content == "🔧":
-            await message.channel.send("<https://github.com/Czechbol/Amadeus/issues>")
-        elif "uh oh" in message.content.lower() and not message.author.bot:
-            await message.channel.send("uh oh")
-            uhoh_ctr += 1
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):

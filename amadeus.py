@@ -19,6 +19,7 @@ from repository.database.emote import Emote  # noqa F401
 
 intents = discord.Intents.default()
 intents.members = True
+intents.presences = True
 
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or(*config.prefixes),

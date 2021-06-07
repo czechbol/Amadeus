@@ -249,17 +249,14 @@ class Boards(basecog.Basecog):
         embed.add_field(name="Připojen", value=str(joined_at), inline=True)
         embed.add_field(name="Počet zpráv", value=str(ranked_user.total), inline=True)
         embed.add_field(name="Pozice mezi uživateli", value=f"{ranked_user.rank}/{user_sum}", inline=True)
-        if check.is_mod(ctx):
-            embed.add_field(name="Poslední zpráva", value=f"{channel_name}\n{last_msg_at}", inline=True)
+        embed.add_field(name="Poslední zpráva", value=f"{channel_name}\n{last_msg_at}", inline=True)
         embed.add_field(name="Role", value=", ".join(str(r) for r in role_list), inline=False)
-        if check.is_mod(ctx):
-            embeds = []
-            embeds.append(embed)
-            boards, pagenum = await self.boards_generator(ctx=ctx, counts=channel_counts, typ="user info")
-            embeds += boards
-            await self.board_pages(ctx, embeds, pagenum)
-        else:
-            await ctx.send(embed=embed, delete_after=config.delay_embed)
+
+        embeds = []
+        embeds.append(embed)
+        boards, pagenum = await self.boards_generator(ctx=ctx, counts=channel_counts, typ="user info")
+        embeds += boards
+        await self.board_pages(ctx, embeds, pagenum)
 
         return
 

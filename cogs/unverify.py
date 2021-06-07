@@ -294,7 +294,7 @@ class Unverify(basecog.Basecog):
                 level="debug", message=f"Unverify failed: Member - {member.name} already unverified."
             )
 
-    @commands.cooldown(rate=5, per=20.0, type=commands.BucketType.user)
+    @commands.cooldown(rate=1, per=3600.0, type=commands.BucketType.user)
     @commands.command(
         brief=text.get("unverify", "selfunverify desc"),
         description=text.get("unverify", "selfunverify desc"),
@@ -359,7 +359,7 @@ class Unverify(basecog.Basecog):
                 level="debug", message=f"Selfunverify failed: Member - {member.name} already unverified."
             )
 
-    @commands.check(check.is_mod)
+    @commands.check(check.is_elevated)
     @commands.group(pass_context=True)
     async def unverifies(self, ctx):
         if ctx.invoked_subcommand is None:
@@ -546,7 +546,7 @@ class Unverify(basecog.Basecog):
                         pass
                     await message.edit(embed=embeds[pagenum])
 
-    @commands.check(check.is_mod)
+    @commands.check(check.is_elevated)
     @commands.command()
     async def reverify(self, ctx, idx: int):
         repo = repository.get_idx(idx)
