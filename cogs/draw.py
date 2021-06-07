@@ -64,7 +64,7 @@ class Draw(basecog.Basecog):
         }
 
     def string2func(self, string):
-        """ evaluates the string and returns a function of x """
+        """Evaluates the string and returns a function of x"""
         # surround operators with spaces and replace ^ with **
         for old, new in self.rep_op.items():
             string = string.replace(old, new)
