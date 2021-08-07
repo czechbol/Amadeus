@@ -58,7 +58,7 @@ class Boards(basecog.Basecog):
                         "channel_id": msg.channel.id,
                         "channel_name": msg.channel.name,
                         "user_id": msg.author.id,
-                        "user_name": msg.author.display_name,
+                        "user_name": msg.author.name,
                         "is_webhook": is_webhook,
                         "last_msg_at": msg.created_at,
                         "count": 1,
@@ -181,13 +181,13 @@ class Boards(basecog.Basecog):
                 try:
                     user = await self.bot.fetch_user(result.user_id)
                     user_name = discord.utils.escape_markdown(
-                        f"{user.display_name}#{user.discriminator}"
+                        f"{user.name}#{user.discriminator}"
                     )
                 except discord.errors.NotFound:
                     user_name = "_(Unknown user)_"
             else:
                 user_name = discord.utils.escape_markdown(
-                    f"{user.display_name}#{user.discriminator}"
+                    f"{user.name}#{user.discriminator}"
                 )
         else:
             user_name = "_(Unknown user)_"
@@ -290,7 +290,7 @@ class Boards(basecog.Basecog):
         embed.set_thumbnail(url=member.avatar_url)
         embed.add_field(
             name="Jméno",
-            value=str(f"{member.display_name}\n({member.name}#{member.discriminator})"),
+            value=str(f"{member.name}\n({member.name}#{member.discriminator})"),
             inline=True,
         )
         embed.add_field(name="ID", value=str(member.id), inline=True)
@@ -520,7 +520,7 @@ class Boards(basecog.Basecog):
                 channel_id=message.channel.id,
                 channel_name=message.channel.name,
                 user_id=message.author.id,
-                user_name=message.author.display_name,
+                user_name=message.author.name,
                 is_webhook=is_webhook,
                 last_msg_at=message.created_at,
                 count=1,
@@ -539,7 +539,7 @@ class Boards(basecog.Basecog):
                 channel_id=message.channel.id,
                 channel_name=message.channel.name,
                 user_id=message.author.id,
-                user_name=message.author.display_name,
+                user_name=message.author.name,
                 last_msg_at=message.created_at,
             )
 
@@ -634,7 +634,7 @@ class Boards(basecog.Basecog):
             if user is None:
                 try:
                     user = await self.bot.fetch_user(usr.user_id)
-                    user_name = user.display_name
+                    user_name = user.name
                 except discord.errors.NotFound:
                     await self.log(
                         level="warning",
@@ -642,7 +642,7 @@ class Boards(basecog.Basecog):
                     )
                     user_name = "_(Unknown user)_"
             else:
-                user_name = user.display_name
+                user_name = user.name
             repository.update_user(user_id=usr.user_id, user_name=user_name)
 
         e = datetime.datetime.now()
@@ -651,8 +651,8 @@ class Boards(basecog.Basecog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        if before.display_name != after.display_name:
-            repository.update_user(user_id=after.id, user_name=after.display_name)
+        if before.name != after.name:
+            repository.update_user(user_id=after.id, user_name=after.name)
         return
 
     @commands.Cog.listener()
