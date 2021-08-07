@@ -477,8 +477,11 @@ class Boards(basecog.Basecog):
                     "reaction_add", check=chk, timeout=config.delay_embed
                 )
             except asyncio.TimeoutError:
-                await msg.clear_reaction("◀️")
-                await msg.clear_reaction("▶️")
+                try:
+                    await msg.clear_reaction("◀️")
+                    await msg.clear_reaction("▶️")
+                except discord.errors.Forbidden:
+                    pass
                 break
             else:
                 if str(reaction.emoji) == "◀️":
