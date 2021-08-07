@@ -11,7 +11,6 @@ class Emotes(basecog.Basecog):
     def __init__(self, bot: commands.Bot):
         super().__init__(bot)
 
-    @commands.command(hidden=True)
     @commands.check(check.is_bot_owner)
     async def emote_setup(self, ctx):
         guild = ctx.guild
