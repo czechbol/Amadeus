@@ -1,5 +1,6 @@
 backups/
 emojis/
+env/
 logs/
 config/config.json
 config/emotes.json
