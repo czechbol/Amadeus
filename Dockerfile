@@ -4,10 +4,10 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
-    make=4.2.1-1.2 automake=1:1.16.1-4 gcc=4:8.3.0-1 g++=4:8.3.0-1 \
-    subversion=1.10.4-1+deb10u2 libmpc-dev=1.1.0-1 libgmp3-dev=2:6.1.2+dfsg-4
+    make=4.3-4.1 automake=1:1.16.3-2 gcc=4:10.2.1-1 g++=4:10.2.1-1 \
+    subversion=1.14.1-3 libmpc-dev=1.2.0-1 libgmp3-dev=2:6.2.1+dfsg-1
 
-RUN apt-get -y --no-install-recommends install git=1:2.20.1-2+deb10u3 tzdata=2021a-0+deb10u1 graphviz=2.40.1-6+deb10u1
+RUN apt-get -y --no-install-recommends install git tzdata graphviz
 
 ENV TZ=Europe/Prague
 
