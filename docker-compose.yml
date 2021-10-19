@@ -14,7 +14,7 @@ services:
     build: .
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - ./:/Amadeus/
+      - ./:/Amadeus/:Z
     command: python3 amadeus.py
     depends_on:
       - db
